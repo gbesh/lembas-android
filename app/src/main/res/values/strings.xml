@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Lembas</string>
+    <string name="wallpaper_name">Lembas</string>
+    <string name="wallpaper_description">The Lembas scene on your lock screen. Follows the launcher\'s theme and sets your phone\'s colours to match.</string>
+</resources>

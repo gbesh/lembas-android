@@ -1,0 +1,94 @@
+name: Build Lembas APK
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "README.md"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Download fonts (all SIL Open Font License)
+        run: |
+          mkdir -p app/src/main/assets/fonts
+          cd app/src/main/assets/fonts
+          base=https://raw.githubusercontent.com/google/fonts/main/ofl
+          get() { curl -fsSL -o "$1" "$2" || echo "Could not fetch $1 - the launcher will use the system serif instead"; }
+          get Cinzel.ttf                    "$base/cinzel/Cinzel%5Bwght%5D.ttf"
+          get CormorantGaramond.ttf         "$base/cormorantgaramond/CormorantGaramond%5Bwght%5D.ttf"
+          get CormorantGaramond-Italic.ttf  "$base/cormorantgaramond/CormorantGaramond-Italic%5Bwght%5D.ttf"
+          get IMFellEnglish-Regular.ttf     "$base/imfellenglish/IMFeENrm28P.ttf"
+          get IMFellEnglish-Italic.ttf      "$base/imfellenglish/IMFeENit28P.ttf"
+          get IMFellEnglishSC-Regular.ttf   "$base/imfellenglishsc/IMFeENsc28P.ttf"
+          get Fraunces.ttf                  "$base/fraunces/Fraunces%5BSOFT%2CWONK%2Copsz%2Cwght%5D.ttf"
+          get Fraunces-Italic.ttf           "$base/fraunces/Fraunces-Italic%5BSOFT%2CWONK%2Copsz%2Cwght%5D.ttf"
+          get AlegreyaSans-Medium.ttf       "$base/alegreyasans/AlegreyaSans-Medium.ttf"
+          ls -la
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Signing key (from repository secrets)
+        env:
+          KEYSTORE_B64: ${{ secrets.LEMBAS_KEYSTORE_B64 }}
+        run: |
+          if [ -z "$KEYSTORE_B64" ] && [ "$GITHUB_REF" != "refs/heads/main" ]; then
+            echo "::warning::No signing key secret; this test build uses the debug key."; exit 0
+          fi
+          if [ -z "$KEYSTORE_B64" ]; then
+            echo "::error title=No signing key::Add the LEMBAS_KEYSTORE_B64 secret so builds can update the installed app."
+            exit 1
+          fi
+          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/lembas.keystore"
+
+      - name: Build
+        shell: bash
+        env:
+          LEMBAS_BUILD: ${{ github.run_number }}00
+          LEMBAS_KEYSTORE: ${{ runner.temp }}/lembas.keystore
+          LEMBAS_KEYSTORE_PASSWORD: ${{ secrets.LEMBAS_KEYSTORE_PASSWORD }}
+          LEMBAS_KEY_PASSWORD: ${{ secrets.LEMBAS_KEYSTORE_PASSWORD }}
+        run: |
+          chmod +x gradlew
+          set +e
+          ./gradlew assembleRelease --no-daemon 2>&1 | tee build.log
+          status=${PIPESTATUS[0]}
+          if [ $status -ne 0 ]; then
+            # Surface the real error as an annotation so it is easy to read.
+            # Compiler errors first (each as its own annotation), then the general reason.
+            grep -E "^e: " build.log | head -30 | sed 's/%/%25/g' | sed 's#file:///home/runner/work/[^/]*/[^/]*/app/src/main/java/com/middleearth/launcher/##' | while read -r line; do echo "::error title=Kotlin::$line"; done
+            msg=$(grep -E "error:|What went wrong|Could not|AAPT" build.log | head -15 | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')
+            echo "::error title=Build failed::$msg"
+          fi
+          exit $status
+
+      - name: Rename APK
+        run: cp app/build/outputs/apk/release/app-release.apk lembas-launcher.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lembas-launcher
+          path: lembas-launcher.apk
+
+      - name: Publish a release (the app checks these to update itself)
+        if: github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          code=${{ github.run_number }}00
+          gh release delete latest -y --cleanup-tag 2>/dev/null || true
+          gh release create "v$code" lembas-launcher.apk --latest --title "Lembas 1.$code" \
+            --notes "Built from commit ${GITHUB_SHA::7}. Open lembas-launcher.apk on your phone to install; after that Lembas keeps itself up to date."
+          # Keep the five newest releases.
+          gh release list --limit 100 --json tagName --jq '.[5:][].tagName' | while read -r t; do gh release delete "$t" -y --cleanup-tag; done
