@@ -47,8 +47,12 @@ object Updater {
 
     private fun prefs(ctx: Context) = ctx.getSharedPreferences(Themes.PREFS, Context.MODE_PRIVATE)
 
-    /** Called on every launch; cheap if the job is already scheduled. */
+    /** Called on every launch; cheap if the job is already scheduled. Never throws. */
     fun schedule(ctx: Context) {
+        try { scheduleInner(ctx) } catch (_: Throwable) { }
+    }
+
+    private fun scheduleInner(ctx: Context) {
         val js = ctx.getSystemService(JobScheduler::class.java) ?: return
         if (!enabled(ctx)) { js.cancel(JOB_ID); return }
         if (js.getPendingJob(JOB_ID) != null) return
@@ -91,7 +95,7 @@ object Updater {
                 Result.INSTALLING
             }
         }
-    } catch (_: Exception) {
+    } catch (_: Throwable) {
         Result.FAILED
     }
 
@@ -161,7 +165,7 @@ object Updater {
     class UpdateJob : JobService() {
         override fun onStartJob(params: JobParameters): Boolean {
             Thread {
-                run(applicationContext)
+                try { run(applicationContext) } catch (_: Throwable) { }
                 jobFinished(params, false)
             }.start()
             return true
