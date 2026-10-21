@@ -1,0 +1,20 @@
+name: probe2
+on:
+  push:
+    branches: [probe2]
+jobs:
+  p:
+    runs-on: ubuntu-24.04
+    steps:
+      - run: |
+          m=https://repo1.maven.org/maven2
+          v() { curl -s $1/maven-metadata.xml | grep -o '<version>[^<]*' | sed 's/<version>//' | grep -v -E 'Beta|RC|dev|alpha|beta|rc' | tail -${2:-4} | tr '\n' ' '; }
+          echo "::notice title=kotlin::$(v $m/org/jetbrains/kotlin/kotlin-gradle-plugin 6)"
+          echo "::notice title=agp8::$(curl -s https://dl.google.com/dl/android/maven2/com/android/tools/build/gradle/maven-metadata.xml | grep -o '<version>8\.1[0-9]\.[0-9]*<' | tr -d '<' | sed 's/<version>//g' | tail -4 | tr '\n' ' ')"
+          echo "::notice title=gradle::$(curl -s https://services.gradle.org/versions/all | grep -o '"version" : "8\.1[0-9]\(\.[0-9]\)\?"' | head -4 | tr '\n' ' ')"
+          echo "::notice title=wear-compose-1.5::$(curl -s https://dl.google.com/dl/android/maven2/androidx/wear/compose/compose-material3/maven-metadata.xml | grep -o '<version>1\.[45]\.[0-9]*<' | tr '\n' ' ')"
+          echo "::notice title=futures::$(curl -s https://dl.google.com/dl/android/maven2/androidx/concurrent/concurrent-futures/maven-metadata.xml | grep -o '<release>[^<]*')"
+          echo "::notice title=platform36::$(ls $ANDROID_HOME/platforms 2>/dev/null | tr '\n' ' ') sdkman=$(ls $ANDROID_HOME/build-tools | tail -2 | tr '\n' ' ')"
+          curl -s https://dl.google.com/dl/android/maven2/androidx/wear/compose/compose-material3/1.7.1/compose-material3-1.7.1.module | grep -o '"org.jetbrains.kotlin:kotlin-stdlib[^}]*' | head -2 | sed 's/^/::notice title=wear-kotlin::/' | tr -d '\n'; echo
+          curl -s https://dl.google.com/dl/android/maven2/androidx/wear/compose/compose-material3/1.7.1/compose-material3-1.7.1.module | grep -o '"requires" : "[^"]*"' | head -3 | sed 's/^/::notice title=wear-requires::/'
+          curl -s https://dl.google.com/dl/android/maven2/androidx/activity/activity-compose/1.12.4/activity-compose-1.12.4.pom | grep -A1 kotlin-stdlib | head -3 | tr -d '\n' | sed 's/^/::notice title=activity::/'; echo
