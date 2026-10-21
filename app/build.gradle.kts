@@ -43,9 +43,6 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlinOptions {
-        jvmTarget = "17"
-    }
     lint {
         // Don't let style warnings stop the cloud build.
         abortOnError = false
@@ -54,3 +51,9 @@ android {
 }
 
 // No libraries on purpose: the whole launcher is the Android framework plus Kotlin.
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+    }
+}

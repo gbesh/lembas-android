@@ -1,4 +1,4 @@
-name: Build Lembas APK
+name: Build Lembas (phone, watch app, watch face)
 
 on:
   push:
@@ -20,12 +20,15 @@ jobs:
           distribution: temurin
           java-version: "17"
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
       - name: Download fonts (all SIL Open Font License)
         run: |
-          mkdir -p app/src/main/assets/fonts
-          cd app/src/main/assets/fonts
           base=https://raw.githubusercontent.com/google/fonts/main/ofl
-          get() { curl -fsSL -o "$1" "$2" || echo "Could not fetch $1 - the launcher will use the system serif instead"; }
+          get() { curl -fsSL -o "$1" "$2"; }
+          mkdir -p fonts && cd fonts
           get Cinzel.ttf                    "$base/cinzel/Cinzel%5Bwght%5D.ttf"
           get CormorantGaramond.ttf         "$base/cormorantgaramond/CormorantGaramond%5Bwght%5D.ttf"
           get CormorantGaramond-Italic.ttf  "$base/cormorantgaramond/CormorantGaramond-Italic%5Bwght%5D.ttf"
@@ -35,7 +38,52 @@ jobs:
           get Fraunces.ttf                  "$base/fraunces/Fraunces%5BSOFT%2CWONK%2Copsz%2Cwght%5D.ttf"
           get Fraunces-Italic.ttf           "$base/fraunces/Fraunces-Italic%5BSOFT%2CWONK%2Copsz%2Cwght%5D.ttf"
           get AlegreyaSans-Medium.ttf       "$base/alegreyasans/AlegreyaSans-Medium.ttf"
-          ls -la
+          cd ..
+          # phone: assets/fonts with their family names
+          mkdir -p app/src/main/assets/fonts && cp fonts/*.ttf app/src/main/assets/fonts/
+          # watch app and watch face: res/font with resource names
+          for d in wear/src/main/res/font watchface/src/main/res/font; do
+            mkdir -p $d
+            cp fonts/Cinzel.ttf $d/cinzel.ttf
+            cp fonts/CormorantGaramond.ttf $d/cormorant.ttf
+            cp fonts/CormorantGaramond-Italic.ttf $d/cormorant_italic.ttf
+            cp fonts/IMFellEnglish-Regular.ttf $d/fell.ttf
+            cp fonts/IMFellEnglish-Italic.ttf $d/fell_italic.ttf
+            cp fonts/IMFellEnglishSC-Regular.ttf $d/fell_sc.ttf
+            cp fonts/Fraunces.ttf $d/fraunces.ttf
+            cp fonts/Fraunces-Italic.ttf $d/fraunces_italic.ttf
+            cp fonts/AlegreyaSans-Medium.ttf $d/alegreya_sans.ttf
+          done
+
+      - name: Watch face artwork and XML
+        run: |
+          pip install -q playwright pillow xmlschema
+          python -m playwright install --with-deps chromium > /dev/null
+          python wear/tools/make_watchface.py watchface/src/main/res wear/src/main/res
+
+      - name: Check the watch face against Google's Watch Face Format specification
+        run: |
+          git clone -q --depth 1 https://github.com/google/watchface /tmp/wff
+          python - <<'EOF'
+          import sys, xmlschema
+          schema = xmlschema.XMLSchema11("/tmp/wff/third_party/wff/specification/documents/2/watchface.xsd")
+          errs = list(schema.iter_errors("watchface/src/main/res/raw/watchface.xml"))
+          for e in errs[:20]:
+              print(f"::error title=Watch face XML::{e.path}: {(e.reason or str(e))[:300]}")
+          sys.exit(1 if errs else 0)
+          EOF
+
+      - name: Google's watch face validator (expressions and data sources)
+        run: |
+          cd /tmp/wff/third_party/wff
+          ./gradlew -q :specification:validator:executable-jar > /tmp/validator-build.log 2>&1 || true
+          jar=specification/validator/build/libs/wff-validator.jar
+          if [ ! -f "$jar" ]; then echo "::warning title=WFF validator::Couldn't build Google's validator; the schema check above still ran"; tail -5 /tmp/validator-build.log; exit 0; fi
+          set +e
+          java -jar "$jar" 2 "$GITHUB_WORKSPACE/watchface/src/main/res/raw/watchface.xml" > /tmp/validator.log 2>&1
+          status=$?
+          cat /tmp/validator.log | tail -40
+          if [ $status -ne 0 ]; then grep -v "^\s*$" /tmp/validator.log | head -15 | sed 's/^/::error title=WFF validator::/'; exit 1; fi
 
       - uses: gradle/actions/setup-gradle@v4
 
@@ -62,33 +110,43 @@ jobs:
         run: |
           chmod +x gradlew
           set +e
-          ./gradlew assembleRelease --no-daemon 2>&1 | tee build.log
+          ./gradlew :app:assembleRelease :wear:assembleRelease :watchface:assembleRelease --no-daemon 2>&1 | tee build.log
           status=${PIPESTATUS[0]}
           if [ $status -ne 0 ]; then
             # Surface the real error as an annotation so it is easy to read.
-            # Compiler errors first (each as its own annotation), then the general reason.
-            grep -E "^e: " build.log | head -30 | sed 's/%/%25/g' | sed 's#file:///home/runner/work/[^/]*/[^/]*/app/src/main/java/com/middleearth/launcher/##' | while read -r line; do echo "::error title=Kotlin::$line"; done
-            msg=$(grep -E "error:|What went wrong|Could not|AAPT" build.log | head -15 | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')
+            grep -E "^e: " build.log | head -30 | sed 's/%/%25/g' | sed 's#file:///home/runner/work/[^/]*/[^/]*/##' | while read -r line; do echo "::error title=Kotlin::$line"; done
+            msg=$(grep -E "error:|What went wrong|Could not|AAPT|ERROR" build.log | head -15 | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')
             echo "::error title=Build failed::$msg"
           fi
           exit $status
 
-      - name: Rename APK
-        run: cp app/build/outputs/apk/release/app-release.apk lembas-launcher.apk
+      - name: Collect the APKs and the watch installer
+        run: |
+          cp app/build/outputs/apk/release/app-release.apk lembas-launcher.apk
+          cp wear/build/outputs/apk/release/wear-release.apk lembas-wear.apk
+          cp watchface/build/outputs/apk/release/watchface-release.apk lembas-watchface.apk
+          mkdir -p kit && cp wear/install/* kit/
+          (cd kit && zip -q ../Lembas-watch-installer.zip *)
+          ls -la *.apk *.zip
 
       - uses: actions/upload-artifact@v4
         with:
-          name: lembas-launcher
-          path: lembas-launcher.apk
+          name: lembas
+          path: |
+            lembas-launcher.apk
+            lembas-wear.apk
+            lembas-watchface.apk
+            Lembas-watch-installer.zip
+            wear/src/main/res/drawable-nodpi/wl_*.png
 
-      - name: Publish a release (the app checks these to update itself)
+      - name: Publish a release (the phone and watch check these to update themselves)
         if: github.ref == 'refs/heads/main'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           code=${{ github.run_number }}00
           gh release delete latest -y --cleanup-tag 2>/dev/null || true
-          gh release create "v$code" lembas-launcher.apk --latest --title "Lembas 1.$code" \
-            --notes "Built from commit ${GITHUB_SHA::7}. Open lembas-launcher.apk on your phone to install; after that Lembas keeps itself up to date."
+          gh release create "v$code" lembas-launcher.apk lembas-wear.apk lembas-watchface.apk Lembas-watch-installer.zip --latest --title "Lembas 1.$code" \
+            --notes "Built from commit ${GITHUB_SHA::7}. Phone: open lembas-launcher.apk. Watch: run Lembas-watch-installer.zip on a Windows PC once; after that both keep themselves up to date."
           # Keep the five newest releases.
           gh release list --limit 100 --json tagName --jq '.[5:][].tagName' | while read -r t; do gh release delete "$t" -y --cleanup-tag; done
