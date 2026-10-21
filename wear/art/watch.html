@@ -4,8 +4,9 @@
 <meta charset="utf-8">
 <title>Lembas watch art</title>
 <style>
-/* The four Lembas scenes re-composed for a round 450px watch face. Each ?part= renders one still
-   layer or sprite (transparent where nothing is drawn); the watch face animates the sprites. */
+/* The Lembas scenes drawn for a round 450px watch face. Each ?part= renders one still layer or
+   sprite (transparent where nothing is drawn); the watch face places and animates them.
+   The night looks are true black apart from a little starlight, so they cost almost nothing on OLED. */
 html,body{margin:0;background:transparent;overflow:hidden}
 svg{display:block}
 </style>
@@ -18,39 +19,39 @@ var PART = q.get('part') || 'starlit-back';
 var W = +(q.get('w') || 450), H = +(q.get('h') || 450);
 function rng(seed) { return function () { seed |= 0; seed = seed + 0x6D2B79F5 | 0; var t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
 function f(n) { return Math.round(n * 10) / 10; }
-var C = 225;  // centre
+var P = {};
 
-// ------------------------------------------------------------------ Starlit Night
+// Keep-clear zones on the face (the time and the complications), so stars don't sit behind them
+function busy(x, y) {
+  return (x > 70 && x < 380 && y > 92 && y < 300) || (y > 296 && x > 100 && x < 350);
+}
+
+// ------------------------------------------------------------------ Starlit Night (OLED: black sky)
 function ridge(r, baseY, amp, stepMin, stepMax) {
-  var d = 'M0,450 L0,' + f(baseY - amp * .2), x = 0, y = baseY - amp * .2, peak = true;
-  while (x < 450) {
+  var d = 'M-10,' + f(baseY), x = -10, peak = true;
+  while (x < 460) {
     var nx = x + stepMin + r() * (stepMax - stepMin);
     var ny = peak ? baseY - amp * (.35 + r() * .65) : baseY - amp * r() * .3;
-    d += ' L' + f(nx) + ',' + f(ny); x = nx; y = ny; peak = !peak;
+    d += ' L' + f(nx) + ',' + f(ny); x = nx; peak = !peak;
   }
-  return d + ' L450,450 Z';
+  return d;
 }
-var P = {};
 P['starlit-back'] = function () {
-  var r = rng(1954), s = '<defs><linearGradient id="sk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#05070F"/><stop offset=".5" stop-color="#0B1226"/><stop offset=".8" stop-color="#1A2444"/><stop offset="1" stop-color="#2A3354"/></linearGradient>' +
-    '<radialGradient id="eg"><stop offset="0" stop-color="#FFF4D8" stop-opacity=".6"/><stop offset="1" stop-color="#FFF4D8" stop-opacity="0"/></radialGradient>' +
-    '<linearGradient id="mi" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#3A4A72" stop-opacity="0"/><stop offset=".6" stop-color="#3A4A72" stop-opacity=".4"/><stop offset="1" stop-color="#3A4A72" stop-opacity="0"/></linearGradient>' +
-    '<linearGradient id="ft" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#05070F" stop-opacity="0"/><stop offset="1" stop-color="#05070F" stop-opacity=".85"/></linearGradient></defs>';
-  s += '<rect width="450" height="450" fill="url(#sk)"/>';
-  for (var i = 0; i < 110; i++) {
-    var k = r(), col = k < .12 ? '#FFE2B0' : k < .25 ? '#BFD4FF' : '#F4F1E8';
-    s += '<circle cx="' + f(r() * 450) + '" cy="' + f(Math.pow(r(), 1.2) * 330) + '" r="' + f(.5 + Math.pow(r(), 3) * 1.1) + '" fill="' + col + '" opacity="' + f(.25 + r() * .55) + '"/>';
+  var r = rng(1954), s = '<rect width="450" height="450" fill="#000"/>';
+  for (var i = 0, n = 0; n < 70 && i < 4000; i++) {
+    var x = r() * 450, y = Math.pow(r(), 1.1) * 400, k = r();
+    if (busy(x, y) || (x - 225) * (x - 225) + (y - 225) * (y - 225) > 214 * 214) continue;
+    n++;
+    var col = k < .12 ? '#FFE2B0' : k < .25 ? '#BFD4FF' : '#F4F1E8';
+    s += '<circle cx="' + f(x) + '" cy="' + f(y) + '" r="' + f(.5 + Math.pow(r(), 3) * 1.1) + '" fill="' + col + '" opacity="' + f(.2 + r() * .5) + '"/>';
   }
-  // the evening star, low on the left
-  s += '<circle cx="92" cy="150" r="20" fill="url(#eg)"/><rect x="77" y="149.4" width="30" height="1.2" fill="#FFF4D8" opacity=".8"/><rect x="91.4" y="135" width="1.2" height="30" fill="#FFF4D8" opacity=".8"/><circle cx="92" cy="150" r="2" fill="#FFFBF0"/>';
-  s += '<path d="' + ridge(rng(7), 382, 90, 26, 60) + '" fill="#141B33"/>';
-  s += '<rect x="0" y="330" width="450" height="90" fill="url(#mi)"/>';
-  s += '<path d="' + ridge(rng(11), 418, 52, 22, 48) + '" fill="#0C111F"/>';
-  s += '<rect y="360" width="450" height="90" fill="url(#ft)"/>';
+  // the hills at the bottom: only their outline catches the starlight
+  s += '<path d="' + ridge(rng(7), 412, 64, 26, 58) + ' L460,460 L-10,460 Z" fill="#000" stroke="#25304F" stroke-width="1.6" stroke-linejoin="round"/>';
+  s += '<path d="' + ridge(rng(11), 440, 40, 22, 44) + ' L460,460 L-10,460 Z" fill="#000" stroke="#1A2340" stroke-width="1.2" stroke-linejoin="round"/>';
   return s;
 };
 P['moonglow'] = function () {
-  return '<defs><radialGradient id="mg"><stop offset="0" stop-color="#CFD8F0" stop-opacity=".34"/><stop offset="1" stop-color="#CFD8F0" stop-opacity="0"/></radialGradient></defs><circle cx="60" cy="60" r="60" fill="url(#mg)"/>';
+  return '<defs><radialGradient id="mg"><stop offset="0" stop-color="#CFD8F0" stop-opacity=".22"/><stop offset="1" stop-color="#CFD8F0" stop-opacity="0"/></radialGradient></defs><circle cx="45" cy="45" r="45" fill="url(#mg)"/>';
 };
 function moon(phase) {  // 0..1, northern-hemisphere view (lit on the right while waxing)
   var cx = 22, cy = 22, rr = 20;
@@ -58,131 +59,89 @@ function moon(phase) {  // 0..1, northern-hemisphere view (lit on the right whil
   var d = 'M' + cx + ',' + (cy - rr) + ' A' + rr + ',' + rr + ' 0 0 1 ' + cx + ',' + (cy + rr) +
     ' A' + f(aw) + ',' + rr + ' 0 0 ' + (tw >= 0 ? 0 : 1) + ' ' + cx + ',' + (cy - rr) + ' Z';
   var flip = phase > .5;
-  return '<circle cx="22" cy="22" r="20" fill="#1C2235"/><path d="' + d + '" fill="#EFE8D6"' + (flip ? ' transform="translate(44,0) scale(-1,1)"' : '') + '/>';
+  return '<circle cx="22" cy="22" r="20" fill="#11151F"/><path d="' + d + '" fill="#EFE8D6"' + (flip ? ' transform="translate(44,0) scale(-1,1)"' : '') + '/>';
 }
 for (var m = 0; m < 8; m++) (function (m) { P['moon' + m] = function () { return moon(m / 8 + .0001); }; })(m);
 
 // ------------------------------------------------------------------ Shire Morning
 P['shire-back'] = function () {
-  return '<defs><linearGradient id="ss" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#DCEBEA"/><stop offset=".45" stop-color="#EEF2E2"/><stop offset=".75" stop-color="#FBF1DA"/><stop offset="1" stop-color="#F7E6C4"/></linearGradient></defs>' +
+  var s = '<defs><linearGradient id="ss" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#CFE4E6"/><stop offset=".4" stop-color="#E9F0E0"/><stop offset=".66" stop-color="#FAF0D6"/></linearGradient></defs>' +
     '<rect width="450" height="450" fill="url(#ss)"/>';
+  // the far hill, then the Hill itself, where the complications sit like round doors
+  s += '<path d="M0,300 C90,280 170,282 250,292 C330,302 400,286 450,276 V450 H0 Z" fill="#B9CF98"/>';
+  s += '<path d="M0,326 C80,306 160,300 230,306 C310,312 390,318 450,306 V450 H0 Z" fill="#86A866"/>';
+  s += '<path d="M0,392 C110,376 200,372 280,376 C350,380 410,390 450,398 V450 H0 Z" fill="#6E9752"/>';
+  // a little tree on the far left
+  s += '<path d="M58,300 L60,326" stroke="#5B4A33" stroke-width="3" stroke-linecap="round"/>' +
+    '<circle cx="60" cy="290" r="15" fill="#6F954F"/><circle cx="49" cy="298" r="10" fill="#6F954F"/><circle cx="71" cy="297" r="11" fill="#6F954F"/><circle cx="62" cy="283" r="9" fill="#7EA35C"/>';
+  s += '<g fill="#E58C6B"><circle cx="90" cy="380" r="3"/><circle cx="372" cy="372" r="3"/><circle cx="384" cy="380" r="2.5"/></g><g fill="#F2D06B"><circle cx="102" cy="386" r="2.5"/><circle cx="360" cy="381" r="2.5"/><circle cx="74" cy="372" r="2.2"/></g>';
+  s += '<path d="M190,452 C205,430 218,420 225,410 C232,420 245,430 260,452 Z" fill="#D9C59A" opacity=".7"/>';
+  return s;
 };
-P['rays'] = function () {  // 160px sprite, centred on the sun
-  var s = '<g opacity=".28" stroke="#F2C969" stroke-width="7" stroke-linecap="round">';
-  for (var i = 0; i < 12; i++) { var a = i * Math.PI / 6; s += '<path d="M' + f(80 + 56 * Math.cos(a)) + ',' + f(80 + 56 * Math.sin(a)) + ' L' + f(80 + 76 * Math.cos(a)) + ',' + f(80 + 76 * Math.sin(a)) + '"/>'; }
+P['rays'] = function () {  // 130px sprite, centred on the sun
+  var s = '<g opacity=".32" stroke="#F2C969" stroke-width="5" stroke-linecap="round">';
+  for (var i = 0; i < 12; i++) { var a = i * Math.PI / 6; s += '<path d="M' + f(65 + 40 * Math.cos(a)) + ',' + f(65 + 40 * Math.sin(a)) + ' L' + f(65 + 58 * Math.cos(a)) + ',' + f(65 + 58 * Math.sin(a)) + '"/>'; }
   return s + '</g>';
 };
-P['sun'] = function () {
-  return '<defs><radialGradient id="su"><stop offset="0" stop-color="#FFF6D6"/><stop offset=".45" stop-color="#FFE9A8" stop-opacity=".55"/><stop offset="1" stop-color="#FFE9A8" stop-opacity="0"/></radialGradient></defs>' +
-    '<circle cx="90" cy="90" r="90" fill="url(#su)"/><circle cx="90" cy="90" r="30" fill="#FFF3C9"/>';
+P['sun'] = function () {  // 120px
+  return '<defs><radialGradient id="su"><stop offset="0" stop-color="#FFF6D6"/><stop offset=".45" stop-color="#FFE9A8" stop-opacity=".5"/><stop offset="1" stop-color="#FFE9A8" stop-opacity="0"/></radialGradient></defs>' +
+    '<circle cx="60" cy="60" r="60" fill="url(#su)"/><circle cx="60" cy="60" r="22" fill="#FFF0BC"/>';
 };
 function cloud(sc, op) {
   return '<g transform="scale(' + sc + ')" fill="#fff" opacity="' + op + '"><rect x="4" y="22" width="90" height="12" rx="6"/><circle cx="20" cy="22" r="12"/><circle cx="50" cy="20" r="17"/><circle cx="80" cy="23" r="12"/></g>';
 }
-P['cloud-a'] = function () { return cloud(1, .9); };
-P['cloud-b'] = function () { return cloud(.7, .75); };
-P['shire-mid'] = function () {
-  var s = '<path d="M0,330 C90,300 190,302 290,318 C360,330 410,312 450,300 V450 H0 Z" fill="#B9CF98"/>';
-  s += '<path d="M0,360 C70,334 150,326 230,344 C300,360 380,362 450,348 V450 H0 Z" fill="#94B373"/>';
-  // a small tree on the left hill and the chimney on the right
-  s += '<path d="M98,318 L100,350 M100,338 L91,330 M100,333 L109,324" stroke="#5B4A33" stroke-width="3" fill="none" stroke-linecap="round"/>' +
-    '<circle cx="100" cy="306" r="20" fill="#6F954F"/><circle cx="86" cy="315" r="13" fill="#6F954F"/><circle cx="114" cy="313" r="14" fill="#6F954F"/><circle cx="103" cy="298" r="12" fill="#7EA35C"/>';
-  s += '<rect x="300" y="344" width="11" height="34" rx="2" fill="#7A6247"/><rect x="298" y="342" width="15" height="5" rx="1.5" fill="#6A533B"/>';
-  return s;
-};
-P['shire-front'] = function () {
-  var s = '<path d="M0,392 C100,368 190,362 270,366 C340,370 400,382 450,392 V450 H0 Z" fill="#6E9752"/>';
-  s += '<circle cx="250" cy="404" r="30" fill="#C9B48A"/><circle cx="250" cy="404" r="24" fill="#2E5E3A"/><path d="M226,404 H274 M250,380 V428" stroke="#244D2F" stroke-width="1.4" opacity=".6"/><circle cx="250" cy="404" r="3" fill="#E2B64A"/>';
-  s += '<circle cx="198" cy="396" r="10" fill="#C9B48A"/><circle cx="198" cy="396" r="7.5" fill="#FCE9B6"/><path d="M190.5,396 H205.5 M198,388.5 V403.5" stroke="#C9B48A" stroke-width="1.4"/>';
-  s += '<path d="M160,444 C190,430 214,428 250,430" stroke="#D9C59A" stroke-width="10" fill="none" stroke-linecap="round" opacity=".8"/>';
-  s += '<g fill="#E58C6B"><circle cx="150" cy="420" r="3"/><circle cx="305" cy="412" r="3"/><circle cx="318" cy="420" r="2.5"/><circle cx="80" cy="398" r="2.5"/></g><g fill="#F2D06B"><circle cx="140" cy="426" r="2.5"/><circle cx="296" cy="420" r="2.5"/><circle cx="96" cy="402" r="2.5"/></g>';
-  s += '<rect y="436" width="450" height="14" fill="#5E8645"/>';
-  return s;
-};
+P['cloud-a'] = function () { return cloud(1, .8); };
+P['cloud-b'] = function () { return cloud(.7, .65); };
 
-// ------------------------------------------------------------------ Red Book
+// ------------------------------------------------------------------ Red Book (afternoon parchment)
 P['redbook-back'] = function () {
-  var r = rng(1937), s = '<defs><radialGradient id="pa" cx=".5" cy=".45" r=".7"><stop offset="0" stop-color="#F3E8CD"/><stop offset=".6" stop-color="#EADBB8"/><stop offset="1" stop-color="#D9C59A"/></radialGradient>' +
-    '<radialGradient id="cg"><stop offset="0" stop-color="#FFECBE" stop-opacity=".5"/><stop offset="1" stop-color="#FFECBE" stop-opacity="0"/></radialGradient></defs>';
-  s += '<rect width="450" height="450" fill="url(#pa)"/><circle cx="225" cy="210" r="230" fill="url(#cg)"/>';
-  for (var i = 0; i < 360; i++) s += '<circle cx="' + f(r() * 450) + '" cy="' + f(r() * 450) + '" r="' + f(.4 + r() * .9) + '" fill="' + (r() < .5 ? '#7A5A34' : '#FFFBEF') + '" opacity="' + f(.04 + r() * .09) + '"/>';
-  s += '<g fill="none" stroke="#8B6B43" stroke-width="1" opacity=".32">' +
-    '<path d="M0,330 C80,312 140,340 225,326 S360,306 450,322"/><path d="M0,346 C70,330 150,356 235,342 S370,322 450,338"/>' +
-    '<path d="M40,388 C70,370 116,376 124,390 S80,416 56,408 S30,396 40,388 Z"/><path d="M330,384 C360,374 400,380 400,396 S360,412 342,404 S318,388 330,384 Z"/>' +
-    '<path d="M0,100 C40,112 76,92 120,104"/><path d="M330,96 C366,86 404,100 450,88"/></g>';
-  s += '<g fill="#5A4026" opacity=".35">';
-  [[86, 318, 10], [98, 321, 12], [112, 318, 9], [340, 312, 10], [352, 315, 8]].forEach(function (m) { s += '<path d="M' + m[0] + ',' + m[1] + ' l' + m[2] / 2 + ',-' + m[2] + ' l' + m[2] / 2 + ',' + m[2] + ' z"/>'; });
+  var r = rng(1937), s = '<defs><radialGradient id="pa" cx=".5" cy=".42" r=".72"><stop offset="0" stop-color="#F3E8CD"/><stop offset=".62" stop-color="#EADBB8"/><stop offset="1" stop-color="#D3BC8E"/></radialGradient></defs>';
+  s += '<rect width="450" height="450" fill="url(#pa)"/>';
+  for (var i = 0; i < 300; i++) s += '<circle cx="' + f(r() * 450) + '" cy="' + f(r() * 450) + '" r="' + f(.4 + r() * .9) + '" fill="' + (r() < .5 ? '#7A5A34' : '#FFFBEF') + '" opacity="' + f(.04 + r() * .08) + '"/>';
+  // faint map-work low on the page: a river and the Misty Mountains, under the seals
+  s += '<g fill="none" stroke="#8B6B43" stroke-width="1" opacity=".28">' +
+    '<path d="M20,330 C90,316 150,344 225,332 S360,312 430,326"/><path d="M30,350 C100,338 160,362 235,350 S370,330 420,344"/></g>';
+  s += '<g fill="#5A4026" opacity=".26">';
+  [[52, 318, 12], [66, 322, 14], [82, 318, 10], [366, 314, 12], [380, 318, 10], [394, 322, 8]].forEach(function (m) { s += '<path d="M' + m[0] + ',' + m[1] + ' l' + m[2] / 2 + ',-' + m[2] + ' l' + m[2] / 2 + ',' + m[2] + ' z"/>'; });
   s += '</g>';
-  // the map's border follows the round face
-  s += '<circle cx="225" cy="225" r="214" fill="none" stroke="#7A5A34" stroke-width="1.6" opacity=".5"/><circle cx="225" cy="225" r="208" fill="none" stroke="#7A5A34" stroke-width=".8" opacity=".5"/>';
-  // compass rose at the top: ring, cross-bar and N (the needle is a sprite)
-  s += '<g opacity=".6"><circle cx="225" cy="58" r="20" fill="none" stroke="#5A4026" stroke-width="1"/>' +
-    '<path d="M202,58 L225,55 L248,58 L225,61 Z" fill="#5A4026" opacity=".55"/></g>';
+  // the border, ruled in red ink like the Red Book's own pages
+  s += '<circle cx="225" cy="225" r="219" fill="none" stroke="#9A2A1C" stroke-width="2.4" opacity=".75"/><circle cx="225" cy="225" r="213" fill="none" stroke="#9A2A1C" stroke-width=".9" opacity=".6"/>';
+  for (var t = 0; t < 60; t++) {
+    var a = t * Math.PI / 30, l = t % 5 === 0 ? 8 : 3.5;
+    s += '<path d="M' + f(225 + 213 * Math.sin(a)) + ',' + f(225 - 213 * Math.cos(a)) + ' L' + f(225 + (213 - l) * Math.sin(a)) + ',' + f(225 - (213 - l) * Math.cos(a)) + '" stroke="#7A2418" stroke-width="' + (t % 5 === 0 ? 1.6 : .8) + '" opacity=".55"/>';
+  }
   return s;
 };
-P['logs'] = function () {  // 60x34 sprite, drawn over the flames; fire base at (30,14)
-  return '<g transform="translate(30,14) scale(1.1)"><g stroke="#4A3420" stroke-width="2.2" stroke-linecap="round"><path d="M-14,6 L14,-3"/><path d="M-14,-3 L14,6"/></g>' +
-    '<g fill="none" stroke="#6A5236" stroke-width=".9"><circle cx="-19" cy="5" r="3"/><circle cx="-12" cy="10" r="3.2"/><circle cx="-3" cy="12" r="3"/><circle cx="6" cy="12" r="3.2"/><circle cx="14" cy="9" r="3"/><circle cx="20" cy="4" r="2.8"/></g></g>';
-};
-P['needle'] = function () {  // 20x56 sprite, pivot at its centre
-  return '<g opacity=".6"><path d="M10,2 L13.5,28 L10,54 L6.5,28 Z" fill="#5A4026"/><path d="M10,2 L13.5,28 L6.5,28 Z" fill="#9A2A1C"/></g>';
-};
-P['fireglow'] = function () {
-  return '<defs><radialGradient id="fg"><stop offset="0" stop-color="#F2B65A" stop-opacity=".6"/><stop offset="1" stop-color="#F2B65A" stop-opacity="0"/></radialGradient></defs><ellipse cx="60" cy="36" rx="60" ry="36" fill="url(#fg)"/>';
-};
-P['flame1'] = function () {  // 24x40 sprite, base at the bottom centre
-  return '<g transform="translate(12,39) scale(1.1)"><path d="M0,0 C-10,-4 -10,-14 -5,-21 C-4,-16 -1,-15 -1,-18 C-2,-24 1,-30 6,-34 C4,-26 10,-22 9,-13 C9,-5 6,-1 0,0 Z" fill="#9A2A1C"/></g>';
-};
-P['flame2'] = function () {
-  return '<g transform="translate(12,39) scale(1.1)"><path d="M0,0 C-4,-2 -5,-7 -3,-11 C-2,-8 0,-8 0,-10 C0,-13 2,-16 4,-18 C4,-13 6,-9 5,-5 C4,-2 2,0 0,0 Z" fill="#D9973A"/></g>';
-};
-P['wisp'] = function () {  // 16x56 curl of smoke
-  return '<path d="M8,54 C3,46 13,38 8,30 S3,14 8,2" fill="none" stroke="#6A5236" stroke-width="1.1" stroke-linecap="round"/>';
+P['warmglow'] = function () {  // 300x220, the hearth-light that breathes behind the time
+  return '<defs><radialGradient id="wg"><stop offset="0" stop-color="#FFE3A6" stop-opacity=".55"/><stop offset="1" stop-color="#FFE3A6" stop-opacity="0"/></radialGradient></defs><ellipse cx="150" cy="110" rx="150" ry="110" fill="url(#wg)"/>';
 };
 
-// ------------------------------------------------------------------ Elven Silver
-// A lancet arch made of two circular arcs (so the glint can travel it by rotating about each centre)
-var ARCH = { baseL: 90, baseR: 360, baseY: 398, apexY: 44 };
-(function () {
-  var half = (ARCH.baseR - ARCH.baseL) / 2, h = ARCH.baseY - ARCH.apexY;
-  ARCH.R = (half * half + h * h) / (2 * half);       // radius of each side
-  ARCH.cxL = ARCH.baseL + ARCH.R;                      // left side's centre (on the right)
-  ARCH.cxR = ARCH.baseR - ARCH.R;
-  ARCH.sweep = Math.atan2(h, ARCH.R - half) * 180 / Math.PI;  // degrees from the base to the apex
-})();
-function archPath(inset) {
-  var R = ARCH.R - inset, bl = ARCH.cxL - R, br = ARCH.cxR + R;
-  var dy = Math.sqrt(R * R - Math.pow(ARCH.cxL - 225, 2));
-  var ay = ARCH.baseY - dy;
-  return 'M' + f(bl) + ',' + ARCH.baseY + ' A' + f(R) + ',' + f(R) + ' 0 0 1 225,' + f(ay) + ' A' + f(R) + ',' + f(R) + ' 0 0 1 ' + f(br) + ',' + ARCH.baseY;
-}
+// ------------------------------------------------------------------ Elven Silver (OLED: black)
 P['elven-back'] = function () {
-  var r = rng(1955), s = '<defs><linearGradient id="eb" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#0B0F12"/><stop offset=".7" stop-color="#11171B"/><stop offset="1" stop-color="#161D22"/></linearGradient></defs>';
-  s += '<rect width="450" height="450" fill="url(#eb)"/>';
-  for (var i = 0; i < 46; i++) s += '<circle cx="' + f(r() * 450) + '" cy="' + f(Math.pow(r(), 1.2) * 330) + '" r="' + f(.5 + r() * .8) + '" fill="#DCE6EA" opacity="' + f(.15 + r() * .35) + '"/>';
-  s += '<path d="' + archPath(0) + '" fill="none" stroke="#B9C6CA" stroke-width="1.3" opacity=".75"/>';
-  s += '<path d="' + archPath(9) + '" fill="none" stroke="#B9C6CA" stroke-width=".8" opacity=".4"/>';
-  s += '<path d="M' + ARCH.baseL + ',' + ARCH.baseY + ' H' + ARCH.baseR + '" stroke="#B9C6CA" stroke-width=".8" opacity=".4"/>';
-  var leaf = '<g fill="none" stroke="#9FB2B8" stroke-width="1.1" opacity=".6" stroke-linecap="round"><path d="M0,0 C-11,-16 -10,-35 0,-48"/><path d="M-5,-10 C-14,-11 -19,-18 -18,-26 C-10,-24 -5,-18 -5,-10 Z"/><path d="M-3,-32 C5,-35 10,-42 8,-50 C0,-48 -3,-40 -3,-32 Z"/></g>';
-  s += '<g transform="translate(' + ARCH.baseL + ',' + (ARCH.baseY - 6) + ')">' + leaf + '</g><g transform="translate(' + ARCH.baseR + ',' + (ARCH.baseY - 6) + ') scale(-1,1)">' + leaf + '</g>';
+  var r = rng(1955), s = '<rect width="450" height="450" fill="#000"/>';
+  s += '<circle cx="225" cy="225" r="216" fill="none" stroke="#3A454C" stroke-width="1.2"/>';
+  s += '<circle cx="225" cy="225" r="210" fill="none" stroke="#1E2428" stroke-width=".8"/>';
+  for (var i = 0, n = 0; n < 34 && i < 4000; i++) {
+    var x = r() * 450, y = r() * 450;
+    if (busy(x, y) || (x - 225) * (x - 225) + (y - 225) * (y - 225) > 200 * 200) continue;
+    n++;
+    s += '<circle cx="' + f(x) + '" cy="' + f(y) + '" r="' + f(.5 + Math.pow(r(), 3)) + '" fill="#DCEBF0" opacity="' + f(.15 + r() * .4) + '"/>';
+  }
   return s;
-};
-P['glyph'] = function () {  // 32x32: the star at the apex (drawn over its halo)
-  return '<g transform="translate(16,16) scale(1.15)"><path d="M0,-12 L3,-3 L12,0 L3,3 L0,12 L-3,3 L-12,0 L-3,-3 Z" fill="#E8F0F2"/><path d="M-7,-7 L7,7 M-7,7 L7,-7" stroke="#E8F0F2" stroke-width=".6" opacity=".6"/></g>';
 };
 P['halo'] = function () {
-  return '<defs><radialGradient id="eh"><stop offset="0" stop-color="#BFD8E6" stop-opacity=".5"/><stop offset="1" stop-color="#BFD8E6" stop-opacity="0"/></radialGradient></defs><circle cx="40" cy="40" r="40" fill="url(#eh)"/>';
+  return '<defs><radialGradient id="ha"><stop offset="0" stop-color="#E6F2F6" stop-opacity=".5"/><stop offset="1" stop-color="#E6F2F6" stop-opacity="0"/></radialGradient></defs><circle cx="40" cy="40" r="40" fill="url(#ha)"/>';
 };
-P['glint'] = function () {  // 24x24: a bright point with a soft glow
-  return '<defs><radialGradient id="gl"><stop offset="0" stop-color="#F2FAFC" stop-opacity=".9"/><stop offset=".35" stop-color="#F2FAFC" stop-opacity=".35"/><stop offset="1" stop-color="#F2FAFC" stop-opacity="0"/></radialGradient></defs><circle cx="12" cy="12" r="12" fill="url(#gl)"/><circle cx="12" cy="12" r="2.2" fill="#FFFFFF"/>';
+P['glyph'] = function () {  // the star of Eärendil, 32px
+  var s = '<g transform="translate(16,16)" fill="#F2F7F8">';
+  for (var i = 0; i < 8; i++) { var l = i % 2 ? 7 : 15; s += '<path d="M0,0 L-2,-2 L0,-' + l + ' L2,-2 Z" transform="rotate(' + i * 45 + ')"/>'; }
+  return s + '<circle r="2.4"/></g>';
+};
+P['glint'] = function () {
+  return '<defs><radialGradient id="gl"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".25" stop-color="#E6F2F6" stop-opacity=".8"/><stop offset="1" stop-color="#E6F2F6" stop-opacity="0"/></radialGradient></defs><circle cx="12" cy="12" r="12" fill="url(#gl)"/>';
 };
 
-// ------------------------------------------------------------------ preview (the Play/picker thumbnail)
-P['preview'] = function () { return P['starlit-back'](); };
-
-var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '">' + P[PART]() + '</svg>';
-document.body.innerHTML = svg;
-window.ARCH = ARCH;
+document.body.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '">' + (P[PART] ? P[PART]() : '') + '</svg>';
 </script>
 </body>
 </html>

@@ -57,7 +57,7 @@ jobs:
 
       - name: Watch face artwork and XML
         run: |
-          pip install -q playwright pillow xmlschema
+          pip install -q playwright pillow xmlschema fonttools
           python -m playwright install --with-deps chromium > /dev/null
           python wear/tools/make_watchface.py watchface/src/main/res wear/src/main/res
 
