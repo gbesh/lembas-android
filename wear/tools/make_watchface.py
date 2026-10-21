@@ -305,7 +305,7 @@ def plates(look):
 def starlit(southern):
     rnd = random.Random(1954)
     s = image("starlit-back", 0, 0, 450, 450)
-    spots = [(40, 150), (402, 170), (420, 268), (132, 46), (318, 48), (360, 130), (392, 226), (225, 24)]
+    spots = [(40, 150), (402, 170), (420, 268), (132, 46), (318, 48), (360, 130), (392, 226)]
     for x, y in spots:
         r = rnd.uniform(1.2, 2.0)
         col = rnd.choice(["#FFF4F1E8", "#FFF4F1E8", "#FFFFE2B0", "#FFBFD4FF"])
