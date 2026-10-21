@@ -160,6 +160,8 @@ jobs:
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v5
+
       - uses: actions/download-artifact@v4
         with:
           name: lembas
@@ -179,33 +181,7 @@ jobs:
           profile: wearos_large_round
           disable-animations: false
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
-          script: |
-            mkdir -p shots
-            until [ "$(adb shell getprop sys.boot_completed | tr -d '\r')" = "1" ]; do sleep 2; done
-            sleep 45
-            adb shell pm list packages | grep -i -E "watchface|wear" > shots/packages.txt || true
-            adb install -r out/lembas-watchface.apk 2>&1 | tee shots/install.txt
-            adb install -r out/lembas-wear.apk 2>&1 | tee -a shots/install.txt
-            adb root || true
-            sleep 5
-            adb shell settings put global auto_time 0 || true
-            adb logcat -c || true
-            adb shell am broadcast -a com.google.android.wearable.app.DEBUG_SURFACE --es operation set-watchface --es watchFaceId com.middleearth.launcher.watchface 2>&1 | tee shots/setface.txt
-            sleep 20
-            adb exec-out screencap -p > shots/face-now.png
-            for t in 0921:shire 1530:redbook 2005:starlit 0130:elven; do hm=${t%%:*}; n=${t##*:}; adb shell "date $(date +%m%d)${hm}$(date +%Y).00" || true; adb shell input keyevent KEYCODE_WAKEUP; sleep 8; adb exec-out screencap -p > shots/face-$n.png; done
-            adb logcat -d > shots/logcat-full.txt || true
-            grep -i -E "middleearth|watchface|wff|DEBUG_SURFACE|Lembas|AndroidRuntime" shots/logcat-full.txt | tail -300 > shots/logcat.txt || true
-            rm -f shots/logcat-full.txt
-            adb shell am start -n com.middleearth.launcher/com.middleearth.lembas.wear.MainActivity
-            sleep 6
-            adb exec-out screencap -p > shots/app-top.png
-            adb shell input swipe 200 350 200 120 300
-            sleep 2
-            adb exec-out screencap -p > shots/app-list.png
-            adb shell input keyevent KEYCODE_SLEEP
-            sleep 6
-            adb exec-out screencap -p > shots/face-ambient.png
+          script: bash wear/tools/emulator-shots.sh
 
       - name: Publish the screenshots to the screens branch
         run: |

@@ -9,7 +9,7 @@
 1. Open the link on your phone, tap the downloaded file and allow installs from your browser if Android asks.
 2. Press the home button and choose **Lembas → Always**
    (or Settings → Apps → Default apps → Home app → Lembas).
-3. Long-press empty space → **Match my phone to Lembas (live wallpaper)** → set it for home and lock screen.
+3. That's it for colours: Lembas sets your phone's wallpaper to the look's scene at each switch, so Android's Material You colours (quick settings, notifications, Settings, the keyboard, Google's apps) follow the look. Turn it off with long-press → **Phone colours follow the look**. Prefer an animated lock screen? Long-press → **Animated lock screen (live wallpaper)**; it colours the phone the same way.
 4. Settings → Display → Dark theme → Schedule → **Turn on from sunset to sunrise**, so the phone's light/dark mode flips at the same moment Lembas does.
 
 To go back to your old launcher, change the Home app setting.
@@ -23,6 +23,16 @@ Lembas updates itself. Once a day (when the battery isn't low) it checks this re
 - Turn it off with long-press → **Automatic updates: Off**.
 
 Every push to `main` builds a new release. All releases are signed with the same key (kept in the repo's Actions secrets, never in the code), so each one installs over the last.
+
+## On your watch (Wear OS)
+
+For round Wear OS watches (built and tested for the Pixel Watch; Wear OS 5 or later):
+
+- **The Lembas watch face.** The four looks are redrawn for a round screen, with the time, the Quenya hour, the Shire date, the mealtime and two complications. It follows the sun using your watch's own weather data, and you can also pick one look. The scenes move gently: stars twinkle and shooting stars cross Starlit Night, clouds drift and chimney smoke rises in Shire Morning, the campfire flickers and the compass needle sways in the Red Book, and a silver glint climbs the elven arch. On the always-on display it's just the time and the date in quiet grey. It's built with Google's Watch Face Format, so there's no code running on the watch, and it's checked against Google's specification on every build.
+- **The Lembas app.** Your apps in the look of the hour, with Lately at the top. Turn the crown to scroll; touch and hold an app for its info page. Settings → Buttons can open it with a double press of the side button.
+- **The Lembas tile.** The Shire date, the mealtime and your four latest apps, one swipe from the watch face.
+
+**Install (once):** download `Lembas-watch-installer.zip` from the latest release onto a Windows PC, unzip it and double-click **Install Lembas on your watch**. It walks you through turning on Wireless debugging on the watch, pairs with the code the watch shows, and installs both. After that, the watch app keeps itself and the watch face up to date. It checks once a day, only while the watch is charging.
 
 ## The four themes
 
@@ -117,7 +127,10 @@ Lembas draws its own line-art icon for over 150 common apps (phone, messages, Wh
 | `ShortcutPopup.kt` | Long-press menu with app shortcuts |
 | `IconCache.kt`, `Glyphs.kt` | Themed icon rendering and the built-in icon set |
 | `Updater.kt` | Daily update check and silent self-install from GitHub releases |
+| `LookWallpaper.kt` | Sets the phone wallpaper to the look's scene at each switch, so Material You follows |
 | `Lore.kt` | Shire calendar, Quenya times of day, hobbit mealtimes |
+
+**Watch:** `wear/` is the watch app and tile (Compose for Wear OS, Material 3, Tiles). `watchface/` is the watch face, resources only. `wear/tools/make_watchface.py` renders the round scenes from `wear/art/watch.html` and writes the Watch Face Format XML. CI checks it against Google's schema and validator, then runs it on a Wear OS emulator for screenshots (test branches).
 
 ## Credits
 Fonts (downloaded at build time, SIL Open Font License): Cinzel by Natanael Gama; Cormorant Garamond by Christian Thalmann; IM Fell English by Igino Marini; Fraunces by Undercase Type; Alegreya Sans by Huerta Tipográfica.
