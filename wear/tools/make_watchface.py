@@ -38,11 +38,11 @@ PARTS = {
 
 # Fixed-weight cuts of the variable fonts (renderers don't all honour weight on variable fonts)
 STATIC_FONTS = {
-    "fraunces_display": ("fraunces.ttf", {"wght": 620, "opsz": 144, "SOFT": 100, "WONK": 0}),
-    "fraunces_text": ("fraunces_italic.ttf", {"wght": 560, "opsz": 36, "SOFT": 100, "WONK": 0}),
-    "cormorant_display": ("cormorant.ttf", {"wght": 560}),
-    "cormorant_text": ("cormorant_italic.ttf", {"wght": 600}),
-    "cinzel_label": ("cinzel.ttf", {"wght": 600}),
+    "fraunces_display": ("fraunces.ttf", {"wght": 620, "opsz": 144, "SOFT": 0, "WONK": 0}),
+    "fraunces_text": ("fraunces_italic.ttf", {"wght": 600, "opsz": 36, "SOFT": 0, "WONK": 0}),
+    "cormorant_display": ("cormorant.ttf", {"wght": 620}),
+    "cormorant_text": ("cormorant_italic.ttf", {"wght": 650}),
+    "cinzel_label": ("cinzel.ttf", {"wght": 700}),
 }
 
 
@@ -100,7 +100,10 @@ def freeze(f, features):
 
 
 # ------------------------------------------------------------------ expressions
-T = "([SECONDS_IN_DAY] + fract([SECOND_MILLISECOND]))"   # seconds today, smoothly
+# Seconds today. Expressions only change once a second; each moving part carries an <Animation>
+# so the watch itself glides between those values at a low frame rate. (Driving parts from
+# SECOND_MILLISECOND makes the renderer evaluate everything on every frame, which is what lagged.)
+T = "[SECONDS_IN_DAY]"
 
 
 def phase(dur, off=0.0):
@@ -185,25 +188,25 @@ COMPS = [(0, 113, 306, "WATCH_BATTERY", "Left"), (1, 237, 306, "STEP_COUNT", "Ri
 STYLE = {
     # fonts: arc, date, time, meal;  colours: arc, date, time, meal;  plate fill, plate ring
     "shire": dict(fonts=("alegreya_sans", "alegreya_sans", "fraunces_display", "fraunces_text"),
-                  sizes=(20, 22, 150, 27), spacing=(0.14, 0.06),
-                  colors=("#FF5E7346", "#FF5E7346", "#FF2B4526", "#FF2B4526"),
+                  sizes=(21, 24, 150, 28), spacing=(0.12, 0.04),
+                  colors=("#FF3E5A2E", "#FF3E5A2E", "#FF22391F", "#FF22391F"),
                   plate=("#FF2E5E3A", "#FFC9B48A", 4.0), upper_arc=True),
     "redbook": dict(fonts=("fell_sc", "fell_sc", "fell", "fell_italic"),
-                    sizes=(22, 23, 150, 28), spacing=(0.08, 0.04),
-                    colors=("#FF9A2A1C", "#FF6A5236", "#FF2B1E12", "#FF9A2A1C"),
+                    sizes=(23, 25, 150, 29), spacing=(0.06, 0.03),
+                    colors=("#FF8E2416", "#FF4E3A22", "#FF22170D", "#FF8E2416"),
                     plate=("#FF8A2A1C", "#FF5E180F", 3.0), upper_arc=False),
     "starlit": dict(fonts=("cinzel_label", "cinzel_label", "cormorant_display", "cormorant_text"),
-                    sizes=(17, 18, 160, 28), spacing=(0.12, 0.16),
-                    colors=("#FFD9BC7A", "#FFA9A293", "#FFF3EBD6", "#FFD9BC7A"),
+                    sizes=(19, 20, 160, 29), spacing=(0.1, 0.14),
+                    colors=("#FFE6C987", "#FFD2CAB6", "#FFFAF3E2", "#FFE6C987"),
                     plate=("#FF000000", "#FF4A5578", 2.0), upper_arc=True),
     "elven": dict(fonts=("cinzel_label", "cinzel_label", "cormorant_display", "cormorant_text"),
-                  sizes=(17, 18, 160, 28), spacing=(0.12, 0.16),
-                  colors=("#FF9FB0B8", "#FF7E8A90", "#FFE6ECEE", "#FFA9C6D6"),
+                  sizes=(19, 20, 160, 29), spacing=(0.1, 0.14),
+                  colors=("#FFBCCAD0", "#FFA3AFB5", "#FFF2F6F7", "#FFBFD7E3"),
                   plate=("#FF000000", "#FF6A777E", 1.6), upper_arc=True),
 }
 AMBIENT = dict(fonts=("cinzel_label", "cinzel_label", "cormorant_display", "cormorant_text"),
-               sizes=(17, 18, 160, 28), spacing=(0.12, 0.16),
-               colors=("#FF8A8A8A", "#FF6E6E6E", "#FFD0D0D0", "#FF8A8A8A"))
+               sizes=(19, 20, 160, 29), spacing=(0.1, 0.14),
+               colors=("#FF9A9A9A", "#FF808080", "#FFD8D8D8", "#FF9A9A9A"))
 COMP_TEXT = "#FFF6EEDC"
 COMP_ACCENT = "#FFE2B65A"
 
@@ -215,6 +218,12 @@ def a(v):
 
 def tr(target, value):
     return f'<Transform target="{target}" value="{a(value)}"/>'
+
+
+def glide(target, value, fps=12, interp="LINEAR", extra=""):
+    """A transform the watch animates smoothly over one second whenever its value changes."""
+    return (f'<Transform target="{target}" value="{a(value)}"><Animation duration="1" interpolation="{interp}" '
+            f'fps="{fps}" repeat="0"{extra}/></Transform>')
 
 
 AMBIENT_OFF = '<Variant mode="AMBIENT" target="alpha" value="0"/>'
@@ -296,45 +305,35 @@ def plates(look):
 def starlit(southern):
     rnd = random.Random(1954)
     s = image("starlit-back", 0, 0, 450, 450)
-    spots = [(40, 150), (402, 170), (30, 260), (420, 268), (132, 46), (318, 48), (360, 130), (90, 330),
-             (366, 330), (60, 214), (392, 226), (225, 24)]
+    spots = [(40, 150), (402, 170), (420, 268), (132, 46), (318, 48), (360, 130), (392, 226), (225, 24)]
     for x, y in spots:
-        r = rnd.uniform(1.1, 2.0)
+        r = rnd.uniform(1.2, 2.0)
         col = rnd.choice(["#FFF4F1E8", "#FFF4F1E8", "#FFFFE2B0", "#FFBFD4FF"])
-        w = wave(rnd.uniform(2.5, 6.0), rnd.uniform(0, 6))
-        s += dot(x, y, r, col, tr("alpha", f"40 + 215 * {w}") + tr("scaleX", f"0.6 + 0.6 * {w}") + tr("scaleY", f"0.6 + 0.6 * {w}"))
+        s += dot(x, y, r, col, glide("alpha", f"50 + 205 * {wave(rnd.randint(4, 8), rnd.randint(0, 7))}", fps=10))
     # the moon, low on the left over the hills, in its real phase (0 new .. 4 full .. 7)
     mx, my = 50, 296
-    s += image("moonglow", mx - 23, my - 23, 90, 90, tr("alpha", f"200 + 55 * {wave(8)}"))
+    s += image("moonglow", mx - 23, my - 23, 90, 90)
     idx = "(floor(([MOON_PHASE_POSITION] + 1.75) / 3.5) % 8)"
     flip = ' scaleX="-1"' if southern else ""
     cases = "".join(f'<Compare expression="m{i}">{image(f"moon{i}", mx, my, 44, 44, extra=flip)}</Compare>' for i in range(1, 8))
     exprs = "".join(f'<Expression name="m{i}"><![CDATA[{idx} == {i}]]></Expression>' for i in range(1, 8))
     s += f'<Condition><Expressions>{exprs}</Expressions>{cases}<Default>{image("moon0", mx, my, 44, 44, extra=flip)}</Default></Condition>'
-    # a shooting star now and then, across the upper right
-    p = phase(17, 3)
-    vis = f"(clamp(({p} - 0.86) / 0.02, 0, 1) * clamp((0.95 - {p}) / 0.07, 0, 1))"
-    mv = f"clamp(({p} - 0.86) / 0.09, 0, 1)"
-    s += (f'<PartDraw x="300" y="60" width="90" height="4" pivotX="0" pivotY="0.5" angle="-28">'
-          f'{tr("alpha", f"255 * {vis}")}{tr("x", f"300 - 110 * {mv}")}{tr("y", f"60 + 58 * {mv}")}'
-          f'<Line startX="0" startY="2" endX="90" endY="2"><Stroke color="#FFFFF4D8" thickness="1.6" cap="ROUND">'
-          f'<LinearGradient startX="0" startY="2" endX="90" endY="2" colors="#E6FFF4D8 #00FFF4D8" positions="0 1"/></Stroke></Line></PartDraw>')
     return s
 
 
 def shire():
     s = image("shire-back", 0, 0, 450, 450)
     sx, sy = 352, 140
-    s += image("rays", sx - 65, sy - 65, 130, 130, tr("angle", f"360 * {phase(150)}"))
+    s += image("rays", sx - 65, sy - 65, 130, 130, glide("angle", f"({T} * 2.4) % 360", fps=10, extra=' angleDirection="CLOCKWISE"'))
     s += image("sun", sx - 60, sy - 60, 120, 120)
-    for name, y, w, h, dur, off in (("cloud-a", 168, 100, 40, 90, 20), ("cloud-b", 226, 70, 28, 120, 70)):
-        s += image(name, -110, y, w, h, tr("x", f"-110 + 570 * {phase(dur, off)}"))
+    for name, x, y, w, h, dur in (("cloud-a", 40, 168, 100, 40, 40), ("cloud-b", 300, 226, 70, 28, 52)):   # drifting to and fro
+        s += image(name, x, y, w, h, glide("x", f"{x} + 26 * sin(6.28319 * {phase(dur)})", fps=8))
     return s
 
 
 def redbook():
     s = image("redbook-back", 0, 0, 450, 450)
-    s += image("warmglow", 75, 84, 300, 220, tr("alpha", f"120 + 135 * {wave(9)}"))
+    s += image("warmglow", 75, 84, 300, 220, glide("alpha", f"120 + 135 * {wave(9)}", fps=8))
     return s
 
 
@@ -343,18 +342,17 @@ def elven():
     s = image("elven-back", 0, 0, 450, 450)
     # a glint of light travels slowly round the silver rim, once a minute
     th = f"(6.28319 * {phase(60)})"
-    s += image("glint", 0, 0, 24, 24, tr("x", f"{C - 12:g} + 216 * sin({th})") + tr("y", f"{C - 12:g} - 216 * cos({th})"))
+    s += image("glint", 0, 0, 24, 24, glide("x", f"{C - 12:g} + 216 * sin({th})", fps=20) + glide("y", f"{C - 12:g} - 216 * cos({th})", fps=20))
     # the star of Eärendil, low between the complications
     sx, sy = 225, 418
-    s += image("halo", sx - 40, sy - 40, 80, 80, tr("alpha", f"120 + 135 * {wave(6)}") +
-               tr("scaleX", f"0.85 + 0.25 * {wave(6)}") + tr("scaleY", f"0.85 + 0.25 * {wave(6)}"))
+    s += image("halo", sx - 40, sy - 40, 80, 80, glide("alpha", f"120 + 135 * {wave(6)}", fps=10))
     s += image("glyph", sx - 16, sy - 16, 32, 32)
-    for i in range(6):   # motes of light drifting up the sides
+    for i in range(4):   # motes of light drifting up the sides
         x = rnd.choice([rnd.uniform(40, 90), rnd.uniform(360, 410)])
         y = rnd.uniform(220, 360)
-        pp = phase(rnd.uniform(12, 20), rnd.uniform(0, 16))
+        pp = phase(rnd.randint(12, 20), rnd.randint(0, 16))
         al = f"clamp({pp} / 0.2, 0, 1) * clamp((1 - {pp}) / 0.2, 0, 1)"
-        s += dot(x, y, 1.4, "#FFDCEBF0", tr("y", f"{y - 2.4:.1f} - 120 * {pp}") + tr("alpha", f"200 * {al}"))
+        s += dot(x, y, 1.4, "#FFDCEBF0", glide("y", f"{y - 2.4:.1f} - 120 * {pp}", fps=10) + glide("alpha", f"200 * {al}", fps=10))
     return s
 
 

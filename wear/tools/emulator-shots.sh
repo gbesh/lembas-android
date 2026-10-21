@@ -30,6 +30,8 @@ for t in 0921:shire 1530:redbook 2005:starlit 0130:elven; do
   adb shell input keyevent KEYCODE_WAKEUP; sleep 8
   snap "face-$n"
 done
+# three frames 0.3 s apart on the last look: the glint should have moved a little between each
+for k in a b c; do adb emu screenrecord screenshot "$S/motion-$k.png" > /dev/null 2>&1; sleep 0.3; done
 adb logcat -d > "$S/full.txt" || true
 grep -E "DWF|middleearth|AndroidRuntime|DEBUG_SURFACE|WatchFaceRuntime" "$S/full.txt" | grep -v -E "RestrictionManager|Finsky|CanvasComplication" | tail -500 > "$S/logcat.txt" || true
 grep -E " [EW] " "$S/full.txt" | grep -v -E "RestrictionManager|Finsky" | tail -300 > "$S/logcat-errors.txt" || true
