@@ -207,6 +207,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         updateTexts()
         updateAmbient()
         Updater.showPending(this)
+        LookWallpaper.syncAsync(this)  // cheap when nothing changed
         if (entranceArmed) {
             val km = getSystemService(KeyguardManager::class.java)
             if (km?.isKeyguardLocked != true) root.post { if (entranceArmed) playEntrance() }
@@ -946,10 +947,11 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
             "App icons: " + if (themed) "Themed line art" else "Original",
             "Hobbit mealtimes: " + if (meals) "On" else "Off",
             "Keyboard when opening the Red Book: " + if (kbd) "On" else "Off",
-            "Match my phone to Lembas (live wallpaper)",
+            "Phone colours follow the look: " + if (LookWallpaper.enabled(this)) "On" else "Off",
             "Make Lembas your home app",
             "Automatic updates: " + if (Updater.enabled(this)) "On" else "Off",
             "Check for updates now (version ${versionName()})",
+            "Animated lock screen (live wallpaper)",
         )
         AlertDialog.Builder(this, dialogTheme())
             .setTitle("Lembas")
@@ -969,7 +971,16 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
                         updateTexts()
                     }
                     4 -> prefs.edit().putBoolean(PREF_KEYBOARD, !kbd).apply()
-                    5 -> setLiveWallpaper()
+                    5 -> {
+                        val on = !LookWallpaper.enabled(this)
+                        LookWallpaper.setEnabled(this, on)
+                        val msg = when {
+                            !on -> "Your wallpaper stays as it is now"
+                            LookWallpaper.liveWallpaperInUse(this) -> "The live wallpaper already colours your phone"
+                            else -> "Your wallpaper and colours now follow the look"
+                        }
+                        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+                    }
                     6 -> try {
                         startActivity(Intent(Settings.ACTION_HOME_SETTINGS))
                     } catch (t: Exception) {
@@ -977,6 +988,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
                     }
                     7 -> Updater.setEnabled(this, !Updater.enabled(this))
                     8 -> checkForUpdate()
+                    9 -> setLiveWallpaper()
                 }
             }
             .show()
@@ -1047,6 +1059,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
             .setTitle("Theme")
             .setSingleChoiceItems(names, current) { dialog, which ->
                 prefs.edit().putString(Themes.PREF_THEME, ids[which]).apply()
+                LookWallpaper.syncAsync(this)
                 dialog.dismiss()
                 if (Themes.current(this).id != look.id) recreate()
             }

@@ -1,0 +1,16 @@
+name: probe
+on: workflow_dispatch
+jobs:
+  p:
+    runs-on: ubuntu-24.04
+    steps:
+      - run: |
+          g=https://dl.google.com/dl/android/maven2
+          for a in androidx/wear/compose/compose-material3 androidx/wear/compose/compose-foundation androidx/wear/compose/compose-navigation androidx/wear/tiles/tiles androidx/wear/protolayout/protolayout androidx/wear/protolayout/protolayout-material3 androidx/compose/compose-bom androidx/activity/activity-compose com/android/tools/build/gradle androidx/wear/watchface/watchface-push androidx/wear/wear androidx/core/core-splashscreen androidx/concurrent/concurrent-futures-ktx com/google/android/horologist/horologist-compose-layout androidx/wear/wear-tooling-preview; do
+            v=$(curl -s $g/$a/maven-metadata.xml | grep -o '<release>[^<]*' | sed 's/<release>//'); l=$(curl -s $g/$a/maven-metadata.xml | grep -o '<version>[^<]*' | sed 's/<version>//' | grep -v -E 'alpha|beta|rc' | tail -3 | tr '\n' ' ')
+            echo "::notice title=$a::release=$v stable=$l"
+          done
+          for a in org/jetbrains/kotlin/kotlin-gradle-plugin org/jetbrains/kotlin/plugin/compose/org.jetbrains.kotlin.plugin.compose.gradle.plugin; do
+            v=$(curl -s https://repo1.maven.org/maven2/$a/maven-metadata.xml | grep -o '<release>[^<]*' | sed 's/<release>//'); echo "::notice title=$a::$v"
+          done
+          curl -s https://services.gradle.org/versions/current | grep -o '"version" : "[^"]*"' | head -1 | sed 's/^/::notice title=gradle::/'
