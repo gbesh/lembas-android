@@ -6,11 +6,6 @@ local.properties
 .DS_Store
 __pycache__/
 app/*.keystore
-# generated in CI (fonts, watch face renders and XML)
+# fonts are downloaded in CI
 app/src/main/assets/fonts/
-wear/src/main/res/font/
-wear/src/main/res/drawable-nodpi/
-watchface/src/main/res/font/
-watchface/src/main/res/drawable-nodpi/
-watchface/src/main/res/raw/
 fonts/
