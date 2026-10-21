@@ -207,7 +207,7 @@ def texts(look):
                spacing=0.22 if look != "redbook" else 0.12)
     out += text(50, 112, 350, 118, st["serif"], 98 if look != "elven" else 92, st["time"], "%s:%s", [HOUR, "[MINUTE_Z]"],
                 weight="LIGHT", shadow=st["shadow"])
-    out += text(35, 232, 380, 34, st["italic"], 24, st["accent"] if look in ("starlit", "elven") else st["time"],
+    out += text(35, 232, 380, 34, st["italic"], 24 if look != "elven" else 19, st["accent"] if look in ("starlit", "elven") else st["time"],
                 shire[0], shire[1], slant="ITALIC")
     out += text(40, 266, 370, 24, st["date"], 16 if look != "elven" else 13, st["soft"], "%s %s %s",
                 ["[DAY_OF_WEEK_F]", "[DAY]", "[MONTH_F]"], spacing=0.04 if look != "elven" else 0.16)
