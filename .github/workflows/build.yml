@@ -150,3 +150,59 @@ jobs:
             --notes "Built from commit ${GITHUB_SHA::7}. Phone: open lembas-launcher.apk. Watch: run Lembas-watch-installer.zip on a Windows PC once; after that both keep themselves up to date."
           # Keep the five newest releases.
           gh release list --limit 100 --json tagName --jq '.[5:][].tagName' | while read -r t; do gh release delete "$t" -y --cleanup-tag; done
+
+  # Test branches only: run the watch face and launcher on a Wear OS emulator and capture each look
+  screens:
+    needs: build
+    if: github.ref != 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: lembas
+          path: out
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
+
+      - name: Wear OS emulator screenshots
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: android-wear
+          arch: x86_64
+          profile: wearos_large_round
+          disable-animations: false
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          script: |
+            mkdir -p shots
+            adb install -r out/lembas-watchface.apk
+            adb install -r out/lembas-wear.apk
+            adb root || true
+            sleep 3
+            adb shell settings put global auto_time 0 || true
+            adb shell am broadcast -a com.google.android.wearable.app.DEBUG_SURFACE --es operation set-watchface --es watchFaceId com.middleearth.launcher.watchface
+            sleep 8
+            for t in 0921:shire 1530:redbook 2005:starlit 0130:elven; do hm=${t%%:*}; n=${t##*:}; adb shell "date $(date +%m%d)${hm}$(date +%Y).00" || adb shell su 0 date $(date +%m%d)${hm} || true; adb shell input keyevent KEYCODE_WAKEUP; sleep 6; adb exec-out screencap -p > shots/face-$n.png; done
+            adb shell am start -n com.middleearth.launcher/com.middleearth.lembas.wear.MainActivity
+            sleep 6
+            adb exec-out screencap -p > shots/app-top.png
+            adb shell input swipe 200 350 200 120 300
+            sleep 2
+            adb exec-out screencap -p > shots/app-list.png
+            adb shell input keyevent KEYCODE_SLEEP
+            sleep 6
+            adb exec-out screencap -p > shots/face-ambient.png
+            adb logcat -d | grep -i -E "watchface|wff|Lembas|AndroidRuntime" | tail -150 > shots/logcat.txt || true
+
+      - name: Publish the screenshots to the screens branch
+        run: |
+          cd shots
+          git init -q && git checkout -q -b screens
+          git -c user.name=ci -c user.email=ci@localhost add -A
+          git -c user.name=ci -c user.email=ci@localhost commit -q -m "screens ${GITHUB_SHA::7}"
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" screens
