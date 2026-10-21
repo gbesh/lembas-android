@@ -14,6 +14,11 @@ adb install -r out/lembas-wear.apk 2>&1 | tee -a "$S/install.txt"
 adb root || true
 sleep 5
 adb shell settings put global auto_time 0 || true
+# Off the charger, or Wear OS covers the face with its charging screen
+adb emu power ac off > /dev/null 2>&1 || true
+adb emu power status discharging > /dev/null 2>&1 || true
+adb shell dumpsys battery unplug || true
+adb shell dumpsys battery set level 80 || true
 adb logcat -c || true
 adb shell am broadcast -a com.google.android.wearable.app.DEBUG_SURFACE --es operation set-watchface --es watchFaceId com.middleearth.launcher.watchface 2>&1 | tee "$S/setface.txt"
 sleep 20
