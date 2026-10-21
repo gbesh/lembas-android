@@ -1,5 +1,7 @@
 name: probe
-on: workflow_dispatch
+on:
+  push:
+    branches: [probe]
 jobs:
   p:
     runs-on: ubuntu-24.04
