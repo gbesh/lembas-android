@@ -703,7 +703,8 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
     private fun updateModernTexts(now: LocalDateTime, is24: Boolean) {
         val hours = now.format(DateTimeFormatter.ofPattern(if (is24) "HH" else "hh"))
         val minutes = now.format(DateTimeFormatter.ofPattern("mm"))
-        val sb = SpannableStringBuilder(hours).append("\n").append(minutes)
+        // hours and minutes side by side, as in the watch app (the watch face stacks them)
+        val sb = SpannableStringBuilder(hours).append("\u2009").append(minutes)
         sb.setSpan(ForegroundColorSpan(modernHoursColor()), 0, hours.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
         minutesFont?.let { sb.setSpan(TypefaceCompatSpan(it), hours.length + 1, sb.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE) }
         clock.text = sb
@@ -741,8 +742,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         }
         label.style(sans, 17f, look.clockColor, 0.02f)
         shire.style(lore, 17f, look.shireColor)
-        clock.style(hoursFont, 132f, look.clockColor, -0.02f)
-        clock.setLineSpacing(0f, 0.8f)
+        clock.style(hoursFont, 112f, look.clockColor, -0.02f)
         meal.style(lore, 16f, look.mealColor)
         meal.background = null
         meal.setPadding(0, 0, 0, 0)

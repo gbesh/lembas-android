@@ -9,8 +9,8 @@
 1. Open the link on your phone, tap the downloaded file and allow installs from your browser if Android asks.
 2. Press the home button and choose **Lembas → Always**
    (or Settings → Apps → Default apps → Home app → Lembas).
-3. That's it for colours: Lembas sets your phone's wallpaper to the look's scene at each switch, so Android's Material You colours (quick settings, notifications, Settings, the keyboard, Google's apps) follow the look. Turn it off with long-press → **Phone colours follow the look**. Prefer an animated lock screen? Long-press → **Animated lock screen (live wallpaper)**; it colours the phone the same way.
-4. Settings → Display → Dark theme → Schedule → **Turn on from sunset to sunrise**, so the phone's light/dark mode flips at the same moment Lembas does.
+3. **Theme the whole phone (once, about a minute, no computer):** long-press the home screen → **Theme the whole phone → Set up once**, and follow it: turn on Developer options, open Wireless debugging → *Pair device with pairing code*, and type the code into the Lembas notification. From then on the system colours and light/dark theme follow the looks (see [Theming the whole phone](#theming-the-whole-phone)).
+4. Long-press the home screen → **Animated wallpaper (home and lock screen)** for the moving scenes behind everything.
 
 To go back to your old launcher, change the Home app setting.
 
@@ -26,7 +26,7 @@ Every push to `main` builds a new release. All releases are signed with the same
 
 ## On your watch (Wear OS)
 
-The Lembas watch face, watch launcher and tile have their own repo: **[gbesh/lembas-wear](https://github.com/gbesh/lembas-wear)** (install once from a Windows PC, then it updates itself). They used to be published here; see that repo for moving a watch over.
+The Lembas watch face, watch launcher and tile have their own repo: **[gbesh/lembas-wear](https://github.com/gbesh/lembas-wear)**. Put them on your watch from the phone: long-press the home screen → **Put Lembas on your watch**, and type the code from the watch's Wireless debugging → *Pair new device* (both on the same Wi-Fi). Lembas installs the watch app and face; after that the watch updates itself. The phone, the watch and Lembas for Windows all change look at the same minute.
 
 ## The four themes
 
@@ -37,9 +37,11 @@ The Lembas watch face, watch launcher and tile have their own repo: **[gbesh/lem
 | **Starlit Night** (dark) | sunset → 11pm, and 4am → sunrise | Night sky with twinkling stars, shooting stars, mountains and today's real moon phase |
 | **Elven Silver** (deep night) | 11pm → 4am | Near-black with a silver elven arch, a travelling glint and rising silver motes |
 
-"Midday" is when the sun is highest, not 12:00 (often closer to 1pm during daylight saving). Sunrise, midday and sunset are worked out each day from your time zone's main city, so no location permission is needed. The theme picker shows today's switch times. You can also pick one theme to use all the time.
+"Midday" is when the sun is highest, not 12:00 (often closer to 1pm during daylight saving). Sunrise, midday and sunset are worked out each day from your time zone's main city, so no location permission is needed. The phone, the Lembas watch face and Lembas for Windows use exactly the same sums and cities, so they all change look at the same minute. The settings sheet shows today's switch times. You can also pick one theme to use all the time.
 
-Every theme shows the time, the Shire-calendar date (e.g. *Highday, 25 Winterfilth*), the time of day in Quenya and the current hobbit mealtime.
+**The home clock** comes in two styles (long-press → **Clock**):
+- **Modern** (the default): the same type as the Lembas watch face, over the look's animated scene. The date and the Shire date (e.g. *Mersday · 1 Blotmath*), the time with the hours heavy in the look's colour and the minutes light, the hobbit mealtime, a **glance line** with your next alarm (and your next calendar event, if you allow it), and the **sun arc**: today's daylight from sunrise to sunset, with the sun on it.
+- **Classic**: each look's own illustrated layout, with the time of day in Quenya.
 
 ## Using it
 
@@ -47,8 +49,9 @@ Every theme shows the time, the Shire-calendar date (e.g. *Highday, 25 Winterfil
 - **Swipe up** anywhere → the app drawer, *The Red Book*.
 - **Swipe down** → notifications.
 - **Tap the clock** → alarms. **Tap the Shire date** → calendar.
-- **Long-press empty space or the clock** → settings.
-- **Unlocking** plays a quick entrance: the scene settles in and the text rises into place in about half a second.
+- **Long-press empty space or the clock** → the settings sheet.
+- **Unlocking**, and each change of look, plays a quick entrance: the scene settles in and the text rises into place in about half a second.
+- **Notification dots** (turn on in settings): a small dot in the look's colour on apps with notifications waiting, on the dock, Lately and the list. Lembas only counts which apps have notifications; it never reads them.
 
 **App drawer (the same layout in every theme)**
 - Search with *Speak, friend, and enter*. Press Enter to open the top match.
@@ -61,44 +64,40 @@ Every theme shows the time, the Shire-calendar date (e.g. *Highday, 25 Winterfil
 - **Swipe up on a dock or Lately icon** to open its first shortcut directly.
 - Shortcuts only appear once Lembas is your default Home app (an Android rule).
 
-**Settings** (long-press empty space)
-- Theme: Adaptive, Shire Morning, Red Book, Starlit Night or Elven Silver
-- Animations on/off
-- App icons: themed line art, or the apps' original icons
-- Hobbit mealtimes on/off
-- Keyboard when opening the Red Book
-- Phone colours follow the look on/off
-- Make Lembas your home app
-- Automatic updates on/off, and Check for updates now
-- Animated lock screen (live wallpaper)
+**Settings** (long-press empty space): a sheet in the look's colours, with a preview of each look to tap, then
+- **Home screen:** clock (Modern or Classic), animations, app icons (line art or original), hobbit mealtimes, next calendar event, notification dots, keyboard when opening the Red Book
+- **The whole phone:** theme the whole phone, animated wallpaper, still wallpaper follows the look, make Lembas your home app
+- **Watch:** put Lembas on your watch
+- **Updates:** automatic updates, check for updates now
 
-## Matching the rest of the phone
+## Theming the whole phone
 
-Android builds its Material You colours (quick settings, notifications, the Settings app, Gboard, Google's apps) from your wallpaper. So at each theme switch Lembas sets your home and lock screen wallpaper to the theme's scene, and the whole phone recolours to match (Android 12+):
+After the one-time setup (long-press → **Theme the whole phone**), Lembas sets Android's own colours and dark theme for each look:
 
-| Theme | System colours |
-|---|---|
-| Shire Morning | sage green, sunlight yellow |
-| Red Book | deep red, parchment |
-| Starlit Night | gold on deep blue |
-| Elven Silver | silver-blue |
+| Theme | System colours | System theme |
+|---|---|---|
+| Shire Morning | green ink and sage | light |
+| Red Book | red ink on parchment | light |
+| Starlit Night | gold | dark |
+| Elven Silver | quiet silver | dark |
 
-When Adaptive changes theme, the phone takes a second or two to recolour. Lembas repaints the wallpaper at most once per theme per day, so this costs next to nothing.
+Quick settings, notifications, the Settings app, Gboard, Google's apps and every Material You app take these colours, and every app that follows the system light/dark theme flips with the looks. Because Lembas hands Android the colours directly, the **animated wallpaper** can stay on your home and lock screens while the whole phone is themed exactly. A light/dark switch that falls while you're using the phone waits until the screen is off or you're back home, so it never flashes mid-task.
 
-- **Phone colours follow the look** (on by default) is the setting for this. Turn it off to keep your own wallpaper.
-- **Animated lock screen (live wallpaper)** shows the theme's scene animated on your lock screen instead, and colours the phone the same way. While it's in use, Lembas leaves the wallpaper alone.
+**How the setup works:** Lembas pairs with the phone's own *Wireless debugging*, the way a computer would, and grants itself one permission (*write secure settings*). Nothing else changes and nothing leaves the phone; you can turn Wireless debugging off afterwards and the permission stays. On Android 10 or earlier, or if you'd rather use a computer: `adb shell pm grant com.middleearth.launcher android.permission.WRITE_SECURE_SETTINGS`. Turning **Theme the whole phone** off hands the colours back to your wallpaper.
 
-No app can change the system font, the notification shade layout or icons inside other apps.
+**Without the setup**, Lembas can still colour the phone through the wallpaper: **Still wallpaper follows the look** paints the look's scene as your wallpaper at each switch, and Android builds its colours from that (or set the animated wallpaper, which hands Android the look's colours too).
+
+No app can change the system font, the notification shade layout or the icons inside other apps.
 
 ## Lembas for Windows
 
-The same four looks for Windows 11 now live in their own public repo: **[gbesh/lembas-windows](https://github.com/gbesh/lembas-windows)** (one-click install, updates itself).
+The same four looks for Windows 11 live in **[gbesh/lembas-windows](https://github.com/gbesh/lembas-windows)** (one-click install, updates itself, with the animated desktop and the same modern clock). It changes look at the same minute as the phone.
 
 ## Themed icons
 Lembas draws its own line-art icon for over 150 common apps (phone, messages, WhatsApp, Chrome, Spotify, Gmail, Maps, Australian banks, BOM weather and more), tinted and framed for each theme. Apps it doesn't know use their own Android 13+ themed icon if they have one, otherwise their first letter in the theme's typeface. Switch to *Original* in settings if you prefer the real icons.
 
 ## Why it's fast
-- No libraries at all: just the Android framework and Kotlin.
+- The launcher itself is just the Android framework and Kotlin. The only libraries (an adb client, Conscrypt and BouncyCastle) are used for the one-time setup over Wireless debugging and for installing on the watch.
 - Each theme's artwork is painted **once** per day into a bitmap on a background thread. Drawing the home screen is then one image plus a few dozen small shapes for the animation.
 - Animations run at about 30 fps, only while the home screen (or the wallpaper) is actually visible. They stop when an app is open, the drawer is open or the screen is off, and pause in battery saver. A setting turns them off completely.
 - Drawing an animation frame creates no new objects, so it never triggers garbage-collection stutter.
@@ -107,7 +106,7 @@ Lembas draws its own line-art icon for over 150 common apps (phone, messages, Wh
 
 ## Building
 
-**GitHub (no install needed):** every push runs `.github/workflows/build.yml`. It downloads the fonts, builds the release APK signed with the key from the `LEMBAS_KEYSTORE_B64` and `LEMBAS_KEYSTORE_PASSWORD` secrets, and publishes it as a release tagged `v<build>` (the five newest are kept). Check the **Actions** tab; when a build fails, the Kotlin errors appear as annotations on the run.
+**GitHub (no install needed):** every push runs `.github/workflows/build.yml`. It downloads the fonts, builds the release APK signed with the key from the `LEMBAS_KEYSTORE_B64` and `LEMBAS_KEYSTORE_PASSWORD` secrets, and publishes it as a release tagged `v<build>` (the five newest are kept). Check the **Actions** tab; when a build fails, the Kotlin errors appear as annotations on the run. On a test branch (run the workflow by hand), it also runs the launcher on a phone emulator with the whole-phone theme on, and pushes screenshots of each look, quick settings and the settings sheet to the `screens` branch.
 
 **Android Studio:** open this folder and press Run. Without the fonts, the launcher uses the system serif. To add them locally, download Cinzel, Cormorant Garamond, IM Fell English, IM Fell English SC, Fraunces and Alegreya Sans from fonts.google.com into `app/src/main/assets/fonts/`, using the file names listed in the workflow.
 
@@ -125,7 +124,13 @@ Lembas draws its own line-art icon for over 150 common apps (phone, messages, Wh
 | `ShortcutPopup.kt` | Long-press menu with app shortcuts |
 | `IconCache.kt`, `Glyphs.kt` | Themed icon rendering and the built-in icon set |
 | `Updater.kt` | Daily update check and silent self-install from GitHub releases |
-| `LookWallpaper.kt` | Sets the phone wallpaper to the look's scene at each switch, so Material You follows |
+| `LookWallpaper.kt` | Sets the phone wallpaper to the look's scene at each switch, and runs the switch alarms |
+| `SystemTheme.kt` | The system colours and dark theme for each look (with the one-time permission) |
+| `ThemeSetup.kt`, `AdbLink.kt` | The one-time setup over Wireless debugging; the adb client |
+| `WatchSetup.kt` | Puts Lembas on the watch from the phone |
+| `SettingsSheet.kt` | The settings sheet with look previews |
+| `SunArcView.kt` | The sun arc under the modern clock |
+| `Dots.kt` | Notification dots |
 | `Lore.kt` | Shire calendar, Quenya times of day, hobbit mealtimes |
 
 ## Credits

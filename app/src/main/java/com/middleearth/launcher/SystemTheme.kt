@@ -29,14 +29,16 @@ object SystemTheme {
     private const val KEY_OVERLAYS = "theme_customization_overlay_packages"
     private const val KEY_NIGHT = "ui_night_mode"
 
-    /** Each look's colours for Android: the neutral (backgrounds, surfaces) and the accent seed, and the palette style. */
+    /** Each look's colours for Android: the seeds (neutral and accent) and the palette style. */
     private class Palette(val neutral: String, val accent: String, val style: String, val dark: Boolean)
 
+    // Android builds the whole palette (accents and the tinted neutrals) from one seed, so each
+    // look gives its signature colour for both.
     private val PALETTES = mapOf(
-        Look.SHIRE.id to Palette("7E8F62", "6E9752", "TONAL_SPOT", dark = false),     // sage and green ink
-        Look.REDBOOK.id to Palette("8A6A44", "9A2A1C", "TONAL_SPOT", dark = false),   // parchment and red ink
-        Look.STARLIT.id to Palette("26335C", "C9A452", "TONAL_SPOT", dark = true),    // midnight blue and gold
-        Look.ELVEN.id to Palette("56626A", "8FA6B2", "SPRITZ", dark = true),          // black-blue and silver
+        Look.SHIRE.id to Palette("6E9752", "6E9752", "TONAL_SPOT", dark = false),     // green ink and sage
+        Look.REDBOOK.id to Palette("9A2A1C", "9A2A1C", "TONAL_SPOT", dark = false),   // red ink on parchment
+        Look.STARLIT.id to Palette("C9A452", "C9A452", "TONAL_SPOT", dark = true),    // gold in the night
+        Look.ELVEN.id to Palette("8FA6B2", "8FA6B2", "SPRITZ", dark = true),          // quiet silver
     )
 
     fun permitted(ctx: Context): Boolean =
