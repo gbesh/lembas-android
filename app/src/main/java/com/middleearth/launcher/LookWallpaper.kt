@@ -20,7 +20,8 @@ import java.time.ZonedDateTime
  * keyboard and Google's apps recolour with it.
  *
  * If the Lembas live wallpaper is set, that already hands Android the look's colours, so this
- * steps aside rather than replacing it.
+ * steps aside rather than replacing it. Once Lembas may set the system colours itself
+ * (SystemTheme), the same alarms switch the exact palette and the dark theme as well.
  *
  * Battery: the alarms don't wake the phone; a switch that falls while it sleeps happens the next
  * time the screen comes on.
@@ -43,9 +44,11 @@ object LookWallpaper {
     } catch (_: Exception) { false }
 
     /** Paint and set the wallpaper if the look (or, for Starlit Night, the moon) changed; then book the next switch. */
-    fun syncAsync(ctx: Context, done: (() -> Unit)? = null) {
+    fun syncAsync(ctx: Context, interactive: Boolean = false, done: (() -> Unit)? = null) {
         val app = ctx.applicationContext
         Thread {
+            // The system colours and dark theme (when Lembas may set them), then the wallpaper
+            try { SystemTheme.apply(app, Themes.current(app), interactive) } catch (_: Throwable) { }
             try { sync(app) } catch (_: Throwable) { }
             try { schedule(app) } catch (_: Throwable) { }
             done?.invoke()
@@ -74,7 +77,8 @@ object LookWallpaper {
     private fun schedule(ctx: Context) {
         val am = ctx.getSystemService(AlarmManager::class.java) ?: return
         val pi = pending(ctx)
-        if (!enabled(ctx) || liveWallpaperInUse(ctx)) { am.cancel(pi); return }
+        val paints = enabled(ctx) && !liveWallpaperInUse(ctx)
+        if (!paints && !SystemTheme.enabled(ctx)) { am.cancel(pi); return }
         val now = ZonedDateTime.now()
         var next = now.toLocalDate().plusDays(1).atStartOfDay(now.zone).plusMinutes(1)  // just after midnight
         if (Themes.choice(ctx) == Look.ADAPTIVE) {
@@ -105,7 +109,7 @@ object LookWallpaper {
             if (intent.action == Intent.ACTION_TIMEZONE_CHANGED || intent.action == Intent.ACTION_TIME_CHANGED)
                 ctx.getSharedPreferences(Themes.PREFS, Context.MODE_PRIVATE).edit().remove(PREF_LAST).apply()
             val result = goAsync()
-            syncAsync(ctx) { result.finish() }
+            syncAsync(ctx, interactive = false) { result.finish() }
         }
     }
 }

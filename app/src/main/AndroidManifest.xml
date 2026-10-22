@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Swipe down on the home screen opens the notification shade. -->
     <uses-permission android:name="android.permission.EXPAND_STATUS_BAR" />
@@ -13,6 +14,16 @@
     <!-- Paints the look's scene as the phone wallpaper, so Material You colours follow the look. -->
     <uses-permission android:name="android.permission.SET_WALLPAPER" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <!-- Granted once over Wireless debugging (see ThemeSetup): lets Lembas set the system colours
+         and dark theme for each look, so the whole phone follows it. -->
+    <uses-permission android:name="android.permission.WRITE_SECURE_SETTINGS"
+        tools:ignore="ProtectedPermissions" />
+    <!-- The setup notification you type the pairing code into. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Finding the pairing screen on the local network (mDNS). -->
+    <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.UPDATE_PACKAGES_WITHOUT_USER_ACTION" />
 
     <uses-feature android:name="android.software.live_wallpaper" android:required="false" />
@@ -85,5 +96,7 @@
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
             </intent-filter>
         </receiver>
+        <receiver android:name=".ThemeSetup$CodeReceiver" android:exported="false" />
+
     </application>
 </manifest>

@@ -50,7 +50,13 @@ android {
     }
 }
 
-// No libraries on purpose: the whole launcher is the Android framework plus Kotlin.
+// The launcher itself is just the Android framework plus Kotlin. The only libraries are for the
+// one-time setup over Wireless debugging (an adb client, TLS 1.3, and certificate generation).
+dependencies {
+    implementation("com.github.MuntashirAkon:libadb-android:3.1.1")
+    implementation("org.conscrypt:conscrypt-android:2.5.3")
+    implementation("org.bouncycastle:bcpkix-jdk15to18:1.81")
+}
 
 kotlin {
     compilerOptions {

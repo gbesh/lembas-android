@@ -122,9 +122,12 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
     private val screen = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             when (intent?.action) {
-                Intent.ACTION_SCREEN_OFF -> if (visibleNow && progress == 0f && animationsOn()) {
-                    entranceArmed = true
-                    prepareEntrance()
+                Intent.ACTION_SCREEN_OFF -> {
+                    SystemTheme.applyPending(this@MainActivity)   // a dark-theme switch that waited for the screen to go off
+                    if (visibleNow && progress == 0f && animationsOn()) {
+                        entranceArmed = true
+                        prepareEntrance()
+                    }
                 }
                 Intent.ACTION_USER_PRESENT -> if (entranceArmed) playEntrance()
                 Intent.ACTION_SCREEN_ON -> {
@@ -207,7 +210,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         updateTexts()
         updateAmbient()
         Updater.showPending(this)
-        LookWallpaper.syncAsync(this)  // cheap when nothing changed
+        LookWallpaper.syncAsync(this, interactive = true)  // cheap when nothing changed
         if (entranceArmed) {
             val km = getSystemService(KeyguardManager::class.java)
             if (km?.isKeyguardLocked != true) root.post { if (entranceArmed) playEntrance() }
@@ -952,6 +955,11 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
             "Automatic updates: " + if (Updater.enabled(this)) "On" else "Off",
             "Check for updates now (version ${versionName()})",
             "Animated lock screen (live wallpaper)",
+            "Theme the whole phone: " + when {
+                SystemTheme.enabled(this) -> "On"
+                SystemTheme.permitted(this) -> "Off"
+                else -> "Set up (once)"
+            },
         )
         AlertDialog.Builder(this, dialogTheme())
             .setTitle("Lembas")
@@ -989,6 +997,18 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
                     7 -> Updater.setEnabled(this, !Updater.enabled(this))
                     8 -> checkForUpdate()
                     9 -> setLiveWallpaper()
+                    10 -> when {
+                        SystemTheme.enabled(this) -> {
+                            SystemTheme.setEnabled(this, false)
+                            SystemTheme.restore(this)
+                            Toast.makeText(this, "Android picks the colours from your wallpaper again", Toast.LENGTH_SHORT).show()
+                        }
+                        SystemTheme.permitted(this) -> {
+                            SystemTheme.setEnabled(this, true)
+                            Toast.makeText(this, "The whole phone follows the look again", Toast.LENGTH_SHORT).show()
+                        }
+                        else -> ThemeSetup.start(this)
+                    }
                 }
             }
             .show()
@@ -1059,7 +1079,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
             .setTitle("Theme")
             .setSingleChoiceItems(names, current) { dialog, which ->
                 prefs.edit().putString(Themes.PREF_THEME, ids[which]).apply()
-                LookWallpaper.syncAsync(this)
+                LookWallpaper.syncAsync(this, interactive = true)
                 dialog.dismiss()
                 if (Themes.current(this).id != look.id) recreate()
             }

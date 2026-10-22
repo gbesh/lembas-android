@@ -94,3 +94,42 @@ jobs:
             --notes "Built from commit ${GITHUB_SHA::7}. Open lembas-launcher.apk on your phone to install; after that Lembas updates itself. The watch face and watch app are in gbesh/lembas-wear."
           # Keep the five newest releases.
           gh release list --limit 100 --json tagName --jq '.[5:][].tagName' | while read -r t; do gh release delete "$t" -y --cleanup-tag; done
+
+  # Test branches only: run Lembas on a phone emulator and capture each look, with the system theme
+  screens:
+    needs: build
+    if: github.ref != 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: lembas
+          path: out
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
+
+      - name: Phone emulator screenshots
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_7
+          disable-animations: false
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          script: bash tools/emulator-shots.sh
+
+      - name: Publish the screenshots to the screens branch
+        run: |
+          cd shots
+          git init -q && git checkout -q -b screens
+          git -c user.name=ci -c user.email=ci@localhost add -A
+          git -c user.name=ci -c user.email=ci@localhost commit -q -m "screens ${GITHUB_SHA::7}"
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" screens
