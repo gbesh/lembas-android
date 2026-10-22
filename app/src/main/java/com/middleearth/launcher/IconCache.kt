@@ -73,6 +73,7 @@ class IconCache private constructor(private val context: Context) {
     }
 
     fun bind(entry: AppEntry, spec: Spec, view: ImageView) {
+        Dots.apply(view, entry.packageName)
         val key = entry.key + "#" + spec.id
         view.tag = key
         val cached = cache.get(key)

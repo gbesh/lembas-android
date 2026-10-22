@@ -29,5 +29,14 @@ for t in 0921:shire 1530:redbook 2005:starlit 0130:elven; do
   adb shell cmd statusbar collapse
   echo "$n: $(adb shell settings get secure theme_customization_overlay_packages) night=$(adb shell settings get secure ui_night_mode)" >> "$S/theme.txt"
 done
+# the settings sheet (long-press on empty space), in the last look
+adb shell input keyevent KEYCODE_HOME; sleep 3
+adb shell input swipe 540 1500 540 1500 900
+sleep 4
+snap "settings"
+adb shell input swipe 540 1900 540 700 400
+sleep 2
+snap "settings-more"
+adb shell input keyevent KEYCODE_BACK
 adb logcat -d | grep -i -E "lembas|middleearth|AndroidRuntime|ThemeOverlay" | tail -300 > "$S/logcat.txt" || true
 exit 0

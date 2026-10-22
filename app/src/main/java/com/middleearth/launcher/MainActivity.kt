@@ -87,7 +87,6 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
     private lateinit var meal: TextView
     private lateinit var sunArc: SunArcView
     private var modern = true
-    private var lookFading = false
     private var hoursFont: android.graphics.Typeface? = null
     private var minutesFont: android.graphics.Typeface? = null
     private lateinit var hint: ImageView
@@ -191,10 +190,13 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
 
         repo.addListener(this)
         if (repo.loaded) onAppsChanged()
+        Dots.color = look.accent
+        Dots.addListener(dotsChanged)
         if (fadeInNext) {
             fadeInNext = false
-            root.alpha = 0f
-            root.animate().alpha(1f).setDuration(420).setInterpolator(easeOut).start()
+            entranceArmed = true
+            prepareEntrance()
+            root.post { if (entranceArmed) playEntrance() }
         }
     }
 
@@ -264,6 +266,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
 
     override fun onDestroy() {
         repo.removeListener(this)
+        Dots.removeListener(dotsChanged)
         animator?.cancel()
         popup.dismiss()
         try { unregisterReceiver(screen) } catch (t: Throwable) { }
@@ -285,6 +288,13 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
     }
 
     override fun onPackageChanged(packageName: String) = icons.evictPackage(packageName)
+
+    /** Notifications came or went: redraw the dots. */
+    private val dotsChanged: () -> Unit = {
+        if (::adapter.isInitialized) adapter.notifyDataSetChanged()
+        refreshDock()
+        refreshLately()
+    }
 
     private fun launch(e: AppEntry, from: View?) {
         val opts = from?.let {
@@ -654,14 +664,10 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         else -> 0xFFC6DDE8.toInt()
     }
 
-    /** A new look fades in rather than cutting: fade out, rebuild, and the new one fades in (see onCreate). */
+    /** A new look arrives with the same entrance as unlocking (the scene settles, the words rise) rather than cutting. */
     private fun changeLook() {
-        if (!visibleNow || !animationsOn()) { recreate(); return }
-        lookFading = true
-        root.animate().alpha(0f).setDuration(260).setInterpolator(easeOut).withEndAction {
-            fadeInNext = true
-            recreate()
-        }.start()
+        fadeInNext = visibleNow && animationsOn()
+        recreate()
     }
 
     /** The glance line: your next alarm, and your next calendar event if Lembas may read the calendar. */
@@ -1061,139 +1067,81 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
     else android.R.style.Theme_DeviceDefault_Dialog_Alert
 
     private fun showSettings() {
-        val choice = Themes.choice(this)
-        val themeName = if (choice == Look.ADAPTIVE) "Adaptive (now ${look.title})" else Look.byId(choice).title
         val themed = prefs.getBoolean(PREF_THEMED, true)
         val meals = prefs.getBoolean(PREF_MEALS, true)
         val kbd = prefs.getBoolean(PREF_KEYBOARD, false)
         val anim = animationsOn()
-        val items = arrayOf(
-            "Theme: $themeName",
-            "Home clock: " + if (modern) "Modern" else "Classic",
-            "Animations: " + if (anim) "On" else "Off",
-            "App icons: " + if (themed) "Themed line art" else "Original",
-            "Hobbit mealtimes: " + if (meals) "On" else "Off",
-            "Keyboard when opening the Red Book: " + if (kbd) "On" else "Off",
-            "Phone colours follow the look: " + if (LookWallpaper.enabled(this)) "On" else "Off",
-            "Make Lembas your home app",
-            "Automatic updates: " + if (Updater.enabled(this)) "On" else "Off",
-            "Check for updates now (version ${versionName()})",
-            "Animated lock screen (live wallpaper)",
-            "Theme the whole phone: " + when {
-                SystemTheme.enabled(this) -> "On"
-                SystemTheme.permitted(this) -> "Off"
-                else -> "Set up (once)"
-            },
-            "Put Lembas on your watch",
-            "Next calendar event on the home screen: " +
-                if (checkSelfPermission(android.Manifest.permission.READ_CALENDAR) == android.content.pm.PackageManager.PERMISSION_GRANTED) "On" else "Off",
+        val calendar = checkSelfPermission(android.Manifest.permission.READ_CALENDAR) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        fun onOff(b: Boolean) = if (b) "On" else "Off"
+        val day = Sun.today()
+        fun hm(m: Int) = java.time.LocalTime.of(m / 60, m % 60).format(DateTimeFormatter.ofPattern(if (DateFormat.is24HourFormat(this)) "H:mm" else "h:mm a"))
+        val times = mapOf(
+            Look.ADAPTIVE to "now ${Themes.adaptive().title}",
+            Look.SHIRE.id to "${hm(day.sunrise)}–${hm(day.noon)}",
+            Look.REDBOOK.id to "${hm(day.noon)}–${hm(day.sunset)}",
+            Look.STARLIT.id to "${hm(day.sunset)}–11pm",
+            Look.ELVEN.id to "11pm–4am",
         )
-        AlertDialog.Builder(this, dialogTheme())
-            .setTitle("Lembas")
-            .setItems(items) { _, which ->
-                when (which) {
-                    0 -> showThemePicker()
-                    1 -> {
-                        prefs.edit().putString(PREF_HOME_STYLE, if (modern) "classic" else "modern").apply()
-                        recreate()
-                    }
-                    2 -> {
-                        prefs.edit().putBoolean(Themes.PREF_ANIM, !anim).apply()
-                        ambient.animationsOn = !anim
-                    }
-                    3 -> {
-                        prefs.edit().putBoolean(PREF_THEMED, !themed).apply()
-                        recreate()
-                    }
-                    4 -> {
-                        prefs.edit().putBoolean(PREF_MEALS, !meals).apply()
-                        updateTexts()
-                    }
-                    5 -> prefs.edit().putBoolean(PREF_KEYBOARD, !kbd).apply()
-                    6 -> {
-                        val on = !LookWallpaper.enabled(this)
-                        LookWallpaper.setEnabled(this, on)
-                        val msg = when {
-                            !on -> "Your wallpaper stays as it is now"
-                            LookWallpaper.liveWallpaperInUse(this) -> "The live wallpaper already colours your phone"
-                            else -> "Your wallpaper and colours now follow the look"
-                        }
-                        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
-                    }
-                    7 -> try {
-                        startActivity(Intent(Settings.ACTION_HOME_SETTINGS))
-                    } catch (t: Exception) {
-                        startActivity(Intent(Settings.ACTION_SETTINGS))
-                    }
-                    8 -> Updater.setEnabled(this, !Updater.enabled(this))
-                    9 -> checkForUpdate()
-                    10 -> setLiveWallpaper()
-                    11 -> when {
-                        SystemTheme.enabled(this) -> {
-                            SystemTheme.setEnabled(this, false)
-                            SystemTheme.restore(this)
-                            Toast.makeText(this, "Android picks the colours from your wallpaper again", Toast.LENGTH_SHORT).show()
-                        }
-                        SystemTheme.permitted(this) -> {
-                            SystemTheme.setEnabled(this, true)
-                            Toast.makeText(this, "The whole phone follows the look again", Toast.LENGTH_SHORT).show()
-                        }
-                        else -> ThemeSetup.start(this)
-                    }
-                    12 -> WatchSetup.start(this)
-                    13 -> if (checkSelfPermission(android.Manifest.permission.READ_CALENDAR) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
-                        Toast.makeText(this, "Turn off calendar access in Settings > Apps > Lembas > Permissions", Toast.LENGTH_LONG).show()
+        val sections = listOf(
+            SettingsSheet.Section("Home screen", listOf(
+                SettingsSheet.Row("Clock", if (modern) "Modern" else "Classic") {
+                    prefs.edit().putString(PREF_HOME_STYLE, if (modern) "classic" else "modern").apply(); recreate(); false },
+                SettingsSheet.Row("Animations", onOff(anim)) {
+                    prefs.edit().putBoolean(Themes.PREF_ANIM, !anim).apply(); ambient.animationsOn = !anim; true },
+                SettingsSheet.Row("App icons", if (themed) "Line art" else "Original") {
+                    prefs.edit().putBoolean(PREF_THEMED, !themed).apply(); recreate(); false },
+                SettingsSheet.Row("Hobbit mealtimes", onOff(meals)) {
+                    prefs.edit().putBoolean(PREF_MEALS, !meals).apply(); updateTexts(); true },
+                SettingsSheet.Row("Next calendar event", onOff(calendar)) {
+                    if (calendar) {
+                        Toast.makeText(this, "Turn off calendar access in Lembas's app permissions", Toast.LENGTH_LONG).show()
                         try { startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, android.net.Uri.parse("package:$packageName"))) } catch (_: Exception) { }
                     } else requestPermissions(arrayOf(android.Manifest.permission.READ_CALENDAR), 0xca1)
-                }
-            }
-            .show()
-    }
-
-    private fun versionName(): String = try {
-        packageManager.getPackageInfo(packageName, 0).versionName ?: "?"
-    } catch (_: Exception) { "?" }
-
-    private fun checkForUpdate() {
-        if (Build.VERSION.SDK_INT >= 26 && !packageManager.canRequestPackageInstalls()) {
-            Toast.makeText(this, "Allow Lembas to install updates, then try again", Toast.LENGTH_LONG).show()
-            try {
-                startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, android.net.Uri.parse("package:$packageName")))
-            } catch (_: Exception) { }
-            return
-        }
-        Toast.makeText(this, "Checking for a new Lembas...", Toast.LENGTH_SHORT).show()
-        val app = applicationContext
-        Thread {
-            val r = Updater.run(app)
-            root.post {
-                val msg = when (r) {
-                    Updater.Result.UP_TO_DATE -> "Lembas is up to date"
-                    Updater.Result.INSTALLING -> "Installing the new Lembas..."
-                    Updater.Result.FAILED -> "Couldn't reach GitHub; Lembas will try again tomorrow"
-                }
-                Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
-            }
-        }.start()
-    }
-
-    private fun setLiveWallpaper() {
-        val component = ComponentName(this, LembasWallpaper::class.java)
-        val info = WallpaperManager.getInstance(this).wallpaperInfo
-        if (info != null && info.component == component) {
-            Toast.makeText(this, "Lembas is already your wallpaper", Toast.LENGTH_SHORT).show()
-            return
-        }
-        try {
-            startActivity(Intent(WallpaperManager.ACTION_CHANGE_LIVE_WALLPAPER)
-                .putExtra(WallpaperManager.EXTRA_LIVE_WALLPAPER_COMPONENT, component))
-        } catch (t: Exception) {
-            try {
-                startActivity(Intent(WallpaperManager.ACTION_LIVE_WALLPAPER_CHOOSER))
-            } catch (t2: Exception) {
-                Toast.makeText(this, "This phone doesn't support live wallpapers", Toast.LENGTH_SHORT).show()
-            }
-        }
+                    false },
+                SettingsSheet.Row("Notification dots", onOff(Dots.enabled(this))) {
+                    if (Dots.enabled(this)) { Dots.turnOff(this); true }
+                    else if (Dots.turnOn(this)) true
+                    else {
+                        Toast.makeText(this, "Allow Lembas under Notification access (it only counts notifications, never reads them)", Toast.LENGTH_LONG).show()
+                        try { startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)) } catch (_: Exception) { }
+                        false
+                    } },
+                SettingsSheet.Row("Keyboard when opening the Red Book", onOff(kbd)) {
+                    prefs.edit().putBoolean(PREF_KEYBOARD, !kbd).apply(); true },
+            )),
+            SettingsSheet.Section("The whole phone", listOf(
+                SettingsSheet.Row("Theme the whole phone", when {
+                    SystemTheme.enabled(this) -> "On"
+                    SystemTheme.permitted(this) -> "Off"
+                    else -> "Set up once"
+                }) {
+                    when {
+                        SystemTheme.enabled(this) -> { SystemTheme.setEnabled(this, false); SystemTheme.restore(this); true }
+                        SystemTheme.permitted(this) -> { SystemTheme.setEnabled(this, true); true }
+                        else -> { ThemeSetup.start(this); false }
+                    } },
+                SettingsSheet.Row("Animated wallpaper (home and lock screen)", if (LookWallpaper.liveWallpaperInUse(this)) "On" else "Set") {
+                    setLiveWallpaper(); false },
+                SettingsSheet.Row("Still wallpaper follows the look", onOff(LookWallpaper.enabled(this))) {
+                    LookWallpaper.setEnabled(this, !LookWallpaper.enabled(this)); true },
+                SettingsSheet.Row("Make Lembas your home app", "") {
+                    try { startActivity(Intent(Settings.ACTION_HOME_SETTINGS)) } catch (t: Exception) { startActivity(Intent(Settings.ACTION_SETTINGS)) }
+                    false },
+            )),
+            SettingsSheet.Section("Watch", listOf(
+                SettingsSheet.Row("Put Lembas on your watch", "") { WatchSetup.start(this); false },
+            )),
+            SettingsSheet.Section("Updates", listOf(
+                SettingsSheet.Row("Automatic updates", onOff(Updater.enabled(this))) {
+                    Updater.setEnabled(this, !Updater.enabled(this)); true },
+                SettingsSheet.Row("Check for updates now", "version ${versionName()}") { checkForUpdate(); false },
+            )),
+        )
+        SettingsSheet(this, look, Themes.choice(this), times) { id ->
+            prefs.edit().putString(Themes.PREF_THEME, id).apply()
+            LookWallpaper.syncAsync(this, interactive = true)
+            if (Themes.current(this).id != look.id) changeLook()
+        }.show(sections) { showSettings() }
     }
 
     private fun showThemePicker() {
