@@ -32,4 +32,18 @@ object Fonts {
         cache[key] = tf
         return tf
     }
+
+    /** A variable font at given axis settings, e.g. "'wght' 760, 'opsz' 144" (the watch face's numerals). */
+    @Synchronized
+    fun variable(assets: AssetManager, file: String, settings: String, italic: Boolean = false): Typeface {
+        val key = "$file#$settings"
+        cache[key]?.let { return it }
+        val fallback = Typeface.create(Typeface.SERIF, if (italic) Typeface.ITALIC else Typeface.NORMAL)
+        val tf = try {
+            if (assets.list("fonts")?.contains(file) != true) fallback
+            else Typeface.Builder(assets, "fonts/$file").setFallback("serif").setFontVariationSettings(settings).build() ?: fallback
+        } catch (_: Throwable) { fallback }
+        cache[key] = tf
+        return tf
+    }
 }

@@ -116,6 +116,23 @@ class AdbLink private constructor(private val ctx: Context, private val keyName:
             return found
         }
 
+        /** Everything of that kind found within the time (the phone and the watch can both be advertising). */
+        fun discoverAll(ctx: Context, type: String, timeoutMs: Long): List<Pair<InetAddress, Int>> {
+            val found = java.util.concurrent.CopyOnWriteArrayList<Pair<InetAddress, Int>>()
+            val mdns = AdbMdns(ctx, type) { host, port ->
+                if (host != null && port > 0 && found.none { it.first == host && it.second == port }) found.add(host to port)
+            }
+            mdns.start()
+            try { Thread.sleep(timeoutMs) } finally { mdns.stop() }
+            return found.toList()
+        }
+
+        /** This phone's own addresses, to tell its services from the watch's. */
+        fun ownAddresses(): Set<String> = try {
+            java.net.NetworkInterface.getNetworkInterfaces().toList().flatMap { it.inetAddresses.toList() }.mapNotNull { it.hostAddress }.toSet()
+        } catch (_: Exception) { emptySet() }
+
         const val PAIRING = AdbMdns.SERVICE_TYPE_TLS_PAIRING
+        const val CONNECT = AdbMdns.SERVICE_TYPE_TLS_CONNECT
     }
 }

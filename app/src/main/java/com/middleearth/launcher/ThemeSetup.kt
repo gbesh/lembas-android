@@ -121,7 +121,9 @@ object ThemeSetup {
     /** Pair with the phone's own adb, grant the permission, and theme the phone. Runs off the main thread. */
     fun pairAndGrant(ctx: Context, code: String): String? {
         val link = AdbLink.phone(ctx)
-        val service = AdbLink.discover(ctx, AdbLink.PAIRING, 8000)
+        val own = AdbLink.ownAddresses()
+        val service = AdbLink.discoverAll(ctx, AdbLink.PAIRING, 6000).firstOrNull { it.first.hostAddress in own || it.first.isLoopbackAddress }
+            ?: AdbLink.discover(ctx, AdbLink.PAIRING, 4000)
             ?: return "Couldn't find the pairing screen. Keep \"Pair device with pairing code\" open, on Wi-Fi, and try again."
         try {
             link.pair(service.first.hostAddress ?: "127.0.0.1", service.second, code.trim())
@@ -129,7 +131,10 @@ object ThemeSetup {
             return "That code didn't work. Check it and try again (a new code appears if you reopen the pairing screen)."
         }
         try {
-            if (!link.connectTls(ctx, 10_000)) return "Paired, but couldn't connect. Keep Wireless debugging on and try again."
+            // this phone's own Wireless debugging (not a watch that might be advertising too)
+            val connect = AdbLink.discoverAll(ctx, AdbLink.CONNECT, 6000).firstOrNull { it.first.hostAddress in own || it.first.isLoopbackAddress }
+            val ok = if (connect != null) link.connect(connect.first.hostAddress ?: "127.0.0.1", connect.second) else link.connectTls(ctx, 10_000)
+            if (!ok) return "Paired, but couldn't connect. Keep Wireless debugging on and try again."
             link.shell(GRANT)
         } catch (e: Exception) {
             return "Paired, but couldn't connect. Keep Wireless debugging on and try again."

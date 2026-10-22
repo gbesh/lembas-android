@@ -24,7 +24,7 @@ for t in 0921:shire 1530:redbook 2005:starlit 0130:elven; do
   sleep 8
   snap "home-$n"
   adb shell cmd statusbar expand-settings
-  sleep 3
+  sleep 5
   snap "qs-$n"
   adb shell cmd statusbar collapse
   echo "$n: $(adb shell settings get secure theme_customization_overlay_packages) night=$(adb shell settings get secure ui_night_mode)" >> "$S/theme.txt"

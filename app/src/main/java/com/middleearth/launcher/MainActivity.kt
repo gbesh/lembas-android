@@ -85,6 +85,11 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
     private lateinit var date: TextView
     private lateinit var ornament: ImageView
     private lateinit var meal: TextView
+    private lateinit var sunArc: SunArcView
+    private var modern = true
+    private var lookFading = false
+    private var hoursFont: android.graphics.Typeface? = null
+    private var minutesFont: android.graphics.Typeface? = null
     private lateinit var hint: ImageView
     private lateinit var dock: LinearLayout
     private lateinit var drawer: LinearLayout
@@ -186,6 +191,11 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
 
         repo.addListener(this)
         if (repo.loaded) onAppsChanged()
+        if (fadeInNext) {
+            fadeInNext = false
+            root.alpha = 0f
+            root.animate().alpha(1f).setDuration(420).setInterpolator(easeOut).start()
+        }
     }
 
     override fun onStart() {
@@ -467,10 +477,11 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         // Adaptive: hand over to the next theme when its time comes (never mid-gesture).
         val want = Themes.current(this)
         if (want.id != look.id && progress == 0f && animator == null) {
-            recreate()
+            changeLook()
             return
         }
         val is24 = DateFormat.is24HourFormat(this)
+        if (modern) { updateModernTexts(now, is24); return }
         val time = now.format(DateTimeFormatter.ofPattern(if (is24) "H:mm" else "h:mm"))
         val sb = SpannableStringBuilder(time)
         look.clockFirstDigitColor?.let { sb.setSpan(ForegroundColorSpan(it), 0, 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE) }
@@ -498,7 +509,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
 
     private fun entranceViews(): List<Pair<View, Long>> = listOf(
         label to 120L, clock to 160L, shire to 240L, date to 280L,
-        ornament to 300L, meal to 320L, hint to 300L, dock to 300L,
+        ornament to 300L, meal to 320L, sunArc to 340L, hint to 300L, dock to 300L,
     )
 
     private fun prepareEntrance() {
@@ -545,6 +556,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         date = findViewById(R.id.date)
         ornament = findViewById(R.id.ornament)
         meal = findViewById(R.id.meal)
+        sunArc = findViewById(R.id.sunArc)
         hint = findViewById(R.id.hint)
         dock = findViewById(R.id.dock)
         drawer = findViewById(R.id.drawer)
@@ -630,7 +642,117 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         }
     }
 
+    /**
+     * The modern home clock, in the watch face's type: the date and the Shire date above, large
+     * stacked numerals (heavy hours in the look's colour, light minutes), the mealtime, and the
+     * sun arc. Shown over the look's animated scene.
+     */
+    private fun modernHoursColor(): Int = when (look.id) {
+        "shire" -> 0xFF3E6B2E.toInt()
+        "redbook" -> 0xFF9A2A1C.toInt()
+        "starlit" -> 0xFFE9CC88.toInt()
+        else -> 0xFFC6DDE8.toInt()
+    }
+
+    /** A new look fades in rather than cutting: fade out, rebuild, and the new one fades in (see onCreate). */
+    private fun changeLook() {
+        if (!visibleNow || !animationsOn()) { recreate(); return }
+        lookFading = true
+        root.animate().alpha(0f).setDuration(260).setInterpolator(easeOut).withEndAction {
+            fadeInNext = true
+            recreate()
+        }.start()
+    }
+
+    /** The glance line: your next alarm, and your next calendar event if Lembas may read the calendar. */
+    private fun glanceText(now: LocalDateTime, is24: Boolean): String {
+        val parts = ArrayList<String>()
+        val fmt = DateTimeFormatter.ofPattern(if (is24) "H:mm" else "h:mm a")
+        val zone = java.time.ZoneId.systemDefault()
+        try {
+            getSystemService(android.app.AlarmManager::class.java)?.nextAlarmClock?.let { a ->
+                val t = java.time.Instant.ofEpochMilli(a.triggerTime).atZone(zone).toLocalDateTime()
+                if (java.time.Duration.between(now, t).toHours() < 20) parts.add("Alarm " + t.format(fmt))
+            }
+        } catch (_: Throwable) { }
+        if (checkSelfPermission(android.Manifest.permission.READ_CALENDAR) == android.content.pm.PackageManager.PERMISSION_GRANTED) try {
+            val start = System.currentTimeMillis()
+            val uri = android.provider.CalendarContract.Instances.CONTENT_URI.buildUpon()
+                .appendPath(start.toString()).appendPath((start + 12 * 3_600_000L).toString()).build()
+            contentResolver.query(uri, arrayOf(android.provider.CalendarContract.Instances.TITLE, android.provider.CalendarContract.Instances.BEGIN,
+                android.provider.CalendarContract.Instances.ALL_DAY), "${android.provider.CalendarContract.Instances.ALL_DAY} = 0", null,
+                "${android.provider.CalendarContract.Instances.BEGIN} ASC")?.use { c ->
+                while (c.moveToNext()) {
+                    val begin = c.getLong(1)
+                    if (begin < start - 10 * 60_000L) continue
+                    val t = java.time.Instant.ofEpochMilli(begin).atZone(zone).toLocalDateTime()
+                    parts.add((c.getString(0) ?: "Event").take(28) + " " + t.format(fmt))
+                    break
+                }
+            }
+        } catch (_: Throwable) { }
+        return parts.joinToString("  ·  ")
+    }
+
+    private fun updateModernTexts(now: LocalDateTime, is24: Boolean) {
+        val hours = now.format(DateTimeFormatter.ofPattern(if (is24) "HH" else "hh"))
+        val minutes = now.format(DateTimeFormatter.ofPattern("mm"))
+        val sb = SpannableStringBuilder(hours).append("\n").append(minutes)
+        sb.setSpan(ForegroundColorSpan(modernHoursColor()), 0, hours.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        minutesFont?.let { sb.setSpan(TypefaceCompatSpan(it), hours.length + 1, sb.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE) }
+        clock.text = sb
+        clock.contentDescription = now.format(DateTimeFormatter.ofPattern(if (is24) "H:mm" else "h:mm a"))
+        val loc = java.util.Locale.getDefault()
+        label.text = now.format(DateTimeFormatter.ofPattern("EEE d MMM", loc))
+        val sd = Lore.shireDate(now.toLocalDate())
+        shire.text = Lore.shireWeekday(now.dayOfWeek) + " · " + (if (sd.isSpecial) sd.name else "${sd.day} ${sd.name}")
+        val m = if (prefs.getBoolean(PREF_MEALS, true)) Lore.meal(now.hour) else ""
+        meal.text = m
+        meal.visibility = if (m.isEmpty()) View.GONE else View.VISIBLE
+        val glance = glanceText(now, is24)
+        date.text = glance
+        date.visibility = if (glance.isEmpty()) View.GONE else View.VISIBLE
+        sunArc.update(now, is24)
+        backdrop.refresh()
+    }
+
+    private fun applyModern() {
+        hoursFont = Fonts.variable(assets, "Fraunces.ttf", "'wght' 760, 'opsz' 144, 'SOFT' 50, 'WONK' 0")
+        minutesFont = Fonts.variable(assets, "Fraunces.ttf", "'wght' 280, 'opsz' 144, 'SOFT' 50, 'WONK' 0")
+        val sans = Fonts.get(assets, "AlegreyaSans-Medium.ttf", 500)
+        val lore = Fonts.variable(assets, "Fraunces-Italic.ttf", "'wght' 420, 'opsz' 24, 'SOFT' 50", italic = true)
+        fun TextView.style(tf: android.graphics.Typeface?, sizeSp: Float, color: Int, spacing: Float = 0f) {
+            typeface = tf
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, sizeSp)
+            setTextColor(color)
+            letterSpacing = spacing
+            if (look.textShadow) setShadowLayer(14 * dp, 0f, 2 * dp, 0x99000000.toInt()) else setShadowLayer(0f, 0f, 0f, 0)
+        }
+        home.gravity = Gravity.CENTER_HORIZONTAL
+        for (v in listOf(label, clock, shire, date, meal, ornament)) {
+            (v.layoutParams as LinearLayout.LayoutParams).gravity = Gravity.CENTER_HORIZONTAL
+            if (v is TextView) v.gravity = Gravity.CENTER
+        }
+        label.style(sans, 17f, look.clockColor, 0.02f)
+        shire.style(lore, 17f, look.shireColor)
+        clock.style(hoursFont, 132f, look.clockColor, -0.02f)
+        clock.setLineSpacing(0f, 0.8f)
+        meal.style(lore, 16f, look.mealColor)
+        meal.background = null
+        meal.setPadding(0, 0, 0, 0)
+        meal.setCompoundDrawablesRelative(null, null, null, null)
+        (meal.layoutParams as LinearLayout.LayoutParams).topMargin = (6 * dp).roundToInt()
+        (shire.layoutParams as LinearLayout.LayoutParams).topMargin = (2 * dp).roundToInt()
+        date.style(sans, 14f, look.clockColor, 0.02f)
+        date.alpha = 0.85f
+        (date.layoutParams as LinearLayout.LayoutParams).topMargin = (10 * dp).roundToInt()
+        ornament.visibility = View.GONE
+        sunArc.visibility = View.VISIBLE
+        sunArc.setStyle(look.clockColor, modernHoursColor(), sans)
+    }
+
     private fun applyLook() {
+        modern = prefs.getString(PREF_HOME_STYLE, "modern") == "modern"
         backdrop.look = look
         ambient.look = look
         ambient.animationsOn = animationsOn()
@@ -681,6 +803,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
 
         hint.setImageResource(look.hintRes)
         hint.imageTintList = ColorStateList.valueOf(look.hintColor)
+        if (modern) applyModern() else { date.visibility = View.VISIBLE; sunArc.visibility = View.GONE }
 
         // Drawer — same layout for every theme
         drawer.background = GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, intArrayOf(look.drawerTop, look.drawerBottom))
@@ -946,6 +1069,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         val anim = animationsOn()
         val items = arrayOf(
             "Theme: $themeName",
+            "Home clock: " + if (modern) "Modern" else "Classic",
             "Animations: " + if (anim) "On" else "Off",
             "App icons: " + if (themed) "Themed line art" else "Original",
             "Hobbit mealtimes: " + if (meals) "On" else "Off",
@@ -960,6 +1084,9 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
                 SystemTheme.permitted(this) -> "Off"
                 else -> "Set up (once)"
             },
+            "Put Lembas on your watch",
+            "Next calendar event on the home screen: " +
+                if (checkSelfPermission(android.Manifest.permission.READ_CALENDAR) == android.content.pm.PackageManager.PERMISSION_GRANTED) "On" else "Off",
         )
         AlertDialog.Builder(this, dialogTheme())
             .setTitle("Lembas")
@@ -967,19 +1094,23 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
                 when (which) {
                     0 -> showThemePicker()
                     1 -> {
+                        prefs.edit().putString(PREF_HOME_STYLE, if (modern) "classic" else "modern").apply()
+                        recreate()
+                    }
+                    2 -> {
                         prefs.edit().putBoolean(Themes.PREF_ANIM, !anim).apply()
                         ambient.animationsOn = !anim
                     }
-                    2 -> {
+                    3 -> {
                         prefs.edit().putBoolean(PREF_THEMED, !themed).apply()
                         recreate()
                     }
-                    3 -> {
+                    4 -> {
                         prefs.edit().putBoolean(PREF_MEALS, !meals).apply()
                         updateTexts()
                     }
-                    4 -> prefs.edit().putBoolean(PREF_KEYBOARD, !kbd).apply()
-                    5 -> {
+                    5 -> prefs.edit().putBoolean(PREF_KEYBOARD, !kbd).apply()
+                    6 -> {
                         val on = !LookWallpaper.enabled(this)
                         LookWallpaper.setEnabled(this, on)
                         val msg = when {
@@ -989,15 +1120,15 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
                         }
                         Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
                     }
-                    6 -> try {
+                    7 -> try {
                         startActivity(Intent(Settings.ACTION_HOME_SETTINGS))
                     } catch (t: Exception) {
                         startActivity(Intent(Settings.ACTION_SETTINGS))
                     }
-                    7 -> Updater.setEnabled(this, !Updater.enabled(this))
-                    8 -> checkForUpdate()
-                    9 -> setLiveWallpaper()
-                    10 -> when {
+                    8 -> Updater.setEnabled(this, !Updater.enabled(this))
+                    9 -> checkForUpdate()
+                    10 -> setLiveWallpaper()
+                    11 -> when {
                         SystemTheme.enabled(this) -> {
                             SystemTheme.setEnabled(this, false)
                             SystemTheme.restore(this)
@@ -1009,6 +1140,11 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
                         }
                         else -> ThemeSetup.start(this)
                     }
+                    12 -> WatchSetup.start(this)
+                    13 -> if (checkSelfPermission(android.Manifest.permission.READ_CALENDAR) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                        Toast.makeText(this, "Turn off calendar access in Settings > Apps > Lembas > Permissions", Toast.LENGTH_LONG).show()
+                        try { startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, android.net.Uri.parse("package:$packageName"))) } catch (_: Exception) { }
+                    } else requestPermissions(arrayOf(android.Manifest.permission.READ_CALENDAR), 0xca1)
                 }
             }
             .show()
@@ -1081,7 +1217,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
                 prefs.edit().putString(Themes.PREF_THEME, ids[which]).apply()
                 LookWallpaper.syncAsync(this, interactive = true)
                 dialog.dismiss()
-                if (Themes.current(this).id != look.id) recreate()
+                if (Themes.current(this).id != look.id) changeLook()
             }
             .show()
     }
@@ -1099,6 +1235,9 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
     private companion object {
         const val PREF_THEMED = "themed_icons"
         const val PREF_MEALS = "meals"
+        const val PREF_HOME_STYLE = "home_style"
+        /** Set just before a look change rebuilds the screen, so the new look fades in. */
+        @JvmStatic var fadeInNext = false
         const val PREF_KEYBOARD = "keyboard"
         const val PREF_DOCK = "dock"
         const val PREF_DOCK_SEEDED = "dock_seeded"

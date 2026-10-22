@@ -35,7 +35,7 @@ object SystemTheme {
     private val PALETTES = mapOf(
         Look.SHIRE.id to Palette("7E8F62", "6E9752", "TONAL_SPOT", dark = false),     // sage and green ink
         Look.REDBOOK.id to Palette("8A6A44", "9A2A1C", "TONAL_SPOT", dark = false),   // parchment and red ink
-        Look.STARLIT.id to Palette("26335C", "C9A452", "EXPRESSIVE", dark = true),    // midnight blue and gold
+        Look.STARLIT.id to Palette("26335C", "C9A452", "TONAL_SPOT", dark = true),    // midnight blue and gold
         Look.ELVEN.id to Palette("56626A", "8FA6B2", "SPRITZ", dark = true),          // black-blue and silver
     )
 
