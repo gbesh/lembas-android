@@ -40,7 +40,7 @@ class SettingsSheet(
     private val dp = activity.resources.displayMetrics.density
     private fun px(v: Float) = (v * dp).roundToInt()
     private val dark = !look.lightBars
-    private val text = if (dark) 0xFFF2EEE4.toInt() else 0xFF1E1A14.toInt()
+    private val ink = if (dark) 0xFFF2EEE4.toInt() else 0xFF1E1A14.toInt()
     private val soft = if (dark) 0xB3F2EEE4.toInt() else 0x991E1A14.toInt()
     private val surface = if (dark) 0x1FFFFFFF else 0x14000000
     private val accent = look.accent
@@ -123,7 +123,7 @@ class SettingsSheet(
             text = r.title
             typeface = sans
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
-            setTextColor(text)
+            setTextColor(ink)
             layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
         })
         if (r.value.isNotEmpty()) addView(TextView(activity).apply {
@@ -171,7 +171,7 @@ class SettingsSheet(
                 text = if (id == Look.ADAPTIVE) "Follow the sun" else Look.byId(id).title
                 typeface = if (selected) serif else sans
                 setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
-                setTextColor(if (selected) accent else text)
+                setTextColor(if (selected) accent else ink)
                 gravity = Gravity.CENTER
                 setPadding(0, px(6f), 0, 0)
                 maxLines = 2

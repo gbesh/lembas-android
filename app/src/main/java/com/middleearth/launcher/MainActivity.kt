@@ -1144,6 +1144,52 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         }.show(sections) { showSettings() }
     }
 
+    private fun versionName(): String = try {
+        packageManager.getPackageInfo(packageName, 0).versionName ?: "?"
+    } catch (_: Exception) { "?" }
+
+    private fun checkForUpdate() {
+        if (Build.VERSION.SDK_INT >= 26 && !packageManager.canRequestPackageInstalls()) {
+            Toast.makeText(this, "Allow Lembas to install updates, then try again", Toast.LENGTH_LONG).show()
+            try {
+                startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, android.net.Uri.parse("package:$packageName")))
+            } catch (_: Exception) { }
+            return
+        }
+        Toast.makeText(this, "Checking for a new Lembas...", Toast.LENGTH_SHORT).show()
+        val app = applicationContext
+        Thread {
+            val r = Updater.run(app)
+            root.post {
+                val msg = when (r) {
+                    Updater.Result.UP_TO_DATE -> "Lembas is up to date"
+                    Updater.Result.INSTALLING -> "Installing the new Lembas..."
+                    Updater.Result.FAILED -> "Couldn't reach GitHub; Lembas will try again tomorrow"
+                }
+                Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+            }
+        }.start()
+    }
+
+    private fun setLiveWallpaper() {
+        val component = ComponentName(this, LembasWallpaper::class.java)
+        val info = WallpaperManager.getInstance(this).wallpaperInfo
+        if (info != null && info.component == component) {
+            Toast.makeText(this, "Lembas is already your wallpaper", Toast.LENGTH_SHORT).show()
+            return
+        }
+        try {
+            startActivity(Intent(WallpaperManager.ACTION_CHANGE_LIVE_WALLPAPER)
+                .putExtra(WallpaperManager.EXTRA_LIVE_WALLPAPER_COMPONENT, component))
+        } catch (t: Exception) {
+            try {
+                startActivity(Intent(WallpaperManager.ACTION_LIVE_WALLPAPER_CHOOSER))
+            } catch (t2: Exception) {
+                Toast.makeText(this, "This phone doesn't support live wallpapers", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
     private fun showThemePicker() {
         val ids = arrayOf(Look.ADAPTIVE, Look.SHIRE.id, Look.REDBOOK.id, Look.STARLIT.id, Look.ELVEN.id)
         val day = Sun.today()
