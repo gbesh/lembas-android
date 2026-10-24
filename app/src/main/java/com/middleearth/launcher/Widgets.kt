@@ -132,6 +132,7 @@ class Widgets(private val activity: Activity, private val container: LinearLayou
 
     private fun add(p: AppWidgetProviderInfo) {
         val id = host.allocateAppWidgetId()
+        android.util.Log.i("Lembas", "widget adding ${p.provider} as $id")
         pendingId = id
         pendingHeight = (p.minHeight / dp).roundToInt().coerceIn(80, 360)
         if (manager.bindAppWidgetIdIfAllowed(id, p.provider)) configure(id)
@@ -155,6 +156,7 @@ class Widgets(private val activity: Activity, private val container: LinearLayou
     }
 
     private fun finishAdd(id: Int) {
+        android.util.Log.i("Lembas", "widget added $id")
         val list = load()
         list.add(Saved(id, pendingHeight.takeIf { it > 0 } ?: 160))
         save(list)
@@ -170,6 +172,7 @@ class Widgets(private val activity: Activity, private val container: LinearLayou
     /** From the activity's onActivityResult. Returns true if it was ours. */
     fun onResult(requestCode: Int, resultCode: Int): Boolean {
         if (requestCode != REQUEST_BIND && requestCode != REQUEST_CONFIGURE) return false
+        android.util.Log.i("Lembas", "widget result request=$requestCode result=$resultCode pending=$pendingId")
         val id = pendingId
         if (id == -1) return true
         if (resultCode != Activity.RESULT_OK) { cancelPending(); return true }

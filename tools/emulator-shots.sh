@@ -72,10 +72,12 @@ snap "widget-picker"
 python3 tools/tap.py "clock" || python3 tools/tap.py "analog"
 sleep 3
 snap "widget-bind"
-python3 tools/tap.py "always" ; python3 tools/tap.py "=create" || python3 tools/tap.py "=allow"
+python3 tools/tap.py "always" 2>> "$S/widgets-taps.txt"; python3 tools/tap.py "=create" 2>> "$S/widgets-taps.txt" || python3 tools/tap.py "=allow" 2>> "$S/widgets-taps.txt"
 sleep 4
 adb shell input keyevent KEYCODE_BACK; sleep 1
 adb shell input keyevent KEYCODE_HOME; sleep 3
 snap "widget-home"
+adb shell cat /data/data/com.middleearth.launcher/shared_prefs/lembas.xml | grep -i widget > "$S/widgets.txt" 2>&1
+adb logcat -d | grep -i -E "Lembas *:|widget" | tail -40 >> "$S/widgets.txt"
 adb logcat -d | grep -i -E "lembas|middleearth|AndroidRuntime|ThemeOverlay" | tail -300 > "$S/logcat.txt" || true
 exit 0
