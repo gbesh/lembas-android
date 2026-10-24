@@ -37,8 +37,13 @@ adb shell content insert --uri content://com.android.contacts/data --bind raw_co
 adb shell pm grant com.middleearth.launcher android.permission.READ_CONTACTS
 adb shell input keyevent KEYCODE_HOME; sleep 3
 for q in ca sam zzqx 12*3+4; do
-  adb shell input swipe 540 1900 540 600 250; sleep 2
-  adb shell input tap 540 330; sleep 1
+  adb shell input swipe 540 1500 540 400 300; sleep 3
+  adb shell uiautomator dump /sdcard/ui.xml > /dev/null 2>&1
+  b=$(adb shell cat /sdcard/ui.xml | tr '>' '\n' | grep 'com.middleearth.launcher:id/search"' | grep -o 'bounds="[^"]*"' | head -1 | tr -dc '0-9,[]')
+  x=$(echo "$b" | sed 's/^\[\([0-9]*\),\([0-9]*\)\]\[\([0-9]*\),\([0-9]*\)\]$/\1 \3/' | awk '{print int(($1+$2)/2)}')
+  y=$(echo "$b" | sed 's/^\[\([0-9]*\),\([0-9]*\)\]\[\([0-9]*\),\([0-9]*\)\]$/\2 \4/' | awk '{print int(($1+$2)/2)}')
+  echo "$q: search box $b -> $x,$y" >> "$S/search.txt"
+  adb shell input tap ${x:-540} ${y:-330}; sleep 1
   adb shell input text "$q"; sleep 3
   snap "search-$(echo $q | tr -c 'a-z0-9' '_')"
   adb shell input keyevent KEYCODE_HOME; sleep 2
