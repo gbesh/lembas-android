@@ -132,7 +132,6 @@ class Widgets(private val activity: Activity, private val container: LinearLayou
 
     private fun add(p: AppWidgetProviderInfo) {
         val id = host.allocateAppWidgetId()
-        android.util.Log.i("Lembas", "widget adding ${p.provider} as $id")
         pendingId = id
         pendingHeight = (p.minHeight / dp).roundToInt().coerceIn(80, 360)
         if (manager.bindAppWidgetIdIfAllowed(id, p.provider)) configure(id)
@@ -156,7 +155,7 @@ class Widgets(private val activity: Activity, private val container: LinearLayou
     }
 
     private fun finishAdd(id: Int) {
-        android.util.Log.i("Lembas", "widget added $id")
+        Haptics.feel(container, Haptics.Feel.CONFIRM)
         val list = load()
         list.add(Saved(id, pendingHeight.takeIf { it > 0 } ?: 160))
         save(list)
@@ -172,7 +171,6 @@ class Widgets(private val activity: Activity, private val container: LinearLayou
     /** From the activity's onActivityResult. Returns true if it was ours. */
     fun onResult(requestCode: Int, resultCode: Int): Boolean {
         if (requestCode != REQUEST_BIND && requestCode != REQUEST_CONFIGURE) return false
-        android.util.Log.i("Lembas", "widget result request=$requestCode result=$resultCode pending=$pendingId")
         val id = pendingId
         if (id == -1) return true
         if (resultCode != Activity.RESULT_OK) { cancelPending(); return true }
@@ -187,11 +185,11 @@ class Widgets(private val activity: Activity, private val container: LinearLayou
         if (i < 0) return
         val label = manager.getAppWidgetInfo(id)?.loadLabel(activity.packageManager) ?: "Widget"
         val options = ArrayList<Pair<String, () -> Unit>>()
-        options.add("Taller" to { list[i].heightDp = (list[i].heightDp + 40).coerceAtMost(520); save(list); show() })
-        options.add("Shorter" to { list[i].heightDp = (list[i].heightDp - 40).coerceAtLeast(60); save(list); show() })
+        options.add("Taller" to { Haptics.feel(container, Haptics.Feel.TICK); list[i].heightDp = (list[i].heightDp + 40).coerceAtMost(520); save(list); show() })
+        options.add("Shorter" to { Haptics.feel(container, Haptics.Feel.TICK); list[i].heightDp = (list[i].heightDp - 40).coerceAtLeast(60); save(list); show() })
         if (i > 0) options.add("Move up" to { list.add(i - 1, list.removeAt(i)); save(list); show() })
         if (i < list.size - 1) options.add("Move down" to { list.add(i + 1, list.removeAt(i)); save(list); show() })
-        options.add("Remove" to { list.removeAt(i); save(list); host.deleteAppWidgetId(id); show() })
+        options.add("Remove" to { Haptics.feel(container, Haptics.Feel.REJECT); list.removeAt(i); save(list); host.deleteAppWidgetId(id); show() })
         AlertDialog.Builder(activity, dialogTheme).setTitle(label)
             .setItems(options.map { it.first }.toTypedArray()) { _, which -> options[which].second() }
             .show()
@@ -220,7 +218,7 @@ class LembasHostView(ctx: Context) : AppWidgetHostView(ctx) {
     private val slop = ViewConfiguration.get(ctx).scaledTouchSlop
     private val press = Runnable {
         fired = true
-        performHapticFeedback(android.view.HapticFeedbackConstants.LONG_PRESS)
+        Haptics.feel(this, Haptics.Feel.HOLD)
         onLongPress?.invoke()
     }
 

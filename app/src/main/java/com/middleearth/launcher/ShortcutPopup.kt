@@ -135,7 +135,7 @@ class ShortcutPopup(
                 contentDescription = "Clear"
                 val br = TypedValue().also { activity.theme.resolveAttribute(android.R.attr.selectableItemBackgroundBorderless, it, true) }.resourceId
                 setBackgroundResource(br)
-                setOnClickListener { Dots.clear(n); row.visibility = View.GONE }
+                setOnClickListener { Haptics.feel(it, Haptics.Feel.REJECT); Dots.clear(n); row.visibility = View.GONE }
             }, LinearLayout.LayoutParams(px(40), px(40)))
             box.addView(row, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
         }
@@ -153,6 +153,7 @@ class ShortcutPopup(
                 minimumHeight = px(48)
                 contentDescription = s.shortLabel
                 setOnClickListener {
+                    Haptics.feel(anchor, Haptics.Feel.LIGHT)
                     dismiss()
                     if (Shortcuts.start(apps, s, anchor)) onShortcut()
                 }

@@ -72,6 +72,7 @@ class SettingsSheet(
                     layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 1).apply { marginStart = px(16f) }
                 })
                 group.addView(row(r) {
+                    Haptics.feel(content, Haptics.Feel.TICK)
                     val keep = r.action()
                     dialog.dismiss()
                     if (keep) rebuild()
@@ -96,6 +97,24 @@ class SettingsSheet(
             setDimAmount(0.35f)
         }
         dialog.show()
+        backPreview(dialog, frame)
+    }
+
+    /** Android 14+: the sheet sinks and shrinks as you swipe back, and rises again if you change your mind. */
+    private fun backPreview(dialog: Dialog, frame: View) {
+        if (android.os.Build.VERSION.SDK_INT < 34) return
+        val cb = object : android.window.OnBackAnimationCallback {
+            override fun onBackProgressed(e: android.window.BackEvent) {
+                val t = android.view.animation.DecelerateInterpolator().getInterpolation(e.progress)
+                frame.translationY = t * 72 * dp
+                frame.scaleX = 1f - 0.06f * t; frame.scaleY = frame.scaleX
+            }
+            override fun onBackCancelled() {
+                frame.animate().translationY(0f).scaleX(1f).scaleY(1f).setDuration(200).start()
+            }
+            override fun onBackInvoked() { dialog.dismiss() }
+        }
+        dialog.onBackInvokedDispatcher.registerOnBackInvokedCallback(android.window.OnBackInvokedDispatcher.PRIORITY_DEFAULT, cb)
     }
 
     private fun heading(t: String) = TextView(activity).apply {
@@ -150,7 +169,7 @@ class SettingsSheet(
                 gravity = Gravity.CENTER_HORIZONTAL
                 setPadding(px(4f), 0, px(4f), 0)
                 isClickable = true
-                setOnClickListener { dialog.dismiss(); onPickLook(id) }
+                setOnClickListener { Haptics.feel(it, Haptics.Feel.CONFIRM); dialog.dismiss(); onPickLook(id) }
                 contentDescription = if (id == Look.ADAPTIVE) "Follow the sun" else Look.byId(id).title
             }
             val img = ImageView(activity).apply {

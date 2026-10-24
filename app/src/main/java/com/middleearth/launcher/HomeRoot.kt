@@ -45,7 +45,7 @@ class HomeRoot @JvmOverloads constructor(context: Context, attrs: AttributeSet? 
     private val longPress = Runnable {
         if (mode == NONE) {
             mode = IGNORE
-            performHapticFeedback(android.view.HapticFeedbackConstants.LONG_PRESS)
+            Haptics.feel(this, Haptics.Feel.HOLD)
             callbacks?.onLongPressHome()
         }
     }
