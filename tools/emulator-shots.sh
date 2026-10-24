@@ -92,7 +92,11 @@ for t in 0921:shire 0130:elven; do
     adb shell am force-stop com.middleearth.launcher
     adb shell "sed -i -e 's#<string name=\"drawer_icons\">[a-z]*</string>##' -e 's#<boolean name=\"keyboard\" value=\"[a-z]*\" />##' -e 's#</map>#<string name=\"drawer_icons\">$style</string><boolean name=\"keyboard\" value=\"false\" /></map>#' $P"
     adb shell input keyevent KEYCODE_HOME; sleep 4
-    adb shell input swipe 540 1350 540 350 250; sleep 3
+    adb shell am start -n com.middleearth.launcher/.MainActivity -a com.middleearth.launcher.SEARCH > /dev/null
+    sleep 4
+    # hide the keyboard if it came up (BACK with no keyboard would close the Red Book)
+    adb shell dumpsys input_method | grep -q "mInputShown=true" && adb shell input keyevent KEYCODE_BACK
+    sleep 2
     snap "drawer-$n-$style"
     if [ $style = tonal ]; then
       adb shell input swipe 540 1250 540 1250 1600 &
