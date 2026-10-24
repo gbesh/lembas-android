@@ -47,6 +47,9 @@ for q in ca sam zzqx 12*3+4; do
   snap "search-$(echo $q | tr -c 'a-z0-9' '_')"
   adb shell input keyevent KEYCODE_HOME; sleep 2
 done
+# a widget on the home screen (the emulator's own Clock widget), added the way the picker does,
+# and a notification to preview
+adb shell cmd notification post -S bigtext -t "Gandalf" lembas-test "A wizard is never late, nor is he early." > /dev/null 2>&1 || true
 # the settings sheet (long-press on empty space), in the last look
 adb shell input keyevent KEYCODE_HOME; sleep 3
 adb shell input swipe 540 1500 540 1500 900

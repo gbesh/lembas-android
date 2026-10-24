@@ -59,16 +59,18 @@ class IconCache private constructor(private val context: Context) {
         val sizePx: Int,
         val glyphFraction: Float,
         val themed: Boolean,
+        /** An icon pack's package ("" for none): with [themed] off, its drawings replace the apps' own icons. */
+        val pack: String = "",
     ) {
-        val id = "${look.id}#$frame#$fillTop#$fillBottom#$stroke#$sizePx#$glyphFraction#$themed"
+        val id = "${look.id}#$frame#$fillTop#$fillBottom#$stroke#$sizePx#$glyphFraction#$themed#$pack"
 
         companion object {
-            fun dock(look: Look, sizePx: Int, themed: Boolean) =
-                Spec(look, look.dockFrame, look.dockFillTop, look.dockFillBottom, look.dockStroke, sizePx, 0.46f, themed)
+            fun dock(look: Look, sizePx: Int, themed: Boolean, pack: String = "") =
+                Spec(look, look.dockFrame, look.dockFillTop, look.dockFillBottom, look.dockStroke, sizePx, 0.46f, themed, pack)
 
-            fun drawer(look: Look, sizePx: Int, themed: Boolean) =
+            fun drawer(look: Look, sizePx: Int, themed: Boolean, pack: String = "") =
                 Spec(look, look.drawerFrame, look.drawerFillTop, look.drawerFillBottom, look.drawerStroke, sizePx,
-                    if (look.drawerFrame == IconFrame.NONE) 0.8f else 0.52f, themed)
+                    if (look.drawerFrame == IconFrame.NONE) 0.8f else 0.52f, themed, pack)
         }
     }
 
@@ -126,7 +128,9 @@ class IconCache private constructor(private val context: Context) {
         val c = Canvas(bmp)
 
         if (!spec.themed) {
-            val d = entry.info.getBadgedIcon(dpi)
+            val fromPack = if (spec.pack.isEmpty()) null else IconPacks.drawable(context, spec.pack, entry.component, dpi)
+                ?.let { context.packageManager.getUserBadgedIcon(it, entry.user) }
+            val d = fromPack ?: entry.info.getBadgedIcon(dpi)
             val inset = if (spec.frame == IconFrame.NONE) 0 else (size * 0.08f).toInt()
             d.setBounds(inset, inset, size - inset, size - inset)
             d.draw(c)

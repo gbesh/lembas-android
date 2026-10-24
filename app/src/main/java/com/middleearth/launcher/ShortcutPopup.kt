@@ -97,6 +97,51 @@ class ShortcutPopup(
             setPadding(px(18), px(14), px(18), px(6))
         })
 
+        // Waiting notifications first: tap one to open it, × to clear it
+        val notes = Dots.notesFor(e.packageName).take(3)
+        for (n in notes) {
+            val row = LinearLayout(activity).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                setPadding(px(18), px(6), px(6), px(6))
+                setBackgroundResource(ripple)
+                contentDescription = "${n.title}: ${n.text}"
+                setOnClickListener { dismiss(); Dots.open(n); onShortcut() }
+            }
+            val words = LinearLayout(activity).apply { orientation = LinearLayout.VERTICAL }
+            if (n.title.isNotEmpty()) words.addView(TextView(activity).apply {
+                text = n.title
+                typeface = labelFont
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
+                setTextColor(look.popupText)
+                setSingleLine()
+                ellipsize = android.text.TextUtils.TruncateAt.END
+            })
+            if (n.text.isNotEmpty()) words.addView(TextView(activity).apply {
+                text = n.text
+                typeface = bodyFont
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
+                setTextColor(look.popupMuted)
+                maxLines = 3
+                ellipsize = android.text.TextUtils.TruncateAt.END
+            })
+            row.addView(words, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+            row.addView(ImageView(activity).apply {
+                setImageResource(R.drawable.g_close)
+                imageTintList = ColorStateList.valueOf(look.popupMuted)
+                setPadding(px(10), px(10), px(10), px(10))
+                contentDescription = "Clear"
+                val br = TypedValue().also { activity.theme.resolveAttribute(android.R.attr.selectableItemBackgroundBorderless, it, true) }.resourceId
+                setBackgroundResource(br)
+                setOnClickListener { Dots.clear(n); row.visibility = View.GONE }
+            }, LinearLayout.LayoutParams(px(40), px(40)))
+            box.addView(row, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
+        }
+        if (notes.isNotEmpty()) {
+            box.addView(View(activity).apply { setBackgroundColor(look.popupStroke) },
+                LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, px(1)).apply { topMargin = px(4); bottomMargin = px(4) })
+        }
+
         for (s in shortcuts) {
             val row = LinearLayout(activity).apply {
                 orientation = LinearLayout.HORIZONTAL
@@ -167,7 +212,7 @@ class ShortcutPopup(
         box.addView(bottom)
 
         // Measure, then place above the icon (or below it if there's no room).
-        val width = px(256)
+        val width = if (notes.isNotEmpty()) px(296) else px(256)
         box.measure(
             View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
             View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),

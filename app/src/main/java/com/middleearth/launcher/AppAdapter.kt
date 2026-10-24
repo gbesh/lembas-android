@@ -30,7 +30,7 @@ class AppAdapter(
     private val sectionFont: Typeface = if (look.sectionUsesDisplay)
         Fonts.get(context.assets, look.displayFont) else Fonts.get(context.assets, look.labelFont, 500)
 
-    private class Holder(val section: TextView, val label: TextView, val icon: ImageView)
+    private class Holder(val section: TextView, val label: TextView, val icon: ImageView, val note: TextView)
 
     fun setApps(apps: List<AppEntry>) {
         all = apps
@@ -120,7 +120,12 @@ class AppAdapter(
         val h = view.tag as Holder
         val e = shown[position]
         h.label.text = e.label
-        view.findViewById<View>(R.id.row).contentDescription = e.label
+        val n = Dots.notesFor(e.packageName).firstOrNull()
+        if (n != null) {
+            h.note.text = listOf(n.title, n.text).filter { it.isNotEmpty() }.joinToString(": ")
+            h.note.visibility = View.VISIBLE
+        } else h.note.visibility = View.GONE
+        view.findViewById<View>(R.id.row).contentDescription = e.label + (n?.let { ", ${h.note.text}" } ?: "")
         if (isSectionStart(position)) {
             h.section.visibility = View.VISIBLE
             h.section.text = letterOf(e).toString()
@@ -140,7 +145,11 @@ class AppAdapter(
         section.setTextColor(look.accent)
         section.setTextSize(TypedValue.COMPLEX_UNIT_SP, look.sectionSizeSp)
         if (!look.sectionUsesDisplay) section.letterSpacing = 0.2f
-        v.tag = Holder(section, label, v.findViewById(R.id.icon))
+        val note = v.findViewById<TextView>(R.id.note)
+        note.typeface = sectionFont
+        note.setTextColor(look.muted)
+        note.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
+        v.tag = Holder(section, label, v.findViewById(R.id.icon), note)
         return v
     }
 }
