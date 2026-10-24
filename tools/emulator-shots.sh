@@ -29,6 +29,20 @@ for t in 0921:shire 1530:redbook 2005:starlit 0130:elven; do
   adb shell cmd statusbar collapse
   echo "$n: $(adb shell settings get secure theme_customization_overlay_packages) night=$(adb shell settings get secure ui_night_mode)" >> "$S/theme.txt"
 done
+# search: a test contact first, then a few searches in the Red Book (the drawer)
+adb shell content insert --uri content://com.android.contacts/raw_contacts --bind account_type:n: --bind account_name:n:
+rid=$(adb shell content query --uri content://com.android.contacts/raw_contacts --projection _id | tail -1 | sed 's/.*_id=//' | tr -d '\r ')
+adb shell content insert --uri content://com.android.contacts/data --bind raw_contact_id:i:$rid --bind mimetype:s:vnd.android.cursor.item/name --bind data1:s:Samwise\ Gamgee
+adb shell content insert --uri content://com.android.contacts/data --bind raw_contact_id:i:$rid --bind mimetype:s:vnd.android.cursor.item/phone_v2 --bind data1:s:0400111222 --bind data2:i:2
+adb shell pm grant com.middleearth.launcher android.permission.READ_CONTACTS
+adb shell input keyevent KEYCODE_HOME; sleep 3
+for q in ca sam zzqx 12*3+4; do
+  adb shell input swipe 540 1900 540 600 250; sleep 2
+  adb shell input tap 540 330; sleep 1
+  adb shell input text "$q"; sleep 3
+  snap "search-$(echo $q | tr -c 'a-z0-9' '_')"
+  adb shell input keyevent KEYCODE_HOME; sleep 2
+done
 # the settings sheet (long-press on empty space), in the last look
 adb shell input keyevent KEYCODE_HOME; sleep 3
 adb shell input swipe 540 1500 540 1500 900

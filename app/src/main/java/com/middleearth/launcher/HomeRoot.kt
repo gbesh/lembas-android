@@ -27,6 +27,8 @@ class HomeRoot @JvmOverloads constructor(context: Context, attrs: AttributeSet? 
         fun onDragEnd(velocityY: Float)
         fun onPullDownOnHome()
         fun onLongPressHome()
+        /** Two quick taps on empty space (Lembas locks the phone, if you turned that on). */
+        fun onDoubleTapHome() {}
         /** True for touches that belong to something else: the letter strips, or a dock icon (swipe-up = shortcut). */
         fun touchBlocked(x: Float, y: Float): Boolean
     }
@@ -50,12 +52,24 @@ class HomeRoot @JvmOverloads constructor(context: Context, attrs: AttributeSet? 
 
     override fun onInterceptTouchEvent(ev: MotionEvent): Boolean = track(ev)
 
+    private var lastTapAt = 0L
+    private var lastTapX = 0f
+    private var lastTapY = 0f
+
     override fun onTouchEvent(ev: MotionEvent): Boolean {
         // Reaches here when the touch landed on empty space (no child took it).
         if (ev.actionMasked == MotionEvent.ACTION_DOWN && callbacks?.isDrawerOpen() == false) {
             postDelayed(longPress, ViewConfiguration.getLongPressTimeout().toLong())
         }
+        val tap = ev.actionMasked == MotionEvent.ACTION_UP && mode == NONE && callbacks?.isDrawerOpen() == false &&
+            ev.eventTime - ev.downTime < ViewConfiguration.getTapTimeout() * 3
         track(ev)
+        if (tap) {
+            val quick = ev.eventTime - lastTapAt < ViewConfiguration.getDoubleTapTimeout() &&
+                abs(ev.x - lastTapX) < slop * 4 && abs(ev.y - lastTapY) < slop * 4
+            if (quick) { lastTapAt = 0L; callbacks?.onDoubleTapHome() }
+            else { lastTapAt = ev.eventTime; lastTapX = ev.x; lastTapY = ev.y }
+        }
         return true
     }
 

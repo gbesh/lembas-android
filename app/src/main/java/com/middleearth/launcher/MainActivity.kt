@@ -86,6 +86,11 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
     private lateinit var ornament: ImageView
     private lateinit var meal: TextView
     private lateinit var sunArc: SunArcView
+    private lateinit var music: MusicCard
+    private lateinit var searchEngine: SearchEngine
+    private lateinit var searchAdapter: SearchAdapter
+    /** True while there's something typed in search (the list then shows results, not the A-Z). */
+    private var searching = false
     private var modern = true
     private var hoursFont: android.graphics.Typeface? = null
     private var minutesFont: android.graphics.Typeface? = null
@@ -203,6 +208,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
     override fun onStart() {
         super.onStart()
         visibleNow = true
+        if (prefs.getBoolean(PREF_MUSIC, true)) music.start()
     }
 
     override fun onResume() {
@@ -245,6 +251,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
     override fun onStop() {
         super.onStop()
         visibleNow = false
+        music.stop()
         // Coming back home should always show the home screen, not a half-open drawer.
         animator?.cancel()
         animator = null
@@ -323,6 +330,12 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         actions.add(ShortcutPopup.Action(if (pinned) "Unpin" else "Add to dock", if (pinned) R.drawable.g_close else R.drawable.g_pin) {
             togglePin(e)
         })
+        actions.add(ShortcutPopup.Action("Rename", R.drawable.g_notes) { renameApp(e) })
+        val hidden = e !in repo.apps
+        actions.add(ShortcutPopup.Action(if (hidden) "Show in the list" else "Hide from the list", R.drawable.g_shield) {
+            repo.setHidden(e, !hidden)
+            Toast.makeText(this, if (hidden) "${e.label} is back in the list" else "${e.label} is hidden. Search still finds it.", Toast.LENGTH_SHORT).show()
+        })
         if (e.isMainUser) actions.add(ShortcutPopup.Action("Uninstall", R.drawable.g_trash) {
             try {
                 startActivity(Intent(Intent.ACTION_DELETE, Uri.fromParts("package", e.packageName, null)))
@@ -330,6 +343,39 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         })
         anchor.performHapticFeedback(android.view.HapticFeedbackConstants.LONG_PRESS)
         popup.show(anchor, e, actions) { recordLaunch(e) }
+    }
+
+    /** Hidden apps: tap one to put it back in the list. */
+    private fun showHiddenApps() {
+        val hidden = repo.hidden
+        if (hidden.isEmpty()) {
+            Toast.makeText(this, "No hidden apps. Touch and hold an app to hide it.", Toast.LENGTH_LONG).show()
+            return
+        }
+        AlertDialog.Builder(this, dialogTheme())
+            .setTitle("Hidden apps")
+            .setItems(hidden.map { "Show ${it.label}" }.toTypedArray()) { _, which -> repo.setHidden(hidden[which], false) }
+            .setNegativeButton("Done", null)
+            .show()
+    }
+
+    private fun renameApp(e: AppEntry) {
+        val field = EditText(this).apply {
+            setText(e.label)
+            setSelection(text.length)
+            hint = e.originalLabel
+            setSingleLine()
+        }
+        val pad = (20 * dp).roundToInt()
+        val box = FrameLayout(this).apply { setPadding(pad, pad / 2, pad, 0); addView(field) }
+        AlertDialog.Builder(this, dialogTheme())
+            .setTitle("Rename ${e.originalLabel}")
+            .setView(box)
+            .setPositiveButton("Rename") { _, _ -> repo.rename(e, field.text.toString()) }
+            .setNeutralButton("Original name") { _, _ -> repo.rename(e, "") }
+            .setNegativeButton("Cancel", null)
+            .show()
+        field.requestFocus()
     }
 
     /** Swipe up on an icon (dock or Lately) → open its first shortcut, e.g. the browser's New tab. */
@@ -444,7 +490,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         lately.removeAllViews()
         val entries = (prefs.getString(PREF_RECENT, "") ?: "").split('\n')
             .mapNotNull { repo.byKey[it] }.take(4)
-        latelyBlock.visibility = if (entries.isEmpty() || adapter.isSearching) View.GONE else View.VISIBLE
+        latelyBlock.visibility = if (entries.isEmpty() || searching) View.GONE else View.VISIBLE
         val size = (52 * dp).roundToInt()
         val bg = ripple(false)
         val small = Fonts.get(assets, look.labelFont, 500)
@@ -519,7 +565,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
 
     private fun entranceViews(): List<Pair<View, Long>> = listOf(
         label to 120L, clock to 160L, shire to 240L, date to 280L,
-        ornament to 300L, meal to 320L, sunArc to 340L, hint to 300L, dock to 300L,
+        ornament to 300L, meal to 320L, sunArc to 340L, music to 360L, hint to 300L, dock to 300L,
     )
 
     private fun prepareEntrance() {
@@ -567,6 +613,10 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         ornament = findViewById(R.id.ornament)
         meal = findViewById(R.id.meal)
         sunArc = findViewById(R.id.sunArc)
+        // the music player sits under the sun arc
+        music = MusicCard(this)
+        home.addView(music, home.indexOfChild(sunArc) + 1, LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = (14 * dp).roundToInt() })
         hint = findViewById(R.id.hint)
         dock = findViewById(R.id.dock)
         drawer = findViewById(R.id.drawer)
@@ -809,6 +859,9 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
 
         hint.setImageResource(look.hintRes)
         hint.imageTintList = ColorStateList.valueOf(look.hintColor)
+        music.style(look.clockColor, (look.clockColor and 0x00FFFFFF) or 0xA0000000.toInt(), look.accent,
+            if (look.lightBars) 0x1A000000 else 0x24FFFFFF, Fonts.get(assets, look.displayItalicFont, 400, true),
+            Fonts.get(assets, "AlegreyaSans-Medium.ttf", 500))
         if (modern) applyModern() else { date.visibility = View.VISIBLE; sunArc.visibility = View.GONE }
 
         // Drawer — same layout for every theme
@@ -875,15 +928,25 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
 
     private fun setupDrawer() {
         adapter = AppAdapter(this, look, icons, drawerSpec)
+        searchEngine = SearchEngine(this, repo)
+        searchAdapter = SearchAdapter(this, look, icons, drawerSpec, searchEngine)
         list.adapter = adapter
-        list.setOnItemClickListener { _, v, pos, _ -> launch(adapter.getItem(pos), v.findViewById(R.id.icon)) }
-        list.setOnItemLongClickListener { _, v, pos, _ -> showAppMenu(adapter.getItem(pos), v.findViewById(R.id.icon)); true }
+        list.setOnItemClickListener { _, v, pos, _ ->
+            if (searching) openHit(searchAdapter.getItem(pos), v)
+            else launch(adapter.getItem(pos), v.findViewById(R.id.icon))
+        }
+        list.setOnItemLongClickListener { _, v, pos, _ ->
+            if (searching) {
+                val h = searchAdapter.getItem(pos)
+                if (h is Hit.App) { showAppMenu(h.e, (v as ViewGroup).getChildAt(0)); true } else false
+            } else { showAppMenu(adapter.getItem(pos), v.findViewById(R.id.icon)); true }
+        }
         list.setOnScrollListener(object : AbsListView.OnScrollListener {
             override fun onScrollStateChanged(view: AbsListView, scrollState: Int) {
                 if (scrollState == AbsListView.OnScrollListener.SCROLL_STATE_TOUCH_SCROLL) hideKeyboard()
             }
             override fun onScroll(view: AbsListView, first: Int, visible: Int, total: Int) {
-                if (total == 0 || adapter.isSearching) return
+                if (total == 0 || searching) return
                 val c = adapter.letterAt(first)
                 railLeft.setCurrent(c)
                 railRight.setCurrent(c)
@@ -903,25 +966,52 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
             override fun afterTextChanged(s: Editable?) {
-                adapter.setQuery(s?.toString() ?: "")
-                list.setSelection(0)
-                val searching = adapter.isSearching
-                railLeft.visibility = if (searching) View.GONE else View.VISIBLE
-                railRight.visibility = if (searching) View.GONE else View.VISIBLE
-                latelyBlock.visibility = if (searching || lately.childCount == 0 || lately.getChildAt(0) is Space) View.GONE else View.VISIBLE
-                updateEmpty()
+                runSearch(s?.toString() ?: "")
             }
         })
         search.setOnEditorActionListener { _, actionId, event ->
             val enter = actionId == EditorInfo.IME_ACTION_GO ||
                 (event != null && event.keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_DOWN)
-            if (enter) adapter.first()?.let { launch(it, null) }
+            if (enter) searchAdapter.first()?.let { openHit(it, null) }
             enter
         }
     }
 
+    /** Typing in search: the list switches from A-Z to results (apps, shortcuts, contacts, a sum, the web). */
+    private fun runSearch(text: String) {
+        val now = text.trim().isNotEmpty()
+        if (now != searching) {
+            searching = now
+            list.adapter = if (now) searchAdapter else adapter
+            railLeft.visibility = if (now) View.GONE else View.VISIBLE
+            railRight.visibility = if (now) View.GONE else View.VISIBLE
+            latelyBlock.visibility = if (now || lately.childCount == 0 || lately.getChildAt(0) is Space) View.GONE else View.VISIBLE
+        }
+        if (now) searchEngine.search(text) { hits ->
+            if (searching && search.text.toString() == text) { searchAdapter.hits = hits; list.setSelection(0) }
+        }
+        updateEmpty()
+    }
+
+    private fun openHit(h: Hit, v: View?) {
+        when (h) {
+            is Hit.App -> launch(h.e, (v as? ViewGroup)?.getChildAt(0))
+            is Hit.Shortcut -> { Shortcuts.start(repo.launcherApps, h.s, v); h.app?.let { recordLaunch(it) } }
+            is Hit.Contact -> searchEngine.openContact(h)
+            is Hit.Calc -> searchEngine.copy(h.result.replace(",", ""))
+            is Hit.Action -> h.run(v)
+            is Hit.Header -> Unit
+        }
+    }
+
+    @Deprecated("Deprecated in Java")
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == SearchEngine.REQUEST_CONTACTS && searching) runSearch(search.text.toString())
+    }
+
     private fun updateEmpty() {
-        empty.visibility = if (repo.loaded && adapter.count == 0) View.VISIBLE else View.GONE
+        empty.visibility = if (!searching && repo.loaded && adapter.count == 0) View.VISIBLE else View.GONE
     }
 
     override fun isDrawerOpen() = drawerOpen
@@ -982,6 +1072,10 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
 
     override fun onLongPressHome() = showSettings()
 
+    override fun onDoubleTapHome() {
+        if (LockService.enabled(this)) LockService.lock()
+    }
+
     private fun applyProgress(p: Float) {
         progress = p
         val h = root.height.toFloat()
@@ -1036,6 +1130,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         drawerOpen = target >= 1f
         updateAmbient()
         if (drawerOpen) {
+            searchEngine.warmUp()
             if (prefs.getBoolean(PREF_KEYBOARD, false)) showKeyboard()
         } else {
             hideKeyboard()
@@ -1106,8 +1201,36 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
                         try { startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)) } catch (_: Exception) { }
                         false
                     } },
+                SettingsSheet.Row("Music player", onOff(prefs.getBoolean(PREF_MUSIC, true) && Dots.accessGranted(this))) {
+                    val on = prefs.getBoolean(PREF_MUSIC, true) && Dots.accessGranted(this)
+                    prefs.edit().putBoolean(PREF_MUSIC, !on).apply()
+                    if (on) { music.stop(); music.visibility = View.GONE; true }
+                    else if (Dots.accessGranted(this) || Dots.turnOn(this)) { music.start(); true }
+                    else {
+                        Toast.makeText(this, "Allow Lembas under Notification access to show what's playing", Toast.LENGTH_LONG).show()
+                        try { startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)) } catch (_: Exception) { }
+                        false
+                    } },
+                SettingsSheet.Row("Double-tap to lock", onOff(LockService.enabled(this))) {
+                    if (LockService.enabled(this)) { LockService.turnOff(this); true }
+                    else if (android.os.Build.VERSION.SDK_INT < 28) { Toast.makeText(this, "Needs Android 9 or later", Toast.LENGTH_SHORT).show(); true }
+                    else if (LockService.turnOn(this)) true
+                    else {
+                        Toast.makeText(this, "Turn on \"Lembas double-tap to lock\" in Accessibility (it only locks the screen)", Toast.LENGTH_LONG).show()
+                        try { startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) } catch (_: Exception) { }
+                        false
+                    } },
                 SettingsSheet.Row("Keyboard when opening the Red Book", onOff(kbd)) {
                     prefs.edit().putBoolean(PREF_KEYBOARD, !kbd).apply(); true },
+            )),
+            SettingsSheet.Section("Apps and search", listOf(
+                SettingsSheet.Row("Hidden apps", if (repo.hidden.isEmpty()) "None" else "${repo.hidden.size}") { showHiddenApps(); false },
+                SettingsSheet.Row("Contacts in search", onOff(searchEngine.contactsAllowed)) {
+                    if (searchEngine.contactsAllowed) {
+                        Toast.makeText(this, "Turn off contacts access in Lembas's app permissions", Toast.LENGTH_LONG).show()
+                        try { startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, android.net.Uri.parse("package:$packageName"))) } catch (_: Exception) { }
+                    } else requestPermissions(arrayOf(android.Manifest.permission.READ_CONTACTS), SearchEngine.REQUEST_CONTACTS)
+                    false },
             )),
             SettingsSheet.Section("The whole phone", listOf(
                 SettingsSheet.Row("Theme the whole phone", when {
@@ -1230,6 +1353,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         const val PREF_THEMED = "themed_icons"
         const val PREF_MEALS = "meals"
         const val PREF_HOME_STYLE = "home_style"
+        const val PREF_MUSIC = "music"
         /** Set just before a look change rebuilds the screen, so the new look fades in. */
         @JvmStatic var fadeInNext = false
         const val PREF_KEYBOARD = "keyboard"
