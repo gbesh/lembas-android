@@ -107,4 +107,11 @@ for t in 0921:shire 0130:elven; do
     adb shell input keyevent KEYCODE_HOME; sleep 2
   done
 done
+# the Red Book on a swipe (the spring), then closed with Back (the back gesture's handler)
+adb shell input keyevent KEYCODE_HOME; sleep 3
+adb shell input swipe 540 1750 540 500 180; sleep 2
+snap "swipe-open"
+adb shell input keyevent KEYCODE_BACK; sleep 2
+snap "back-closed"
+adb logcat -d | grep -E "AndroidRuntime|FATAL EXCEPTION" -A12 > "$S/crash.txt" || true
 exit 0
