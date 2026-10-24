@@ -1256,7 +1256,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
                     if (Dots.enabled(this)) { Dots.turnOff(this); true }
                     else if (Dots.turnOn(this)) true
                     else {
-                        Toast.makeText(this, "Allow Lembas under Notification access (it only counts notifications, never reads them)", Toast.LENGTH_LONG).show()
+                        Toast.makeText(this, "Allow Lembas under Notification access (the previews stay on your phone; nothing is sent anywhere)", Toast.LENGTH_LONG).show()
                         try { startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)) } catch (_: Exception) { }
                         false
                     } },

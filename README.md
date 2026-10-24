@@ -53,11 +53,14 @@ The Lembas watch face, watch launcher and tile have their own repo: **[gbesh/lem
 - **Unlocking**, and each change of look, plays a quick entrance: the scene settles in and the text rises into place in about half a second.
 - **Double-tap empty space** to lock the phone (turn on in settings; fingerprint and face unlock keep working). It uses a tiny accessibility service that only locks the screen and reads nothing; after the whole-phone setup Lembas switches it on itself.
 - **Music player** under the clock while something's playing: the song, the artist, play/pause and next. Tap the song to open the app that's playing. (It uses the same notification access as the dots.)
-- **Notification dots** (turn on in settings): a small dot in the look's colour on apps with notifications waiting, on the dock, Lately and the list. Lembas only counts which apps have notifications; it never reads them.
+- **Notification dots and previews** (turn on in settings): a small dot in the look's colour on apps with notifications waiting, on the dock, Lately and the list. In the list, the latest message shows in a line under the app's name, and touching and holding the app shows its notifications above its shortcuts: tap one to open it, or × to clear it. Notifications stay on your phone; Lembas sends nothing anywhere.
+- **Widgets** under the clock: any app's widget (weather, calendar, notes…), stacked one above another. Add them from settings → **Add a widget**, which lists every widget with its preview. Android asks once whether Lembas may show widgets, and some widgets have their own setup screen. Touch and hold a widget to make it taller or shorter, move it up or down, or remove it.
 
 **Search** (*Speak, friend, and enter*, at the top of the Red Book). As you type it finds:
 - **Apps**, by name, by a word in the name, or by initials (*gm* for Google Maps); hidden apps too.
-- **App shortcuts**, such as *New incognito tab* or *Take a selfie*.
+- **Icon packs:** install any icon pack from the Play Store (the kind made for Nova, Niagara and similar launchers), then settings → **App icons** and choose it. Apps the pack doesn't cover keep their own icon.
+
+**App shortcuts**, such as *New incognito tab* or *Take a selfie*.
 - **Contacts**, with call and message buttons beside each. Lembas asks for contacts access the first time you choose to.
 - **A quick sum**: type *12*3+4* or *15% * 80* and the answer shows at the top. Tap it to copy.
 - **Search Google** and **Search the Play Store** for what you typed. When no app matches, the Play Store comes first, so installing something is one tap away.
@@ -75,7 +78,8 @@ Press Enter to open the top result. Touch and hold Lembas's own icon (in any app
 - Shortcuts only appear once Lembas is your default Home app (an Android rule).
 
 **Settings** (long-press empty space): a sheet in the look's colours, with a preview of each look to tap, then
-- **Home screen:** clock (Modern or Classic), animations, app icons (line art or original), hobbit mealtimes, next calendar event, notification dots, music player, double-tap to lock, keyboard when opening the Red Book
+- **Home screen:** clock (Modern or Classic), animations, app icons (line art, original, or any installed icon pack), hobbit mealtimes, next calendar event, notification dots, music player, double-tap to lock, keyboard when opening the Red Book
+- **Widgets:** add a widget
 - **Apps and search:** hidden apps, contacts in search
 - **The whole phone:** theme the whole phone, animated wallpaper, still wallpaper follows the look, make Lembas your home app
 - **Watch:** put Lembas on your watch
@@ -141,7 +145,9 @@ Lembas draws its own line-art icon for over 150 common apps (phone, messages, Wh
 | `WatchSetup.kt` | Puts Lembas on the watch from the phone |
 | `SettingsSheet.kt` | The settings sheet with look previews |
 | `SunArcView.kt` | The sun arc under the modern clock |
-| `Dots.kt` | Notification dots |
+| `Dots.kt` | Notification dots and previews |
+| `Widgets.kt` | Home-screen widgets: picker, adding, resizing and the long-press menu |
+| `IconPacks.kt` | Icon packs (the standard appfilter format used by Nova, Niagara and others) |
 | `Search.kt` | Search: apps, shortcuts, contacts, sums, Google and the Play Store |
 | `MusicCard.kt` | The music player on the home screen |
 | `LockService.kt` | Double-tap to lock |

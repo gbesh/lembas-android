@@ -119,7 +119,7 @@
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
             </intent-filter>
         </receiver>
-        <!-- Notification dots (only counts which apps have notifications; off until you turn it on) -->
+        <!-- Notification dots and previews (stay on the phone; off until you turn it on) -->
         <service
             android:name=".DotsService"
             android:exported="true"
