@@ -348,6 +348,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
             }
             addListener(object : AnimatorListenerAdapter() {
                 override fun onAnimationEnd(animation: Animator) {
+                    drawer.scaleX = 1f; drawer.scaleY = 1f; drawer.translationX = 0f; backRadius = 0f
                     drawer.clipToOutline = false
                     drawer.outlineProvider = android.view.ViewOutlineProvider.BACKGROUND
                 }
@@ -1296,6 +1297,8 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         if (target > 0f && latelyStale) refreshLately()
         // the keyboard rises with the Red Book, not after it
         if (target >= 1f && prefs.getBoolean(PREF_KEYBOARD, false)) showKeyboard()
+        // with the phone's animations off ("Remove animations"), Android never runs the spring: jump there
+        if (!ValueAnimator.areAnimatorsEnabled()) { settle(target); return }
         setLayers(true)
         val h = root.height.toFloat().coerceAtLeast(1f)
         var x = from
@@ -1317,6 +1320,14 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
                     settle(target)
                 } else applyProgress(x.coerceIn(0f, 1f))
             }
+            addListener(object : AnimatorListenerAdapter() {
+                private var cancelled = false
+                override fun onAnimationCancel(animation: Animator) { cancelled = true }
+                // ended without reaching the target (Android stopped it): finish the move anyway
+                override fun onAnimationEnd(animation: Animator) {
+                    if (!cancelled && animator === animation) { animator = null; settle(target) }
+                }
+            })
             start()
         }
     }
