@@ -5,4 +5,5 @@
     <string name="wallpaper_description">The Lembas scene on your lock screen. Follows the launcher\'s theme and sets your phone\'s colours to match.</string>
     <string name="lock_service_name">Lembas double-tap to lock</string>
     <string name="lock_service_description">Lets you lock the phone with two quick taps on an empty part of the Lembas home screen. It does nothing else: it doesn\'t read the screen or anything you do.</string>
+    <string name="shortcut_search">Search</string>
 </resources>

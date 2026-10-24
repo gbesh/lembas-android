@@ -198,6 +198,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         if (repo.loaded) onAppsChanged()
         Dots.color = look.accent
         Dots.addListener(dotsChanged)
+        if (intent?.action == ACTION_SEARCH) root.post { openSearch(intent.getStringExtra("query")) }
         if (fadeInNext) {
             fadeInNext = false
             entranceArmed = true
@@ -261,9 +262,19 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        // Home button pressed while already home.
         popup.dismiss()
+        if (intent.action == ACTION_SEARCH) { openSearch(intent.getStringExtra("query")); return }
+        // Home button pressed while already home.
         if (progress > 0f) animateTo(0f)
+    }
+
+    /** Open the Red Book straight into search (the Search shortcut on Lembas's icon, or another app asking). */
+    private fun openSearch(query: String?) {
+        if (progress < 1f) animateTo(1f)
+        root.postDelayed({
+            if (!query.isNullOrEmpty()) { search.setText(query); search.setSelection(query.length) }
+            showKeyboard()
+        }, 350)
     }
 
     @Deprecated("Deprecated in Java")
@@ -1355,6 +1366,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         const val PREF_MEALS = "meals"
         const val PREF_HOME_STYLE = "home_style"
         const val PREF_MUSIC = "music"
+        const val ACTION_SEARCH = "com.middleearth.launcher.SEARCH"
         /** Set just before a look change rebuilds the screen, so the new look fades in. */
         @JvmStatic var fadeInNext = false
         const val PREF_KEYBOARD = "keyboard"

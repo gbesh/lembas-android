@@ -70,6 +70,12 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- Open straight into search (the Search shortcut on Lembas's icon, or another app) -->
+            <intent-filter>
+                <action android:name="com.middleearth.launcher.SEARCH" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/shortcuts" />
         </activity>
 
         <!-- Live wallpaper: the scene on the lock screen + system colours that follow the theme. -->
