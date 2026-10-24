@@ -83,7 +83,6 @@ snap "widget-home"
 adb shell cat /data/data/com.middleearth.launcher/shared_prefs/lembas.xml | grep -i widget > "$S/widgets.txt" 2>&1
 adb logcat -d | grep -i -E "Lembas *:|widget" | tail -40 >> "$S/widgets.txt"
 adb logcat -d | grep -i -E "lembas|middleearth|AndroidRuntime|ThemeOverlay" | tail -300 > "$S/logcat.txt" || true
-exit 0
 # the Red Book's icon styles, in a light look and a dark one, and a row being pressed
 P=/data/data/com.middleearth.launcher/shared_prefs/lembas.xml
 for t in 0921:shire 0130:elven; do
@@ -106,3 +105,4 @@ for t in 0921:shire 0130:elven; do
     adb shell input keyevent KEYCODE_HOME; sleep 2
   done
 done
+exit 0
