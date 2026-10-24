@@ -200,9 +200,11 @@ class ShortcutPopup(
                 imageTintList = ColorStateList.valueOf(look.popupMuted)
             }, LinearLayout.LayoutParams(px(18), px(18)))
             b.addView(TextView(activity).apply {
-                text = a.label
+                // one short word each, so five fit side by side
+                text = SHORT[a.label] ?: a.label
                 typeface = bodyFont
-                setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, if (actions.size > 4) 12f else 13f)
+                ellipsize = android.text.TextUtils.TruncateAt.END
                 setTextColor(look.popupMuted)
                 setSingleLine()
                 gravity = Gravity.CENTER
@@ -214,7 +216,7 @@ class ShortcutPopup(
         box.addView(bottom)
 
         // Measure, then place above the icon (or below it if there's no room).
-        val width = if (notes.isNotEmpty()) px(296) else px(256)
+        val width = if (notes.isNotEmpty() || actions.size > 4) px(296) else px(256)
         box.measure(
             View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
             View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
@@ -262,4 +264,8 @@ class ShortcutPopup(
     }
 
     private fun px(v: Int) = (v * dp).roundToInt()
+
+    private companion object {
+        val SHORT = mapOf("App info" to "Info", "Add to dock" to "Pin", "Hide from the list" to "Hide", "Show in the list" to "Show")
+    }
 }
