@@ -59,5 +59,23 @@ adb shell input swipe 540 1900 540 700 400
 sleep 2
 snap "settings-more"
 adb shell input keyevent KEYCODE_BACK
+# widgets: add the emulator's clock widget through Lembas's own picker (animations off so the
+# screen can be read)
+adb shell am force-stop com.middleearth.launcher
+adb shell "sed -i 's#</map>#<boolean name=\"animations\" value=\"false\" /></map>#' /data/data/com.middleearth.launcher/shared_prefs/lembas.xml"
+adb shell settings put global animator_duration_scale 0
+adb shell input keyevent KEYCODE_HOME; sleep 4
+adb shell input swipe 540 1500 540 1500 900; sleep 3
+for i in 1 2 3 4 5 6; do python3 tools/tap.py "add a widget" && break; adb shell input swipe 540 1900 540 900 300; sleep 1; done
+sleep 3
+snap "widget-picker"
+python3 tools/tap.py "clock" || python3 tools/tap.py "analog"
+sleep 3
+snap "widget-bind"
+python3 tools/tap.py "always" ; python3 tools/tap.py "create" || python3 tools/tap.py "allow"
+sleep 4
+adb shell input keyevent KEYCODE_BACK; sleep 1
+adb shell input keyevent KEYCODE_HOME; sleep 3
+snap "widget-home"
 adb logcat -d | grep -i -E "lembas|middleearth|AndroidRuntime|ThemeOverlay" | tail -300 > "$S/logcat.txt" || true
 exit 0
