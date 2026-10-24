@@ -51,21 +51,32 @@ The Lembas watch face, watch launcher and tile have their own repo: **[gbesh/lem
 - **Tap the clock** → alarms. **Tap the Shire date** → calendar.
 - **Long-press empty space or the clock** → the settings sheet.
 - **Unlocking**, and each change of look, plays a quick entrance: the scene settles in and the text rises into place in about half a second.
+- **Double-tap empty space** to lock the phone (turn on in settings; fingerprint and face unlock keep working). It uses a tiny accessibility service that only locks the screen and reads nothing; after the whole-phone setup Lembas switches it on itself.
+- **Music player** under the clock while something's playing: the song, the artist, play/pause and next. Tap the song to open the app that's playing. (It uses the same notification access as the dots.)
 - **Notification dots** (turn on in settings): a small dot in the look's colour on apps with notifications waiting, on the dock, Lately and the list. Lembas only counts which apps have notifications; it never reads them.
 
+**Search** (*Speak, friend, and enter*, at the top of the Red Book). As you type it finds:
+- **Apps**, by name, by a word in the name, or by initials (*gm* for Google Maps); hidden apps too.
+- **App shortcuts**, such as *New incognito tab* or *Take a selfie*.
+- **Contacts**, with call and message buttons beside each. Lembas asks for contacts access the first time you choose to.
+- **A quick sum**: type *12*3+4* or *15% * 80* and the answer shows at the top. Tap it to copy.
+- **Search Google** and **Search the Play Store** for what you typed. When no app matches, the Play Store comes first, so installing something is one tap away.
+
+Press Enter to open the top result. Touch and hold Lembas's own icon (in any app list, or from another launcher) for a **Search** shortcut that opens straight into search.
+
 **App drawer (the same layout in every theme)**
-- Search with *Speak, friend, and enter*. Press Enter to open the top match.
 - **Lately** shows your four most recent apps.
 - **Letter strips on both edges:** drag your thumb down either side to jump through A–Z. The letter under your thumb swells and bulges inward like Niagara, and you feel a tick on each letter.
 - Swipe down from the top of the list to close it.
 
 **App shortcuts**
-- **Long-press any app** (dock, Lately or the list) for its own shortcuts, such as *New tab* and *New incognito tab* for the browser or *Take a selfie* for the camera, plus *App info*, *Add to dock / Unpin* and *Uninstall*.
+- **Long-press any app** (dock, Lately, the list or search) for its own shortcuts, such as *New tab* and *New incognito tab* for the browser or *Take a selfie* for the camera, plus *App info*, *Add to dock / Unpin*, **Rename**, **Hide from the list** (search still finds it; Settings → Hidden apps brings it back) and *Uninstall*.
 - **Swipe up on a dock or Lately icon** to open its first shortcut directly.
 - Shortcuts only appear once Lembas is your default Home app (an Android rule).
 
 **Settings** (long-press empty space): a sheet in the look's colours, with a preview of each look to tap, then
-- **Home screen:** clock (Modern or Classic), animations, app icons (line art or original), hobbit mealtimes, next calendar event, notification dots, keyboard when opening the Red Book
+- **Home screen:** clock (Modern or Classic), animations, app icons (line art or original), hobbit mealtimes, next calendar event, notification dots, music player, double-tap to lock, keyboard when opening the Red Book
+- **Apps and search:** hidden apps, contacts in search
 - **The whole phone:** theme the whole phone, animated wallpaper, still wallpaper follows the look, make Lembas your home app
 - **Watch:** put Lembas on your watch
 - **Updates:** automatic updates, check for updates now
@@ -131,6 +142,9 @@ Lembas draws its own line-art icon for over 150 common apps (phone, messages, Wh
 | `SettingsSheet.kt` | The settings sheet with look previews |
 | `SunArcView.kt` | The sun arc under the modern clock |
 | `Dots.kt` | Notification dots |
+| `Search.kt` | Search: apps, shortcuts, contacts, sums, Google and the Play Store |
+| `MusicCard.kt` | The music player on the home screen |
+| `LockService.kt` | Double-tap to lock |
 | `Lore.kt` | Shire calendar, Quenya times of day, hobbit mealtimes |
 
 ## Credits
