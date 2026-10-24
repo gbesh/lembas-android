@@ -58,14 +58,15 @@ object LookWallpaper {
     private fun sync(ctx: Context) {
         if (!enabled(ctx) || liveWallpaperInUse(ctx)) return
         val look = Themes.current(ctx)
-        val key = look.id + "/" + LocalDate.now()   // a new day can bring a new moon phase
-        if (prefs(ctx).getString(PREF_LAST, "") == key) return
-
         val display = ctx.getSystemService(DisplayManager::class.java).getDisplay(Display.DEFAULT_DISPLAY) ?: return
         val dm = DisplayMetrics()
         @Suppress("DEPRECATION") display.getRealMetrics(dm)
         val w = minOf(dm.widthPixels, dm.heightPixels)
         val h = maxOf(dm.widthPixels, dm.heightPixels)
+        // repaint for a new look, a new day (the moon phase) or a different screen (a new phone,
+        // restored from a backup of the old one, must not keep the old phone's picture)
+        val key = look.id + "/" + LocalDate.now() + "/" + w + "x" + h
+        if (prefs(ctx).getString(PREF_LAST, "") == key) return
         val bmp = Painter(dm.density).paint(look, w, h)
         val wm = WallpaperManager.getInstance(ctx)
         wm.setBitmap(bmp, null, true, WallpaperManager.FLAG_SYSTEM or WallpaperManager.FLAG_LOCK)
