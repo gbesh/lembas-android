@@ -38,8 +38,13 @@ class Widgets(private val activity: Activity, private val container: LinearLayou
     private val prefs = activity.getSharedPreferences(Themes.PREFS, Context.MODE_PRIVATE)
     private val dp = activity.resources.displayMetrics.density
     private fun px(v: Float) = (v * dp).roundToInt()
-    private var pendingId = -1
-    private var pendingHeight = 0
+    // a widget being added (kept in prefs, in case the screen is rebuilt while Android asks)
+    private var pendingId: Int
+        get() = prefs.getInt("widget_pending", -1)
+        set(v) { prefs.edit().putInt("widget_pending", v).apply() }
+    private var pendingHeight: Int
+        get() = prefs.getInt("widget_pending_h", 160)
+        set(v) { prefs.edit().putInt("widget_pending_h", v).apply() }
 
     private class Saved(val id: Int, var heightDp: Int)
 

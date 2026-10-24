@@ -72,7 +72,7 @@ snap "widget-picker"
 python3 tools/tap.py "clock" || python3 tools/tap.py "analog"
 sleep 3
 snap "widget-bind"
-python3 tools/tap.py "always" ; python3 tools/tap.py "create" || python3 tools/tap.py "allow"
+python3 tools/tap.py "always" ; python3 tools/tap.py "=create" || python3 tools/tap.py "=allow"
 sleep 4
 adb shell input keyevent KEYCODE_BACK; sleep 1
 adb shell input keyevent KEYCODE_HOME; sleep 3
