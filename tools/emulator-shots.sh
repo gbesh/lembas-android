@@ -109,10 +109,12 @@ for t in 0921:shire 0130:elven; do
 done
 # the Red Book on a swipe (the spring), then closed with Back (the back gesture's handler)
 adb shell input keyevent KEYCODE_HOME; sleep 3
+adb shell setprop log.tag.LembasTouch DEBUG
 # a real finger: down, a few moves, up (one adb call, so the moves aren't spread out by adb itself)
 adb shell "input motionevent DOWN 160 1650; for y in 1600 1520 1420 1300 1150 1000 850 700; do input motionevent MOVE 160 \$y; done; input motionevent UP 160 650"
 sleep 2
 snap "swipe-open"
+adb logcat -d -s LembasTouch:D Lembas:I > "$S/touch.txt" || true
 adb shell input keyevent KEYCODE_BACK; sleep 2
 snap "back-closed"
 adb logcat -d | grep -E "AndroidRuntime|FATAL EXCEPTION" -A12 > "$S/crash.txt" || true
