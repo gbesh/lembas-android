@@ -83,6 +83,7 @@ object Dots {
             .filter { !it.isOngoing && it.isClearable && it.packageName != ctx.packageName }
             .filter { (it.notification.flags and android.app.Notification.FLAG_GROUP_SUMMARY) == 0 || it.notification.group == null }
             .toList()
+        val liveChanged = Live.set(ctx, active)
         val newNotes = shown.sortedByDescending { it.postTime }.map { sbn ->
             val ex = sbn.notification.extras
             val title = (ex.getCharSequence(android.app.Notification.EXTRA_TITLE) ?: "").toString()
@@ -90,7 +91,7 @@ object Dots {
             Note(sbn.key, sbn.packageName, title, text, sbn.postTime, sbn.notification.contentIntent)
         }.groupBy { it.pkg }
         fun sig(m: Map<String, List<Note>>) = m.mapValues { e -> e.value.map { it.key + it.title + it.text } }
-        val changed = newNotes.keys != packages || sig(newNotes) != sig(notes)
+        val changed = liveChanged || newNotes.keys != packages || sig(newNotes) != sig(notes)
         notes = newNotes
         if (!changed) return
         packages.clear(); packages.addAll(newNotes.keys)
