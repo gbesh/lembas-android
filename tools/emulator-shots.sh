@@ -32,7 +32,7 @@ done
 # search: a test contact first, then a few searches in the Red Book (the drawer)
 adb shell content insert --uri content://com.android.contacts/raw_contacts --bind account_type:n: --bind account_name:n:
 rid=$(adb shell content query --uri content://com.android.contacts/raw_contacts --projection _id | tail -1 | sed 's/.*_id=//' | tr -d '\r ')
-adb shell content insert --uri content://com.android.contacts/data --bind raw_contact_id:i:$rid --bind mimetype:s:vnd.android.cursor.item/name --bind data1:s:Samwise\ Gamgee
+adb shell content insert --uri content://com.android.contacts/data --bind raw_contact_id:i:$rid --bind mimetype:s:vnd.android.cursor.item/name --bind data1:s:Samwise
 adb shell content insert --uri content://com.android.contacts/data --bind raw_contact_id:i:$rid --bind mimetype:s:vnd.android.cursor.item/phone_v2 --bind data1:s:0400111222 --bind data2:i:2
 adb shell pm grant com.middleearth.launcher android.permission.READ_CONTACTS
 sleep 3
