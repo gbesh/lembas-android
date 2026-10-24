@@ -90,11 +90,9 @@ for t in 0921:shire 0130:elven; do
   adb shell "date $(date +%m%d)${hm}$(date +%Y).00" > /dev/null
   for style in tonal disc bare classic; do
     adb shell am force-stop com.middleearth.launcher
-    adb shell "sed -i -e 's#<string name=\"drawer_icons\">[a-z]*</string>##' -e 's#</map>#<string name=\"drawer_icons\">$style</string></map>#' $P"
+    adb shell "sed -i -e 's#<string name=\"drawer_icons\">[a-z]*</string>##' -e 's#<boolean name=\"keyboard\" value=\"[a-z]*\" />##' -e 's#</map>#<string name=\"drawer_icons\">$style</string><boolean name=\"keyboard\" value=\"false\" /></map>#' $P"
     adb shell input keyevent KEYCODE_HOME; sleep 4
-    adb shell am start -n com.middleearth.launcher/.MainActivity -a com.middleearth.launcher.SEARCH --es query "" > /dev/null
-    sleep 4
-    adb shell input keyevent KEYCODE_BACK; sleep 2
+    adb shell input swipe 540 1350 540 350 250; sleep 3
     snap "drawer-$n-$style"
     if [ $style = tonal ]; then
       adb shell input swipe 540 1250 540 1250 1600 &
