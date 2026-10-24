@@ -35,6 +35,9 @@ rid=$(adb shell content query --uri content://com.android.contacts/raw_contacts 
 adb shell content insert --uri content://com.android.contacts/data --bind raw_contact_id:i:$rid --bind mimetype:s:vnd.android.cursor.item/name --bind data1:s:Samwise\ Gamgee
 adb shell content insert --uri content://com.android.contacts/data --bind raw_contact_id:i:$rid --bind mimetype:s:vnd.android.cursor.item/phone_v2 --bind data1:s:0400111222 --bind data2:i:2
 adb shell pm grant com.middleearth.launcher android.permission.READ_CONTACTS
+sleep 3
+adb shell content query --uri content://com.android.contacts/contacts --projection display_name:has_phone_number > "$S/contacts.txt" 2>&1
+echo "raw id: $rid" >> "$S/contacts.txt"
 adb shell input keyevent KEYCODE_HOME; sleep 3
 for q in ca sam zzqx 12*3+4; do
   adb shell am start -n com.middleearth.launcher/.MainActivity -a com.middleearth.launcher.SEARCH --es query "$q" > /dev/null

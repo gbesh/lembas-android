@@ -343,7 +343,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
             togglePin(e)
         })
         actions.add(ShortcutPopup.Action("Rename", R.drawable.g_notes) { renameApp(e) })
-        val hidden = e !in repo.apps
+        val hidden = repo.isHidden(e)
         actions.add(ShortcutPopup.Action(if (hidden) "Show in the list" else "Hide from the list", R.drawable.g_shield) {
             repo.setHidden(e, !hidden)
             Toast.makeText(this, if (hidden) "${e.label} is back in the list" else "${e.label} is hidden. Search still finds it.", Toast.LENGTH_SHORT).show()

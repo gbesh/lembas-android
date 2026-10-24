@@ -281,7 +281,7 @@ class SearchAdapter(
         when (h) {
             is Hit.App -> {
                 r.title.text = h.e.label
-                r.sub.text = if (h.e !in AppRepository.get(activity).apps) "Hidden from the list" else ""
+                r.sub.text = if (AppRepository.get(activity).isHidden(h.e)) "Hidden from the list" else ""
                 icons.bind(h.e, iconSpec, r.icon)
             }
             is Hit.Shortcut -> {

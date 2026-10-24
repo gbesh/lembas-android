@@ -126,6 +126,8 @@ class AppRepository private constructor(private val context: Context) {
         }
     }
 
+    fun isHidden(e: AppEntry) = hidden.any { it.key == e.key }
+
     /** Hide an app from the list (or show it again). It still turns up in search. */
     fun setHidden(e: AppEntry, hide: Boolean) {
         val prefs = context.getSharedPreferences(Themes.PREFS, Context.MODE_PRIVATE)
