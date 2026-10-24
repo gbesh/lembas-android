@@ -118,4 +118,36 @@ adb logcat -d -s LembasTouch:D Lembas:I > "$S/touch.txt" || true
 adb shell input keyevent KEYCODE_BACK; sleep 2
 snap "back-closed"
 adb logcat -d | grep -E "AndroidRuntime|FATAL EXCEPTION" -A12 > "$S/crash.txt" || true
+# bubbles: allow them for Lembas (what "All conversations can bubble" does), then open the
+# Clock app as a bubble from its touch-and-hold menu
+adb shell cmd notification help 2>&1 | grep -i bubble > "$S/bubbles.txt"
+adb shell pm grant com.middleearth.launcher android.permission.POST_NOTIFICATIONS
+adb shell cmd notification set_bubbles com.middleearth.launcher 1 >> "$S/bubbles.txt" 2>&1 || \
+  adb shell cmd notification set_bubbles com.middleearth.launcher "$(adb shell pm list packages -U com.middleearth.launcher | sed 's/.*uid://' | tr -d '\r')" 1 >> "$S/bubbles.txt" 2>&1
+adb shell am start -n com.middleearth.launcher/.MainActivity -a com.middleearth.launcher.SEARCH --es query clock > /dev/null; sleep 4
+adb shell dumpsys input_method | grep -q "mInputShown=true" && adb shell input keyevent KEYCODE_BACK
+sleep 2
+python3 tools/tap.py "=clock" 2>/dev/null; true
+adb shell input keyevent KEYCODE_HOME; sleep 2
+adb shell am start -n com.middleearth.launcher/.MainActivity -a com.middleearth.launcher.SEARCH --es query clock > /dev/null; sleep 4
+adb shell dumpsys input_method | grep -q "mInputShown=true" && adb shell input keyevent KEYCODE_BACK
+sleep 2
+# touch and hold the Clock result, then tap Bubble
+python3 - <<'PY'
+import re, subprocess, xml.etree.ElementTree as ET
+subprocess.run(["adb","shell","uiautomator","dump","/sdcard/ui.xml"],capture_output=True)
+x=subprocess.run(["adb","exec-out","cat","/sdcard/ui.xml"],capture_output=True).stdout
+for n in ET.fromstring(x).iter("node"):
+    if (n.get("text") or "").strip().lower()=="clock":
+        x1,y1,x2,y2=map(int,re.findall(r"\d+",n.get("bounds")))
+        subprocess.run(["adb","shell","input","swipe",str((x1+x2)//2),str((y1+y2)//2),str((x1+x2)//2),str((y1+y2)//2),"900"])
+        break
+PY
+sleep 2
+snap "bubble-menu"
+python3 tools/tap.py "bubble" 2>> "$S/bubbles.txt"
+sleep 6
+snap "bubble-open"
+adb shell dumpsys notification --noredact | grep -i -E "bubble|lembas" | head -40 >> "$S/bubbles.txt"
+adb logcat -d | grep -i -E "bubble" | grep -v -i "chatty" | tail -40 >> "$S/bubbles.txt"
 exit 0

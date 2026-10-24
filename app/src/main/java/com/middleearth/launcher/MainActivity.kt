@@ -422,6 +422,10 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
     private fun showAppMenu(e: AppEntry, anchor: View) {
         val pinned = e.key in pinnedKeys()
         val actions = ArrayList<ShortcutPopup.Action>()
+        if (Bubbles.canBubble(e)) actions.add(ShortcutPopup.Action("Bubble", R.drawable.g_chat) {
+            Haptics.feel(root, Haptics.Feel.CONFIRM)
+            Bubbles.open(this, e)
+        })
         actions.add(ShortcutPopup.Action("App info", R.drawable.g_info) {
             try { repo.launcherApps.startAppDetailsActivity(e.component, e.user, null, null) } catch (t: Exception) { }
         })
