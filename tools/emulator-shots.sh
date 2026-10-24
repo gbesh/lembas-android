@@ -84,3 +84,25 @@ adb shell cat /data/data/com.middleearth.launcher/shared_prefs/lembas.xml | grep
 adb logcat -d | grep -i -E "Lembas *:|widget" | tail -40 >> "$S/widgets.txt"
 adb logcat -d | grep -i -E "lembas|middleearth|AndroidRuntime|ThemeOverlay" | tail -300 > "$S/logcat.txt" || true
 exit 0
+# the Red Book's icon styles, in a light look and a dark one, and a row being pressed
+P=/data/data/com.middleearth.launcher/shared_prefs/lembas.xml
+for t in 0921:shire 0130:elven; do
+  hm=${t%%:*}; n=${t##*:}
+  adb shell "date $(date +%m%d)${hm}$(date +%Y).00" > /dev/null
+  for style in tonal disc bare classic; do
+    adb shell am force-stop com.middleearth.launcher
+    adb shell "sed -i -e 's#<string name=\"drawer_icons\">[a-z]*</string>##' -e 's#</map>#<string name=\"drawer_icons\">$style</string></map>#' $P"
+    adb shell input keyevent KEYCODE_HOME; sleep 4
+    adb shell am start -n com.middleearth.launcher/.MainActivity -a com.middleearth.launcher.SEARCH --es query "" > /dev/null
+    sleep 4
+    adb shell input keyevent KEYCODE_BACK; sleep 2
+    snap "drawer-$n-$style"
+    if [ $style = tonal ]; then
+      adb shell input swipe 540 1250 540 1250 1600 &
+      sleep 0.25; snap "drawer-$n-press"
+      sleep 1.4; snap "drawer-$n-held"
+      wait; adb shell input keyevent KEYCODE_BACK; sleep 1
+    fi
+    adb shell input keyevent KEYCODE_HOME; sleep 2
+  done
+done
