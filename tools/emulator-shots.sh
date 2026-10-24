@@ -77,7 +77,7 @@ sleep 4
 # the clock widget opens its own setup screen: finish it (backing out would cancel the widget)
 snap "widget-config"
 adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1; adb exec-out cat /sdcard/ui.xml | grep -o -E '(text|content-desc)="[^"]+"' > "$S/widget-config.txt" || true
-for w in "=done" "=save" "=ok" "=add" "=add widget" "=apply" "=confirm" "=navigate up"; do python3 tools/tap.py "$w" 2>> "$S/widgets-taps.txt" && break; done
+for w in "=scallop" "=numeral" "=done" "=save" "=ok" "=add" "=add widget" "=apply" "=confirm" "=navigate up"; do python3 tools/tap.py "$w" 2>> "$S/widgets-taps.txt" && break; done
 sleep 3
 snap "widget-home"
 adb shell cat /data/data/com.middleearth.launcher/shared_prefs/lembas.xml | grep -i widget > "$S/widgets.txt" 2>&1
