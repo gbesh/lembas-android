@@ -47,6 +47,7 @@ import android.view.animation.PathInterpolator
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.AbsListView
+import android.widget.AdapterView
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.ImageView
@@ -168,8 +169,9 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         val themed = prefs.getBoolean(PREF_THEMED, true)
         val pack = if (themed) "" else IconPacks.selected(this)
         dockSpec = IconCache.Spec.dock(look, (56 * dp).roundToInt(), themed, pack)
-        drawerSpec = IconCache.Spec.drawer(look, (38 * dp).roundToInt(), themed, pack)
-        latelySpec = IconCache.Spec.drawer(look, (52 * dp).roundToInt(), themed, pack)
+        val drawerStyle = prefs.getString(DrawerIcons.PREF, DrawerIcons.DEFAULT) ?: DrawerIcons.DEFAULT
+        drawerSpec = IconCache.Spec.drawer(look, (38 * dp).roundToInt(), themed, pack, drawerStyle)
+        latelySpec = IconCache.Spec.drawer(look, (52 * dp).roundToInt(), themed, pack, drawerStyle)
 
         applyLook()
         setupDrawer()
@@ -365,6 +367,20 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
     }
 
     /** App icons: Lembas's line art, the apps' own icons, or any installed icon pack. */
+    /** How the Red Book draws its icons: tonal squircle, soft disc, no frame or classic. */
+    private fun chooseDrawerIcons() {
+        val current = prefs.getString(DrawerIcons.PREF, DrawerIcons.DEFAULT)
+        val styles = DrawerIcons.styles
+        AlertDialog.Builder(this, dialogTheme())
+            .setTitle("Red Book icons")
+            .setSingleChoiceItems(styles.map { it.second }.toTypedArray(), styles.indexOfFirst { it.first == current }.coerceAtLeast(0)) { d, which ->
+                d.dismiss()
+                prefs.edit().putString(DrawerIcons.PREF, styles[which].first).apply()
+                recreate()
+            }
+            .show()
+    }
+
     private fun chooseIcons() {
         val packs = IconPacks.installed(this)
         val names = listOf("Line art (Lembas)", "Original icons") + packs.map { it.label } + "Get icon packs from the Play Store"
@@ -983,7 +999,29 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
             if (searching) openHit(searchAdapter.getItem(pos), v)
             else launch(adapter.getItem(pos), v.findViewById(R.id.icon))
         }
+        // light up a row the instant a finger lands on it (Android itself waits a moment to tell
+        // a tap from a scroll); scrolling away or lifting lets it fade
+        var hot: PressRow? = null
+        var downX = 0f
+        var downY = 0f
+        val slop = android.view.ViewConfiguration.get(this).scaledTouchSlop
+        list.setOnTouchListener { _, ev ->
+            when (ev.actionMasked) {
+                MotionEvent.ACTION_DOWN -> {
+                    downX = ev.x; downY = ev.y
+                    val i = list.pointToPosition(ev.x.toInt(), ev.y.toInt())
+                    hot = if (i == AdapterView.INVALID_POSITION) null else PressRow.of(list.getChildAt(i - list.firstVisiblePosition))
+                    hot?.touching = true
+                }
+                MotionEvent.ACTION_MOVE -> if (hot != null && (kotlin.math.abs(ev.y - downY) > slop || kotlin.math.abs(ev.x - downX) > slop)) {
+                    hot?.touching = false; hot = null
+                }
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> { hot?.touching = false; hot = null }
+            }
+            false
+        }
         list.setOnItemLongClickListener { _, v, pos, _ ->
+            PressRow.of(v)?.let { row -> row.isActivated = true; popup.onClosed = { row.isActivated = false } }
             if (searching) {
                 val h = searchAdapter.getItem(pos)
                 if (h is Hit.App) { showAppMenu(h.e, (v as ViewGroup).getChildAt(0)); true } else false
@@ -1286,6 +1324,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
                 SettingsSheet.Row("Add a widget", if (widgets.count == 0) "" else "${widgets.count} on the home screen") { widgets.pick(); false },
             )),
             SettingsSheet.Section("Apps and search", listOf(
+                SettingsSheet.Row("Red Book icons", DrawerIcons.title(prefs.getString(DrawerIcons.PREF, DrawerIcons.DEFAULT) ?: "")) { chooseDrawerIcons(); false },
                 SettingsSheet.Row("Hidden apps", if (repo.hidden.isEmpty()) "None" else "${repo.hidden.size}") { showHiddenApps(); false },
                 SettingsSheet.Row("Contacts in search", onOff(searchEngine.contactsAllowed)) {
                     if (searchEngine.contactsAllowed) {

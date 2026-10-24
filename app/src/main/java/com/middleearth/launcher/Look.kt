@@ -1,7 +1,7 @@
 package com.middleearth.launcher
 
 /** How an app icon is framed. */
-enum class IconFrame { NONE, TILE, ROUND_TILE, CIRCLE }
+enum class IconFrame { NONE, TILE, ROUND_TILE, CIRCLE, SQUIRCLE }
 
 /** How the drawer's search field is drawn. */
 enum class SearchStyle { PILL, FILLED, UNDERLINE }
@@ -57,6 +57,9 @@ class Look(
     val drawerFillTop: Int = 0,
     val drawerFillBottom: Int = drawerFillTop,
     val drawerStroke: Int = 0,
+    /** The modern drawer icons: the soft tint behind each glyph, and the glyph's colour. */
+    val drawerTone: Int = 0,
+    val drawerInk: Int = 0,
     // Drawer (same layout for every theme)
     val drawerTop: Int,
     val drawerBottom: Int,
@@ -129,6 +132,8 @@ class Look(
             dockStroke = 0x402F4A2A,
             drawerFrame = IconFrame.ROUND_TILE,
             drawerFillTop = 0xFFE3EBCB.toInt(),
+            drawerTone = 0xFFE3EBCB.toInt(),
+            drawerInk = 0xFF2F4A2A.toInt(),
             drawerTop = 0xFFFBF4E3.toInt(),
             drawerBottom = 0xFFF6EED8.toInt(),
             drawerTitle = "The Red Book",
@@ -192,6 +197,8 @@ class Look(
             dockStroke = 0x732B1E12,
             drawerFrame = IconFrame.CIRCLE,
             drawerStroke = 0x662B1E12,
+            drawerTone = 0xFFE9D6B0.toInt(),
+            drawerInk = 0xFF9A2A1C.toInt(),
             drawerTop = 0xFFF5EBD2.toInt(),
             drawerBottom = 0xFFDCC8A0.toInt(),
             drawerTitle = "The Red Book",
@@ -255,6 +262,8 @@ class Look(
             drawerFillTop = 0xFF2A2414.toInt(),
             drawerFillBottom = 0xFF15120A.toInt(),
             drawerStroke = 0x59D9BC7A,
+            drawerTone = 0xFF29230F.toInt(),
+            drawerInk = 0xFFE2C687.toInt(),
             drawerTop = 0xF70A0E1A.toInt(),
             drawerBottom = 0xFC06080F.toInt(),
             drawerTitle = "The Red Book",
@@ -318,6 +327,8 @@ class Look(
             dockStroke = 0x59B9C6CA,
             drawerFrame = IconFrame.CIRCLE,
             drawerStroke = 0x59B9C6CA,
+            drawerTone = 0xFF202A2E.toInt(),
+            drawerInk = 0xFFD6DEE0.toInt(),
             drawerTop = 0xFA0E1316.toInt(),
             drawerBottom = 0xFF0A0D10.toInt(),
             drawerTitle = "THE RED BOOK",

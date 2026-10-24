@@ -16,12 +16,11 @@
         android:paddingBottom="2dp"
         android:visibility="gone" />
 
-    <LinearLayout
+    <com.middleearth.launcher.PressRow
         android:id="@+id/row"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:minHeight="52dp"
-        android:background="?android:attr/selectableItemBackground"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingLeft="44dp"
@@ -56,5 +55,5 @@
                 android:singleLine="true"
                 android:visibility="gone" />
         </LinearLayout>
-    </LinearLayout>
+    </com.middleearth.launcher.PressRow>
 </LinearLayout>

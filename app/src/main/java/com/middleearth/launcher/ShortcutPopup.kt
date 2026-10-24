@@ -61,6 +61,8 @@ class ShortcutPopup(
 
     private val dp = activity.resources.displayMetrics.density
     private var window: PopupWindow? = null
+    /** Called once when the menu closes (the drawer un-highlights the app's row). */
+    var onClosed: (() -> Unit)? = null
 
     fun dismiss() {
         window?.dismiss()
@@ -234,6 +236,9 @@ class ShortcutPopup(
             isOutsideTouchable = true
             elevation = 12 * dp
             animationStyle = 0
+            val closed = onClosed   // this menu's own callback (a newer menu sets its own)
+            onClosed = null
+            setOnDismissListener { closed?.invoke() }
         }
         window = pw
         pw.showAtLocation(activity.window.decorView, Gravity.NO_GRAVITY, x, y)
