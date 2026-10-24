@@ -26,6 +26,16 @@ for t in 0921:shire 0130:elven; do
   snap "lock-$n"
   adb shell wm dismiss-keyguard || true; sleep 2
 done
+# turned sideways (landscape), home and the Red Book
+adb shell settings put system accelerometer_rotation 0
+adb shell settings put system user_rotation 1; sleep 6
+adb shell input keyevent KEYCODE_HOME; sleep 6
+snap "landscape-home"
+adb shell am start -n com.middleearth.launcher/.MainActivity -a com.middleearth.launcher.SEARCH > /dev/null; sleep 4
+adb shell dumpsys input_method | grep -q "mInputShown=true" && adb shell input keyevent KEYCODE_BACK
+sleep 2; snap "landscape-drawer"
+adb shell input keyevent KEYCODE_HOME
+adb shell settings put system user_rotation 0; sleep 4
 # a foldable: unfold and look again
 if adb shell cmd device_state print-states 2>/dev/null | grep -q -i open; then
   adb shell cmd device_state state 2 >/dev/null 2>&1 || true; sleep 8

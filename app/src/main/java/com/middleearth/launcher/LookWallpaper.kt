@@ -61,8 +61,10 @@ object LookWallpaper {
         val display = ctx.getSystemService(DisplayManager::class.java).getDisplay(Display.DEFAULT_DISPLAY) ?: return
         val dm = DisplayMetrics()
         @Suppress("DEPRECATION") display.getRealMetrics(dm)
-        val w = minOf(dm.widthPixels, dm.heightPixels)
-        val h = maxOf(dm.widthPixels, dm.heightPixels)
+        // the screen the way it's held naturally: upright for a phone, sideways for a tablet
+        val turned = display.rotation == android.view.Surface.ROTATION_90 || display.rotation == android.view.Surface.ROTATION_270
+        val w = if (turned) dm.heightPixels else dm.widthPixels
+        val h = if (turned) dm.widthPixels else dm.heightPixels
         // repaint for a new look, a new day (the moon phase) or a different screen (a new phone,
         // restored from a backup of the old one, must not keep the old phone's picture)
         val key = look.id + "/" + LocalDate.now() + "/" + w + "x" + h
