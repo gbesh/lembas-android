@@ -109,7 +109,9 @@ for t in 0921:shire 0130:elven; do
 done
 # the Red Book on a swipe (the spring), then closed with Back (the back gesture's handler)
 adb shell input keyevent KEYCODE_HOME; sleep 3
-adb shell input swipe 540 1750 540 500 180; sleep 2
+# a real finger: down, a few moves, up (one adb call, so the moves aren't spread out by adb itself)
+adb shell "input motionevent DOWN 300 1650; for y in 1600 1520 1420 1300 1150 1000 850 700; do input motionevent MOVE 300 \$y; done; input motionevent UP 300 650"
+sleep 2
 snap "swipe-open"
 adb shell input keyevent KEYCODE_BACK; sleep 2
 snap "back-closed"
