@@ -95,6 +95,9 @@ class SettingsSheet(
             setWindowAnimations(android.R.style.Animation_InputMethod)   // slides up and back down
             addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
             setDimAmount(0.35f)
+            // frosted glass behind the sheet, when the phone allows it (then a lighter dim)
+            val lp = attributes
+            if (Blur.behind(activity, lp, px(30f))) { lp.dimAmount = 0.2f; attributes = lp }
         }
         dialog.show()
         backPreview(dialog, frame)

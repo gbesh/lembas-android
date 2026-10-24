@@ -252,6 +252,7 @@ class ShortcutPopup(
             val lp = root.layoutParams as WindowManager.LayoutParams
             lp.flags = lp.flags or WindowManager.LayoutParams.FLAG_DIM_BEHIND
             lp.dimAmount = if (look.darkScene) 0.45f else 0.25f
+            if (Blur.behind(activity, lp, px(20))) lp.dimAmount *= 0.6f
             activity.windowManager.updateViewLayout(root, lp)
         } catch (t: Throwable) { }
 

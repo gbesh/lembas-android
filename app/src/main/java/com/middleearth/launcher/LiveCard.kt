@@ -42,6 +42,12 @@ object Live {
     @Volatile var current: Update? = null
         private set
 
+    /** Re-read the phone's notifications now (after the setting changes). */
+    fun refresh(ctx: Context) {
+        val svc = Dots.service
+        set(ctx, if (svc != null) try { svc.activeNotifications } catch (_: Throwable) { null } else null)
+    }
+
     fun enabled(ctx: Context) = ctx.getSharedPreferences(Themes.PREFS, Context.MODE_PRIVATE).getBoolean(PREF, true)
 
     /** Pick the update worth showing from the phone's notifications. Returns true if it changed. */

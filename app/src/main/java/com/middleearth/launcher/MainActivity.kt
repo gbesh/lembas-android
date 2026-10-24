@@ -89,6 +89,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
     private lateinit var meal: TextView
     private lateinit var sunArc: SunArcView
     private lateinit var music: MusicCard
+    private lateinit var live: LiveCard
     private lateinit var widgetBox: LinearLayout
     private lateinit var widgets: Widgets
     private lateinit var searchEngine: SearchEngine
@@ -391,6 +392,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
 
     /** Notifications came or went: redraw the dots. */
     private val dotsChanged: () -> Unit = {
+        if (::live.isInitialized) live.show()
         if (::adapter.isInitialized) adapter.notifyDataSetChanged()
         refreshDock()
         refreshLately()
@@ -763,6 +765,10 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         music = MusicCard(this)
         home.addView(music, home.indexOfChild(sunArc) + 1, LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = (14 * dp).roundToInt() })
+        // Live Updates (a call, directions, a delivery on its way) above the music player
+        live = LiveCard(this)
+        home.addView(live, home.indexOfChild(music), LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = (14 * dp).roundToInt() })
         // and widgets under that
         widgetBox = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; visibility = View.GONE }
         home.addView(widgetBox, home.indexOfChild(music) + 1, LinearLayout.LayoutParams(
@@ -1010,6 +1016,9 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         hint.setImageResource(look.hintRes)
         hint.imageTintList = ColorStateList.valueOf(look.hintColor)
         music.style(look.clockColor, (look.clockColor and 0x00FFFFFF) or 0xA0000000.toInt(), look.accent,
+            if (look.lightBars) 0x1A000000 else 0x24FFFFFF, Fonts.get(assets, look.displayItalicFont, 400, true),
+            Fonts.get(assets, "AlegreyaSans-Medium.ttf", 500))
+        live.style(look.clockColor, (look.clockColor and 0x00FFFFFF) or 0xA0000000.toInt(), look.accent,
             if (look.lightBars) 0x1A000000 else 0x24FFFFFF, Fonts.get(assets, look.displayItalicFont, 400, true),
             Fonts.get(assets, "AlegreyaSans-Medium.ttf", 500))
         if (modern) applyModern() else { date.visibility = View.VISIBLE; sunArc.visibility = View.GONE }
@@ -1435,6 +1444,16 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
                     else if (Dots.accessGranted(this) || Dots.turnOn(this)) { music.start(); true }
                     else {
                         Toast.makeText(this, "Allow Lembas under Notification access to show what's playing", Toast.LENGTH_LONG).show()
+                        try { startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)) } catch (_: Exception) { }
+                        false
+                    } },
+                SettingsSheet.Row("Live Updates", onOff(Live.enabled(this) && Dots.accessGranted(this))) {
+                    val on = Live.enabled(this) && Dots.accessGranted(this)
+                    prefs.edit().putBoolean(Live.PREF, !on).apply()
+                    if (on) { Live.refresh(this); live.show(); true }
+                    else if (Dots.accessGranted(this) || Dots.turnOn(this)) { Live.refresh(this); live.show(); true }
+                    else {
+                        Toast.makeText(this, "Allow Lembas under Notification access to show calls, directions and deliveries", Toast.LENGTH_LONG).show()
                         try { startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)) } catch (_: Exception) { }
                         false
                     } },
