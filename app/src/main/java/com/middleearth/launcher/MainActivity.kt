@@ -1252,6 +1252,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
     private var dragPastHalf = false
 
     override fun onDragEnd(velocityY: Float) {
+        if (android.util.Log.isLoggable("LembasTouch", android.util.Log.DEBUG)) android.util.Log.d("LembasTouch", "end v=$velocityY p=$progress")
         val fling = 900 * dp
         val open = when {
             velocityY < -fling -> true
@@ -1298,6 +1299,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
      * without a fixed-length slide, so a quick flick is quick and a slow drag eases home.
      */
     private fun animateTo(target: Float, velocity: Float = 0f) {
+        if (android.util.Log.isLoggable("LembasTouch", android.util.Log.DEBUG)) android.util.Log.d("LembasTouch", "animateTo $target from $progress anim=${ValueAnimator.areAnimatorsEnabled()}")
         animator?.cancel()
         val from = progress
         if (from == target) {
@@ -1343,6 +1345,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
     }
 
     private fun settle(target: Float) {
+        if (android.util.Log.isLoggable("LembasTouch", android.util.Log.DEBUG)) android.util.Log.d("LembasTouch", "settle $target")
         applyProgress(target)
         setLayers(false)
         val was = drawerOpen
