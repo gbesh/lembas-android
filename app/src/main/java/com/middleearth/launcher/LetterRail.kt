@@ -140,7 +140,9 @@ class LetterRail @JvmOverloads constructor(context: Context, attrs: AttributeSet
         if (i != lastIndex) {
             lastIndex = i
             current = letters[i]
-            performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+            // a crisp tick on letters that have apps, only the faintest tap on empty ones,
+            // so you can feel your way down the alphabet
+            Haptics.feel(this, if (letters[i] in present) Haptics.Feel.TICK else Haptics.Feel.LIGHT)
             listener?.onLetter(letters[i])
         }
         invalidate()

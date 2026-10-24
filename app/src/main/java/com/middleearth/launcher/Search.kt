@@ -184,6 +184,7 @@ class SearchEngine(private val activity: Activity, private val repo: AppReposito
 
     fun copy(result: String) {
         activity.getSystemService(ClipboardManager::class.java)?.setPrimaryClip(ClipData.newPlainText("Result", result))
+        Haptics.feel(activity.window?.decorView, Haptics.Feel.CONFIRM)
         Toast.makeText(activity, "Copied $result", Toast.LENGTH_SHORT).show()
     }
 

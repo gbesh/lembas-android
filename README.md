@@ -50,6 +50,10 @@ The Lembas watch face, watch launcher and tile have their own repo: **[gbesh/lem
 - **Swipe down** → notifications.
 - **Tap the clock** → alarms. **Tap the Shire date** → calendar.
 - **Long-press empty space or the clock** → the settings sheet.
+- **Haptics** (on by default; settings → Haptics): a light tap when an app opens, a tick as your swipe passes the point where letting go will open the Red Book (and another if you pull back), a soft snap when it lands, crisp ticks down the letter strips on letters that have apps (and only a faint tap on empty ones, so you can feel your way down the alphabet), and small confirmations when you pin, hide, copy a sum, clear a notification, resize a widget or choose a look. They use Android's own effects, so they feel right on your phone, and they follow the phone's touch-feedback setting.
+- **Dock and Lately icons press in** under your finger and spring back when you let go.
+- **The Red Book moves on a spring**: it carries the speed of your swipe, so a flick is quick and a slow drag eases home, and the list stretches a little when you scroll past either end. If you've chosen keyboard-when-opening, the keyboard rises with it.
+- **Back gesture** (Android 14+): swipe back and the Red Book or the settings sheet shrinks and follows your thumb; let go to close it, or change your mind.
 - **Unlocking**, and each change of look, plays a quick entrance: the scene settles in and the text rises into place in about half a second.
 - **Double-tap empty space** to lock the phone (turn on in settings; fingerprint and face unlock keep working). It uses a tiny accessibility service that only locks the screen and reads nothing; after the whole-phone setup Lembas switches it on itself.
 - **Music player** under the clock while something's playing: the song, the artist, play/pause and next. Tap the song to open the app that's playing. (It uses the same notification access as the dots.)
@@ -80,7 +84,7 @@ Press Enter to open the top result. Touch and hold Lembas's own icon (in any app
 - Shortcuts only appear once Lembas is your default Home app (an Android rule).
 
 **Settings** (long-press empty space): a sheet in the look's colours, with a preview of each look to tap, then
-- **Home screen:** clock (Modern or Classic), animations, app icons (line art, original, or any installed icon pack), hobbit mealtimes, next calendar event, notification dots, music player, double-tap to lock, keyboard when opening the Red Book
+- **Home screen:** clock (Modern or Classic), animations, haptics, app icons (line art, original, or any installed icon pack), hobbit mealtimes, next calendar event, notification dots, music player, double-tap to lock, keyboard when opening the Red Book
 - **Widgets:** add a widget
 - **Apps and search:** Red Book icons (tonal squircle, soft disc, no frame, or the classic outlines), hidden apps, contacts in search
 - **The whole phone:** theme the whole phone, animated wallpaper, still wallpaper follows the look, make Lembas your home app
@@ -141,6 +145,7 @@ Lembas draws its own line-art icon for over 150 common apps (phone, messages, Wh
 | `ShortcutPopup.kt` | Long-press menu with app shortcuts |
 | `IconCache.kt`, `Glyphs.kt` | Themed icon rendering and the built-in icon set |
 | `DrawerIcons.kt`, `tools/glyph_variants.py` | The Red Book's icon styles; the script makes the bolder (`gb_`) and two-tone (`gd_`) glyphs from the originals (`g_`) |
+| `Haptics.kt` | Lembas's haptics, one vocabulary of feelings used everywhere |
 | `PressRow.kt` | The highlight under your finger in the Red Book and search |
 | `Updater.kt` | Daily update check and silent self-install from GitHub releases |
 | `LookWallpaper.kt` | Sets the phone wallpaper to the look's scene at each switch, and runs the switch alarms |

@@ -66,10 +66,11 @@ class MusicCard(ctx: Context) : LinearLayout(ctx) {
         next.setImageResource(R.drawable.g_next)
         addView(art); addView(col); addView(play); addView(next)
         play.setOnClickListener {
+            Haptics.feel(it, Haptics.Feel.LIGHT)
             val c = controller ?: return@setOnClickListener
             if (c.playbackState?.state == PlaybackState.STATE_PLAYING) c.transportControls.pause() else c.transportControls.play()
         }
-        next.setOnClickListener { controller?.transportControls?.skipToNext() }
+        next.setOnClickListener { Haptics.feel(it, Haptics.Feel.LIGHT); controller?.transportControls?.skipToNext() }
         col.setOnClickListener { controller?.sessionActivity?.let { try { it.send() } catch (_: Exception) { } } }
     }
 

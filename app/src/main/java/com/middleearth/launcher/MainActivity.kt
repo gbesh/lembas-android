@@ -286,6 +286,78 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         }, 350)
     }
 
+    // ------------------------------------------------------------------ back gesture
+    private var backCallback: Any? = null
+    private var backRadius = 0f
+
+    /**
+     * Android 13+: while the Red Book is open, the back gesture closes it; on Android 14+ the Red
+     * Book shrinks and follows your thumb as you swipe, so you can see it going (or change your mind).
+     */
+    private fun backGesture(on: Boolean) {
+        if (android.os.Build.VERSION.SDK_INT < 33) return
+        val d = onBackInvokedDispatcher
+        (backCallback as? android.window.OnBackInvokedCallback)?.let { d.unregisterOnBackInvokedCallback(it) }
+        backCallback = null
+        if (!on) return
+        val cb: android.window.OnBackInvokedCallback = if (android.os.Build.VERSION.SDK_INT >= 34) {
+            object : android.window.OnBackAnimationCallback {
+                override fun onBackStarted(e: android.window.BackEvent) { setLayers(true); backPreview(0f, e.swipeEdge) }
+                override fun onBackProgressed(e: android.window.BackEvent) { backPreview(e.progress, e.swipeEdge) }
+                override fun onBackCancelled() { backRelease(false) }
+                override fun onBackInvoked() { backRelease(true) }
+            }
+        } else android.window.OnBackInvokedCallback { animateTo(0f) }
+        d.registerOnBackInvokedCallback(android.window.OnBackInvokedDispatcher.PRIORITY_DEFAULT, cb)
+        backCallback = cb
+    }
+
+    private fun backPreview(p: Float, edge: Int) {
+        val t = android.view.animation.DecelerateInterpolator().getInterpolation(p)
+        val s = 1f - 0.1f * t
+        drawer.scaleX = s; drawer.scaleY = s
+        drawer.translationX = (if (edge == 0 /* from the left edge */) 1 else -1) * t * 24 * dp
+        backRadius = t * 32 * dp
+        if (drawer.outlineProvider !is BackOutline) {
+            drawer.outlineProvider = BackOutline()
+            drawer.clipToOutline = true
+        }
+        drawer.invalidateOutline()
+        home.alpha = 0.35f * t
+    }
+
+    private inner class BackOutline : android.view.ViewOutlineProvider() {
+        override fun getOutline(view: View, outline: android.graphics.Outline) {
+            outline.setRoundRect(0, 0, view.width, view.height, backRadius)
+        }
+    }
+
+    private fun backRelease(close: Boolean) {
+        val sx = drawer.scaleX; val tx = drawer.translationX; val r = backRadius; val ha = home.alpha
+        ValueAnimator.ofFloat(1f, 0f).apply {
+            duration = if (close) 260 else 200
+            interpolator = DecelerateInterpolator()
+            addUpdateListener {
+                val f = it.animatedValue as Float
+                val s = 1f - (1f - sx) * f
+                drawer.scaleX = s; drawer.scaleY = s
+                drawer.translationX = tx * f
+                backRadius = r * f
+                drawer.invalidateOutline()
+                if (!close) home.alpha = ha * f
+            }
+            addListener(object : AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: Animator) {
+                    drawer.scaleX = 1f; drawer.scaleY = 1f; drawer.translationX = 0f; backRadius = 0f
+                    drawer.clipToOutline = false
+                    drawer.outlineProvider = android.view.ViewOutlineProvider.BACKGROUND
+                }
+            })
+            start()
+        }
+        if (close) animateTo(0f, 0f)
+    }
+
     @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
         if (progress > 0f) animateTo(0f)
@@ -334,6 +406,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
             Rect(loc[0], loc[1], loc[0] + it.width, loc[1] + it.height)
         }
         try {
+            Haptics.feel(from ?: root, Haptics.Feel.LIGHT)
             repo.launcherApps.startMainActivity(e.component, e.user, bounds, opts)
             recordLaunch(e)
         } catch (t: Exception) {
@@ -362,7 +435,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
                 startActivity(Intent(Intent.ACTION_DELETE, Uri.fromParts("package", e.packageName, null)))
             } catch (t: Exception) { }
         })
-        anchor.performHapticFeedback(android.view.HapticFeedbackConstants.LONG_PRESS)
+        Haptics.feel(anchor, Haptics.Feel.HOLD)
         popup.show(anchor, e, actions) { recordLaunch(e) }
     }
 
@@ -440,18 +513,30 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
 
     /** Swipe up on an icon (dock or Lately) → open its first shortcut, e.g. the browser's New tab. */
     private inner class SwipeUp(private val e: AppEntry) : View.OnTouchListener {
+        private fun release(icon: View) {
+            if (icon.scaleX == 1f) return
+            icon.animate().scaleX(1f).scaleY(1f).setDuration(320).setInterpolator(android.view.animation.OvershootInterpolator(2.2f)).start()
+        }
         private var downY = 0f
         private var downAt = 0L
         override fun onTouch(v: View, ev: MotionEvent): Boolean {
+            // the icon presses in under your finger and springs back when you let go
+            val icon = (v as? ViewGroup)?.getChildAt(0) ?: v
             when (ev.actionMasked) {
-                MotionEvent.ACTION_DOWN -> { downY = ev.rawY; downAt = ev.eventTime }
+                MotionEvent.ACTION_DOWN -> {
+                    downY = ev.rawY; downAt = ev.eventTime
+                    icon.animate().scaleX(0.88f).scaleY(0.88f).setDuration(90).setInterpolator(DecelerateInterpolator()).start()
+                }
+                MotionEvent.ACTION_CANCEL -> release(icon)
+                MotionEvent.ACTION_MOVE -> if (ev.x < -v.width * 0.2f || ev.x > v.width * 1.2f || ev.y > v.height * 1.2f) release(icon)
                 MotionEvent.ACTION_UP -> {
+                    release(icon)
                     if (downY - ev.rawY > 36 * dp && ev.eventTime - downAt < 600) {
                         v.isPressed = false
                         v.cancelLongPress()
                         val first = Shortcuts.forApp(repo.launcherApps, e).firstOrNull()
                         if (first != null && Shortcuts.start(repo.launcherApps, first, v)) {
-                            v.performHapticFeedback(android.view.HapticFeedbackConstants.CONFIRM)
+                            Haptics.feel(v, Haptics.Feel.CONFIRM)
                             recordLaunch(e)
                         } else launch(e, v)
                         return true
@@ -472,6 +557,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
     }
 
     private fun togglePin(e: AppEntry) {
+        Haptics.feel(root, Haptics.Feel.CONFIRM)
         val keys = pinnedKeys()
         if (e.key in keys) keys.remove(e.key)
         else if (keys.size >= MAX_DOCK) {
@@ -995,6 +1081,8 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         searchEngine = SearchEngine(this, repo)
         searchAdapter = SearchAdapter(this, look, icons, drawerSpec, searchEngine)
         list.adapter = adapter
+        // the list stretches a little when you scroll past either end (Android 12+)
+        if (android.os.Build.VERSION.SDK_INT >= 31) list.overScrollMode = View.OVER_SCROLL_ALWAYS
         list.setOnItemClickListener { _, v, pos, _ ->
             if (searching) openHit(searchAdapter.getItem(pos), v)
             else launch(adapter.getItem(pos), v.findViewById(R.id.icon))
@@ -1110,6 +1198,14 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
 
     override fun drawerCanScrollUp() = list.canScrollVertically(-1)
 
+    /** Is there something under (x, y) inside [v] that scrolls up or down? */
+    private fun scrollsAt(v: View, x: Float, y: Float): Boolean {
+        if (!hit(v, x, y)) return false
+        if (v.canScrollVertically(1) || v.canScrollVertically(-1)) return true
+        if (v is ViewGroup) for (i in 0 until v.childCount) if (scrollsAt(v.getChildAt(i), x, y)) return true
+        return false
+    }
+
     private fun hit(v: View, x: Float, y: Float): Boolean {
         if (!v.isShown) return false
         val loc = IntArray(2)
@@ -1125,7 +1221,9 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         if (progress > 0f) return hit(railLeft, x, y) || hit(railRight, x, y)
         for (i in 0 until dock.childCount) if (hit(dock.getChildAt(i), x, y) && dock.getChildAt(i) is ImageView) return true
         // widgets keep their own swipes (scrolling lists in mail or calendar widgets)
-        for (i in 0 until widgetBox.childCount) if (hit(widgetBox.getChildAt(i), x, y)) return true
+        // (only where the widget actually scrolls: a swipe on a clock or weather widget still
+        // opens the Red Book)
+        for (i in 0 until widgetBox.childCount) if (scrollsAt(widgetBox.getChildAt(i), x, y)) return true
         return false
     }
 
@@ -1133,6 +1231,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         animator?.cancel()
         animator = null
         dragBase = progress
+        dragPastHalf = progress > 0.5f
         if (latelyStale) refreshLately()
         setLayers(true)
         hideKeyboard()
@@ -1142,9 +1241,18 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
     override fun onDrag(dy: Float) {
         val h = root.height.takeIf { it > 0 } ?: return
         applyProgress((dragBase - dy / h).coerceIn(0f, 1f))
+        // a tick as you cross the point where letting go flips the result, and back again
+        val past = progress > 0.5f
+        if (past != dragPastHalf) {
+            dragPastHalf = past
+            Haptics.feel(root, if (past != (dragBase > 0.5f)) Haptics.Feel.THRESHOLD_ON else Haptics.Feel.THRESHOLD_OFF)
+        }
     }
 
+    private var dragPastHalf = false
+
     override fun onDragEnd(velocityY: Float) {
+        if (android.util.Log.isLoggable("LembasTouch", android.util.Log.DEBUG)) android.util.Log.d("LembasTouch", "end v=$velocityY p=$progress")
         val fling = 900 * dp
         val open = when {
             velocityY < -fling -> true
@@ -1155,6 +1263,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
     }
 
     override fun onPullDownOnHome() {
+        Haptics.feel(root, Haptics.Feel.LIGHT)
         try {
             @Suppress("WrongConstant")
             val sbm = getSystemService("statusbar")
@@ -1167,7 +1276,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
     override fun onLongPressHome() = showSettings()
 
     override fun onDoubleTapHome() {
-        if (LockService.enabled(this)) LockService.lock()
+        if (LockService.enabled(this)) { Haptics.feel(root, Haptics.Feel.CONFIRM); LockService.lock() }
     }
 
     private fun applyProgress(p: Float) {
@@ -1185,7 +1294,12 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         if (home.layerType != type) home.setLayerType(type, null)
     }
 
+    /**
+     * Move the Red Book open or shut on a spring: it carries the speed of your swipe and settles
+     * without a fixed-length slide, so a quick flick is quick and a slow drag eases home.
+     */
     private fun animateTo(target: Float, velocity: Float = 0f) {
+        if (android.util.Log.isLoggable("LembasTouch", android.util.Log.DEBUG)) android.util.Log.d("LembasTouch", "animateTo $target from $progress anim=${ValueAnimator.areAnimatorsEnabled()}")
         animator?.cancel()
         val from = progress
         if (from == target) {
@@ -1193,25 +1307,37 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
             return
         }
         if (target > 0f && latelyStale) refreshLately()
+        // the keyboard rises with the Red Book, not after it
+        if (target >= 1f && prefs.getBoolean(PREF_KEYBOARD, false)) showKeyboard()
+        // with the phone's animations off ("Remove animations"), Android never runs the spring: jump there
+        if (!ValueAnimator.areAnimatorsEnabled()) { settle(target); return }
         setLayers(true)
-        val dist = abs(target - from)
-        var duration = (110 + 220 * dist).toLong()
-        if (abs(velocity) > 1f) {
-            val px = dist * root.height
-            duration = min(duration, max(120L, (px / abs(velocity) * 1000f * 1.8f).toLong()))
-        }
-        animator = ValueAnimator.ofFloat(from, target).apply {
-            this.duration = duration
-            interpolator = DecelerateInterpolator(1.8f)
-            addUpdateListener { applyProgress(it.animatedValue as Float) }
+        val h = root.height.toFloat().coerceAtLeast(1f)
+        var x = from
+        var v = -velocity / h               // progress per second (a swipe up opens: progress rises)
+        val stiffness = 520f
+        val damping = 2f * kotlin.math.sqrt(stiffness) * 1.0f   // critically damped: no bounce past the edge
+        animator = android.animation.TimeAnimator().apply {
+            setTimeListener { anim, _, deltaMs ->
+                var dt = (deltaMs.coerceIn(0L, 48L)) / 1000f
+                while (dt > 0f) {                     // small steps keep the spring steady on slow frames
+                    val step = min(dt, 0.004f)
+                    v += (-stiffness * (x - target) - damping * v) * step
+                    x += v * step
+                    dt -= step
+                }
+                if (abs(x - target) < 0.0015f && abs(v) < 0.05f) {
+                    anim.cancel()
+                    animator = null
+                    settle(target)
+                } else applyProgress(x.coerceIn(0f, 1f))
+            }
             addListener(object : AnimatorListenerAdapter() {
                 private var cancelled = false
                 override fun onAnimationCancel(animation: Animator) { cancelled = true }
+                // ended without reaching the target (Android stopped it): finish the move anyway
                 override fun onAnimationEnd(animation: Animator) {
-                    if (!cancelled) {
-                        animator = null
-                        settle(target)
-                    }
+                    if (!cancelled && animator === animation) { animator = null; settle(target) }
                 }
             })
             start()
@@ -1219,13 +1345,17 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
     }
 
     private fun settle(target: Float) {
+        if (android.util.Log.isLoggable("LembasTouch", android.util.Log.DEBUG)) android.util.Log.d("LembasTouch", "settle $target")
         applyProgress(target)
         setLayers(false)
+        val was = drawerOpen
         drawerOpen = target >= 1f
+        if (was != drawerOpen) Haptics.feel(root, Haptics.Feel.SNAP)
+        backGesture(drawerOpen)
         updateAmbient()
         if (drawerOpen) {
             searchEngine.warmUp()
-            if (prefs.getBoolean(PREF_KEYBOARD, false)) showKeyboard()
+            if (prefs.getBoolean(PREF_KEYBOARD, false) && !search.hasFocus()) showKeyboard()
         } else {
             hideKeyboard()
             if (search.text.isNotEmpty()) search.setText("")
@@ -1317,6 +1447,11 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
                         try { startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) } catch (_: Exception) { }
                         false
                     } },
+                SettingsSheet.Row("Haptics", onOff(Haptics.enabled(this))) {
+                    val on = !Haptics.enabled(this)
+                    Haptics.setEnabled(this, on)
+                    if (on) Haptics.feel(root, Haptics.Feel.TOGGLE_ON)
+                    true },
                 SettingsSheet.Row("Keyboard when opening the Red Book", onOff(kbd)) {
                     prefs.edit().putBoolean(PREF_KEYBOARD, !kbd).apply(); true },
             )),

@@ -45,7 +45,7 @@ class HomeRoot @JvmOverloads constructor(context: Context, attrs: AttributeSet? 
     private val longPress = Runnable {
         if (mode == NONE) {
             mode = IGNORE
-            performHapticFeedback(android.view.HapticFeedbackConstants.LONG_PRESS)
+            Haptics.feel(this, Haptics.Feel.HOLD)
             callbacks?.onLongPressHome()
         }
     }
@@ -80,6 +80,7 @@ class HomeRoot @JvmOverloads constructor(context: Context, attrs: AttributeSet? 
                 startX = ev.x
                 startY = ev.y
                 mode = if (cb.touchBlocked(ev.x, ev.y)) IGNORE else NONE
+                if (android.util.Log.isLoggable("LembasTouch", android.util.Log.DEBUG)) android.util.Log.d("LembasTouch", "down ${ev.x},${ev.y} mode=$mode")
                 tracker?.recycle()
                 tracker = VelocityTracker.obtain().also { it.addMovement(ev) }
                 return false
@@ -110,6 +111,7 @@ class HomeRoot @JvmOverloads constructor(context: Context, attrs: AttributeSet? 
                         mode = IGNORE
                     }
                 }
+                if (android.util.Log.isLoggable("LembasTouch", android.util.Log.DEBUG)) android.util.Log.d("LembasTouch", "move ${ev.y} mode=$mode")
                 if (mode == DRAG) cb.onDrag(ev.y - startY)
                 return mode == DRAG || mode == SHADE
             }
