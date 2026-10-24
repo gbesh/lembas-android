@@ -1198,6 +1198,14 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
 
     override fun drawerCanScrollUp() = list.canScrollVertically(-1)
 
+    /** Is there something under (x, y) inside [v] that scrolls up or down? */
+    private fun scrollsAt(v: View, x: Float, y: Float): Boolean {
+        if (!hit(v, x, y)) return false
+        if (v.canScrollVertically(1) || v.canScrollVertically(-1)) return true
+        if (v is ViewGroup) for (i in 0 until v.childCount) if (scrollsAt(v.getChildAt(i), x, y)) return true
+        return false
+    }
+
     private fun hit(v: View, x: Float, y: Float): Boolean {
         if (!v.isShown) return false
         val loc = IntArray(2)
@@ -1213,7 +1221,9 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         if (progress > 0f) return hit(railLeft, x, y) || hit(railRight, x, y)
         for (i in 0 until dock.childCount) if (hit(dock.getChildAt(i), x, y) && dock.getChildAt(i) is ImageView) return true
         // widgets keep their own swipes (scrolling lists in mail or calendar widgets)
-        for (i in 0 until widgetBox.childCount) if (hit(widgetBox.getChildAt(i), x, y)) return true
+        // (only where the widget actually scrolls: a swipe on a clock or weather widget still
+        // opens the Red Book)
+        for (i in 0 until widgetBox.childCount) if (scrollsAt(widgetBox.getChildAt(i), x, y)) return true
         return false
     }
 
