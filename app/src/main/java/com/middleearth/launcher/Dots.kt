@@ -16,14 +16,28 @@ import android.widget.ImageView
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * Notification dots: a small dot in the look's colour on an app's icon while it has
- * notifications waiting (dock, Lately and the Red Book list). Needs notification access, which
- * you turn on from the settings sheet; Lembas only counts which apps have notifications and
- * never reads what they say.
+ * Notification dots and previews: a small dot in the look's colour on an app's icon while it has
+ * notifications waiting (dock, Lately and the Red Book list), the latest one under the app's name
+ * in the list, and the waiting ones at the top of the app's long-press menu, where you can open or
+ * clear them. Needs notification access, which you turn on from the settings sheet. Lembas keeps
+ * them in memory only, while they're showing, and never sends or saves them anywhere.
  */
 object Dots {
     const val PREF_ON = "dots"
     private val packages = ConcurrentHashMap.newKeySet<String>()
+
+    /** One waiting notification, as previewed in Lembas. */
+    class Note(val key: String, val pkg: String, val title: String, val text: String, val time: Long,
+               val open: android.app.PendingIntent?)
+    @Volatile private var notes: Map<String, List<Note>> = emptyMap()
+    @Volatile var service: DotsService? = null
+
+    /** An app's waiting notifications, newest first. */
+    fun notesFor(pkg: String): List<Note> = notes[pkg] ?: emptyList()
+
+    fun open(n: Note) { try { n.open?.send() } catch (_: Exception) { } }
+
+    fun clear(n: Note) { try { service?.cancelNotification(n.key) } catch (_: Exception) { } }
     private val listeners = ArrayList<() -> Unit>()
     private val main = Handler(Looper.getMainLooper())
     @Volatile var color = 0xFFD9BC7A.toInt()
@@ -65,12 +79,21 @@ object Dots {
 
     internal fun set(ctx: Context, active: Array<StatusBarNotification>?) {
         val on = ctx.getSharedPreferences(Themes.PREFS, Context.MODE_PRIVATE).getBoolean(PREF_ON, true)
-        val now = if (!on || active == null) emptySet() else active.asSequence()
+        val shown = if (!on || active == null) emptyList() else active.asSequence()
             .filter { !it.isOngoing && it.isClearable && it.packageName != ctx.packageName }
             .filter { (it.notification.flags and android.app.Notification.FLAG_GROUP_SUMMARY) == 0 || it.notification.group == null }
-            .map { it.packageName }.toSet()
-        if (now == packages) return
-        packages.clear(); packages.addAll(now)
+            .toList()
+        val newNotes = shown.sortedByDescending { it.postTime }.map { sbn ->
+            val ex = sbn.notification.extras
+            val title = (ex.getCharSequence(android.app.Notification.EXTRA_TITLE) ?: "").toString()
+            val text = (ex.getCharSequence(android.app.Notification.EXTRA_BIG_TEXT) ?: ex.getCharSequence(android.app.Notification.EXTRA_TEXT) ?: "").toString()
+            Note(sbn.key, sbn.packageName, title, text, sbn.postTime, sbn.notification.contentIntent)
+        }.groupBy { it.pkg }
+        fun sig(m: Map<String, List<Note>>) = m.mapValues { e -> e.value.map { it.key + it.title + it.text } }
+        val changed = newNotes.keys != packages || sig(newNotes) != sig(notes)
+        notes = newNotes
+        if (!changed) return
+        packages.clear(); packages.addAll(newNotes.keys)
         notifyChanged()
     }
 
@@ -108,8 +131,8 @@ object Dots {
 
 class DotsService : NotificationListenerService() {
     private fun refresh() = try { Dots.set(this, activeNotifications) } catch (_: Throwable) { }
-    override fun onListenerConnected() = refresh()
+    override fun onListenerConnected() { Dots.service = this; refresh() }
     override fun onNotificationPosted(sbn: StatusBarNotification?) = refresh()
     override fun onNotificationRemoved(sbn: StatusBarNotification?) = refresh()
-    override fun onListenerDisconnected() { Dots.set(this, null) }
+    override fun onListenerDisconnected() { Dots.service = null; Dots.set(this, null) }
 }

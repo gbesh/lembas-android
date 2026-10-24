@@ -88,6 +88,8 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
     private lateinit var meal: TextView
     private lateinit var sunArc: SunArcView
     private lateinit var music: MusicCard
+    private lateinit var widgetBox: LinearLayout
+    private lateinit var widgets: Widgets
     private lateinit var searchEngine: SearchEngine
     private lateinit var searchAdapter: SearchAdapter
     /** True while there's something typed in search (the list then shows results, not the A-Z). */
@@ -164,12 +166,15 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         icons = IconCache.get(this)
         popup = ShortcutPopup(this, look, repo.launcherApps)
         val themed = prefs.getBoolean(PREF_THEMED, true)
-        dockSpec = IconCache.Spec.dock(look, (56 * dp).roundToInt(), themed)
-        drawerSpec = IconCache.Spec.drawer(look, (38 * dp).roundToInt(), themed)
-        latelySpec = IconCache.Spec.drawer(look, (52 * dp).roundToInt(), themed)
+        val pack = if (themed) "" else IconPacks.selected(this)
+        dockSpec = IconCache.Spec.dock(look, (56 * dp).roundToInt(), themed, pack)
+        drawerSpec = IconCache.Spec.drawer(look, (38 * dp).roundToInt(), themed, pack)
+        latelySpec = IconCache.Spec.drawer(look, (52 * dp).roundToInt(), themed, pack)
 
         applyLook()
         setupDrawer()
+        widgets = Widgets(this, widgetBox, dialogTheme())
+        widgets.show()
 
         root.callbacks = this
         root.setOnApplyWindowInsetsListener { _, insets -> handleInsets(insets) }
@@ -211,6 +216,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         super.onStart()
         visibleNow = true
         if (prefs.getBoolean(PREF_MUSIC, true)) music.start()
+        widgets.start()
     }
 
     override fun onResume() {
@@ -254,6 +260,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         super.onStop()
         visibleNow = false
         music.stop()
+        widgets.stop()
         // Coming back home should always show the home screen, not a half-open drawer.
         animator?.cancel()
         animator = null
@@ -355,6 +362,31 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         })
         anchor.performHapticFeedback(android.view.HapticFeedbackConstants.LONG_PRESS)
         popup.show(anchor, e, actions) { recordLaunch(e) }
+    }
+
+    /** App icons: Lembas's line art, the apps' own icons, or any installed icon pack. */
+    private fun chooseIcons() {
+        val packs = IconPacks.installed(this)
+        val names = listOf("Line art (Lembas)", "Original icons") + packs.map { it.label } + "Get icon packs from the Play Store"
+        val themed = prefs.getBoolean(PREF_THEMED, true)
+        val current = when {
+            themed -> 0
+            IconPacks.selected(this).isEmpty() -> 1
+            else -> 2 + packs.indexOfFirst { it.pkg == IconPacks.selected(this) }.coerceAtLeast(0)
+        }
+        AlertDialog.Builder(this, dialogTheme())
+            .setTitle("App icons")
+            .setSingleChoiceItems(names.toTypedArray(), current) { d, which ->
+                d.dismiss()
+                when {
+                    which == 0 -> { prefs.edit().putBoolean(PREF_THEMED, true).apply(); IconPacks.select(this, "") }
+                    which == 1 -> { prefs.edit().putBoolean(PREF_THEMED, false).apply(); IconPacks.select(this, "") }
+                    which == names.size - 1 -> { searchEngine.playStore("icon pack"); return@setSingleChoiceItems }
+                    else -> { prefs.edit().putBoolean(PREF_THEMED, false).apply(); IconPacks.select(this, packs[which - 2].pkg) }
+                }
+                recreate()
+            }
+            .show()
     }
 
     /** Hidden apps: tap one to put it back in the list. */
@@ -577,7 +609,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
 
     private fun entranceViews(): List<Pair<View, Long>> = listOf(
         label to 120L, clock to 160L, shire to 240L, date to 280L,
-        ornament to 300L, meal to 320L, sunArc to 340L, music to 360L, hint to 300L, dock to 300L,
+        ornament to 300L, meal to 320L, sunArc to 340L, music to 360L, widgetBox to 380L, hint to 300L, dock to 300L,
     )
 
     private fun prepareEntrance() {
@@ -629,6 +661,10 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         music = MusicCard(this)
         home.addView(music, home.indexOfChild(sunArc) + 1, LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = (14 * dp).roundToInt() })
+        // and widgets under that
+        widgetBox = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; visibility = View.GONE }
+        home.addView(widgetBox, home.indexOfChild(music) + 1, LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = (4 * dp).roundToInt() })
         hint = findViewById(R.id.hint)
         dock = findViewById(R.id.dock)
         drawer = findViewById(R.id.drawer)
@@ -1017,6 +1053,12 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
     }
 
     @Deprecated("Deprecated in Java")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (widgets.onResult(requestCode, resultCode)) return
+        super.onActivityResult(requestCode, resultCode, data)
+    }
+
+    @Deprecated("Deprecated in Java")
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == SearchEngine.REQUEST_CONTACTS && searching) runSearch(search.text.toString())
@@ -1044,6 +1086,8 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
     override fun touchBlocked(x: Float, y: Float): Boolean {
         if (progress > 0f) return hit(railLeft, x, y) || hit(railRight, x, y)
         for (i in 0 until dock.childCount) if (hit(dock.getChildAt(i), x, y) && dock.getChildAt(i) is ImageView) return true
+        // widgets keep their own swipes (scrolling lists in mail or calendar widgets)
+        for (i in 0 until widgetBox.childCount) if (hit(widgetBox.getChildAt(i), x, y)) return true
         return false
     }
 
@@ -1195,8 +1239,11 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
                     prefs.edit().putString(PREF_HOME_STYLE, if (modern) "classic" else "modern").apply(); recreate(); false },
                 SettingsSheet.Row("Animations", onOff(anim)) {
                     prefs.edit().putBoolean(Themes.PREF_ANIM, !anim).apply(); ambient.animationsOn = !anim; true },
-                SettingsSheet.Row("App icons", if (themed) "Line art" else "Original") {
-                    prefs.edit().putBoolean(PREF_THEMED, !themed).apply(); recreate(); false },
+                SettingsSheet.Row("App icons", when {
+                    themed -> "Line art"
+                    IconPacks.selected(this).isNotEmpty() -> IconPacks.installed(this).firstOrNull { it.pkg == IconPacks.selected(this) }?.label ?: "Icon pack"
+                    else -> "Original"
+                }) { chooseIcons(); false },
                 SettingsSheet.Row("Hobbit mealtimes", onOff(meals)) {
                     prefs.edit().putBoolean(PREF_MEALS, !meals).apply(); updateTexts(); true },
                 SettingsSheet.Row("Next calendar event", onOff(calendar)) {
@@ -1205,11 +1252,11 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
                         try { startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, android.net.Uri.parse("package:$packageName"))) } catch (_: Exception) { }
                     } else requestPermissions(arrayOf(android.Manifest.permission.READ_CALENDAR), 0xca1)
                     false },
-                SettingsSheet.Row("Notification dots", onOff(Dots.enabled(this))) {
+                SettingsSheet.Row("Notification dots and previews", onOff(Dots.enabled(this))) {
                     if (Dots.enabled(this)) { Dots.turnOff(this); true }
                     else if (Dots.turnOn(this)) true
                     else {
-                        Toast.makeText(this, "Allow Lembas under Notification access (it only counts notifications, never reads them)", Toast.LENGTH_LONG).show()
+                        Toast.makeText(this, "Allow Lembas under Notification access (the previews stay on your phone; nothing is sent anywhere)", Toast.LENGTH_LONG).show()
                         try { startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)) } catch (_: Exception) { }
                         false
                     } },
@@ -1234,6 +1281,9 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
                     } },
                 SettingsSheet.Row("Keyboard when opening the Red Book", onOff(kbd)) {
                     prefs.edit().putBoolean(PREF_KEYBOARD, !kbd).apply(); true },
+            )),
+            SettingsSheet.Section("Widgets", listOf(
+                SettingsSheet.Row("Add a widget", if (widgets.count == 0) "" else "${widgets.count} on the home screen") { widgets.pick(); false },
             )),
             SettingsSheet.Section("Apps and search", listOf(
                 SettingsSheet.Row("Hidden apps", if (repo.hidden.isEmpty()) "None" else "${repo.hidden.size}") { showHiddenApps(); false },

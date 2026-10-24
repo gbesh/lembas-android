@@ -39,6 +39,13 @@
         </intent>
         <!-- search: the web, the Play Store, dialler and messages -->
         <intent><action android:name="android.intent.action.WEB_SEARCH" /></intent>
+        <!-- icon packs -->
+        <intent><action android:name="org.adw.launcher.THEMES" /></intent>
+        <intent><action android:name="com.novalauncher.THEME" /></intent>
+        <intent><action android:name="com.teslacoilsw.launcher.THEME" /></intent>
+        <intent><action android:name="com.gau.go.launcherex.theme" /></intent>
+        <intent><action android:name="com.anddoes.launcher.THEME" /></intent>
+        <intent><action android:name="app.lawnchair.icons.THEMED_ICON" /></intent>
         <intent><action android:name="android.intent.action.VIEW" /><data android:scheme="market" /></intent>
         <intent><action android:name="android.intent.action.VIEW" /><data android:scheme="https" /></intent>
         <intent><action android:name="android.intent.action.DIAL" /></intent>
@@ -112,7 +119,7 @@
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
             </intent-filter>
         </receiver>
-        <!-- Notification dots (only counts which apps have notifications; off until you turn it on) -->
+        <!-- Notification dots and previews (stay on the phone; off until you turn it on) -->
         <service
             android:name=".DotsService"
             android:exported="true"
