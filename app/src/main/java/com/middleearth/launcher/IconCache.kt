@@ -61,16 +61,25 @@ class IconCache private constructor(private val context: Context) {
         val themed: Boolean,
         /** An icon pack's package ("" for none): with [themed] off, its drawings replace the apps' own icons. */
         val pack: String = "",
+        /** The glyphs' colour. */
+        val ink: Int = look.glyphColor,
+        /** Which drawing of the line-art glyphs: "g" (the originals), "gb" (bolder) or "gd" (bolder, two-tone). */
+        val glyphSet: String = "g",
     ) {
-        val id = "${look.id}#$frame#$fillTop#$fillBottom#$stroke#$sizePx#$glyphFraction#$themed#$pack"
+        val id = "${look.id}#$frame#$fillTop#$fillBottom#$stroke#$sizePx#$glyphFraction#$themed#$pack#$ink#$glyphSet"
 
         companion object {
             fun dock(look: Look, sizePx: Int, themed: Boolean, pack: String = "") =
                 Spec(look, look.dockFrame, look.dockFillTop, look.dockFillBottom, look.dockStroke, sizePx, 0.46f, themed, pack)
 
-            fun drawer(look: Look, sizePx: Int, themed: Boolean, pack: String = "") =
-                Spec(look, look.drawerFrame, look.drawerFillTop, look.drawerFillBottom, look.drawerStroke, sizePx,
+            /** The Red Book's icons, in one of [DrawerIcons]' styles. */
+            fun drawer(look: Look, sizePx: Int, themed: Boolean, pack: String = "", style: String = DrawerIcons.DEFAULT) = when (style) {
+                DrawerIcons.TONAL -> Spec(look, IconFrame.SQUIRCLE, look.drawerTone, look.drawerTone, 0, sizePx, 0.6f, themed, pack, look.drawerInk, "gb")
+                DrawerIcons.DISC -> Spec(look, IconFrame.CIRCLE, look.drawerTone, look.drawerTone, 0, sizePx, 0.6f, themed, pack, look.drawerInk, "gd")
+                DrawerIcons.BARE -> Spec(look, IconFrame.NONE, 0, 0, 0, sizePx, 0.8f, themed, pack, look.drawerInk, "g")
+                else -> Spec(look, look.drawerFrame, look.drawerFillTop, look.drawerFillBottom, look.drawerStroke, sizePx,
                     if (look.drawerFrame == IconFrame.NONE) 0.8f else 0.52f, themed, pack)
+            }
         }
     }
 
@@ -142,10 +151,10 @@ class IconCache private constructor(private val context: Context) {
         val g = size * spec.glyphFraction
         val left = (size - g) / 2f
         val top = (size - g) / 2f - if (spec.frame == IconFrame.ROUND_TILE) 1.25f * dp else 0f
-        val color = spec.look.glyphColor
+        val color = spec.ink
 
         if (entry.glyph != 0) {
-            val d = context.getDrawable(entry.glyph)!!.mutate()
+            val d = context.getDrawable(variant(entry.glyph, spec.glyphSet))!!.mutate()
             d.setTint(color)
             d.setBounds(left.toInt(), top.toInt(), (left + g).toInt(), (top + g).toInt())
             d.draw(c)
@@ -154,6 +163,17 @@ class IconCache private constructor(private val context: Context) {
         }
         bmp.prepareToDraw()
         return bmp
+    }
+
+    private val variants = java.util.concurrent.ConcurrentHashMap<String, Int>()
+
+    /** The bolder (gb_) or two-tone (gd_) drawing of a glyph, falling back to the original. */
+    private fun variant(glyph: Int, set: String): Int {
+        if (set == "g") return glyph
+        return variants.getOrPut("$set#$glyph") {
+            val name = try { context.resources.getResourceEntryName(glyph) } catch (_: Exception) { return glyph }
+            context.resources.getIdentifier(set + name.removePrefix("g"), "drawable", context.packageName).takeIf { it != 0 } ?: glyph
+        }
     }
 
     private fun drawFrame(c: Canvas, spec: Spec) {
@@ -186,6 +206,20 @@ class IconCache private constructor(private val context: Context) {
                 }
                 p.color = spec.fillTop
                 c.drawRoundRect(RectF(0f, 0f, s, s - lift), radius, radius, p)
+            }
+            IconFrame.SQUIRCLE -> {
+                // a squircle: flat sides that round off smoothly, like Android's own themed icons
+                val k = s / 38f
+                val path = android.graphics.Path().apply {
+                    moveTo(19 * k, 0f)
+                    cubicTo(33 * k, 0f, 38 * k, 5 * k, 38 * k, 19 * k)
+                    cubicTo(38 * k, 33 * k, 33 * k, 38 * k, 19 * k, 38 * k)
+                    cubicTo(5 * k, 38 * k, 0f, 33 * k, 0f, 19 * k)
+                    cubicTo(0f, 5 * k, 5 * k, 0f, 19 * k, 0f)
+                    close()
+                }
+                p.color = spec.fillTop
+                c.drawPath(path, p)
             }
             IconFrame.CIRCLE -> {
                 if (spec.fillTop != 0) {

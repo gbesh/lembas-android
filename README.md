@@ -69,6 +69,8 @@ Press Enter to open the top result. Touch and hold Lembas's own icon (in any app
 
 **App drawer (the same layout in every theme)**
 - **Lately** shows your four most recent apps.
+- **Icons** come in four styles (settings → Red Book icons): a **tonal squircle** in a soft tint of the look (the default), a **soft disc** with two-tone glyphs, **no frame** (just a larger glyph, like Niagara), or the **classic** outlines.
+- **Rows light up under your finger** the moment you touch them, and the icon swells slightly; the app stays lit while its menu is open.
 - **Letter strips on both edges:** drag your thumb down either side to jump through A–Z. The letter under your thumb swells and bulges inward like Niagara, and you feel a tick on each letter.
 - Swipe down from the top of the list to close it.
 
@@ -80,7 +82,7 @@ Press Enter to open the top result. Touch and hold Lembas's own icon (in any app
 **Settings** (long-press empty space): a sheet in the look's colours, with a preview of each look to tap, then
 - **Home screen:** clock (Modern or Classic), animations, app icons (line art, original, or any installed icon pack), hobbit mealtimes, next calendar event, notification dots, music player, double-tap to lock, keyboard when opening the Red Book
 - **Widgets:** add a widget
-- **Apps and search:** hidden apps, contacts in search
+- **Apps and search:** Red Book icons (tonal squircle, soft disc, no frame, or the classic outlines), hidden apps, contacts in search
 - **The whole phone:** theme the whole phone, animated wallpaper, still wallpaper follows the look, make Lembas your home app
 - **Watch:** put Lembas on your watch
 - **Updates:** automatic updates, check for updates now
@@ -138,6 +140,8 @@ Lembas draws its own line-art icon for over 150 common apps (phone, messages, Wh
 | `AppAdapter.kt`, `LetterRail.kt` | Drawer list and the magnifying letter strips |
 | `ShortcutPopup.kt` | Long-press menu with app shortcuts |
 | `IconCache.kt`, `Glyphs.kt` | Themed icon rendering and the built-in icon set |
+| `DrawerIcons.kt`, `tools/glyph_variants.py` | The Red Book's icon styles; the script makes the bolder (`gb_`) and two-tone (`gd_`) glyphs from the originals (`g_`) |
+| `PressRow.kt` | The highlight under your finger in the Red Book and search |
 | `Updater.kt` | Daily update check and silent self-install from GitHub releases |
 | `LookWallpaper.kt` | Sets the phone wallpaper to the look's scene at each switch, and runs the switch alarms |
 | `SystemTheme.kt` | The system colours and dark theme for each look (with the one-time permission) |

@@ -272,6 +272,7 @@ class SearchAdapter(
             return tv
         }
         val v = convertView ?: makeRow(parent)
+        (v as? PressRow)?.reset()
         val r = v.tag as Row
         r.icon.foreground = null
         r.icon.imageTintList = null
@@ -337,14 +338,12 @@ class SearchAdapter(
     }
 
     private fun makeRow(parent: ViewGroup): View {
-        val row = LinearLayout(activity).apply {
+        val row = PressRow(activity).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
             minimumHeight = px(56f)
             setPadding(px(44f), px(6f), px(36f), px(6f))
-            val tv = TypedValue()
-            activity.theme.resolveAttribute(android.R.attr.selectableItemBackground, tv, true)
-            setBackgroundResource(tv.resourceId)
+            highlight = PressRow.colorFor(look)
         }
         val icon = ImageView(activity).apply { layoutParams = LinearLayout.LayoutParams(px(38f), px(38f)) }
         val col = LinearLayout(activity).apply {

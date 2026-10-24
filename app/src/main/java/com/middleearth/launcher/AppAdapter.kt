@@ -131,6 +131,7 @@ class AppAdapter(
             h.section.text = letterOf(e).toString()
         } else h.section.visibility = View.GONE
         icons.bind(e, iconSpec, h.icon)
+        if (convertView != null) PressRow.of(view)?.reset()
         return view
     }
 
@@ -149,6 +150,7 @@ class AppAdapter(
         note.typeface = sectionFont
         note.setTextColor(look.muted)
         note.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
+        v.findViewById<PressRow>(R.id.row).highlight = PressRow.colorFor(look)
         v.tag = Holder(section, label, v.findViewById(R.id.icon), note)
         return v
     }
