@@ -29,8 +29,12 @@ class Ambient(private val look: Look, private val w: Float, private val h: Float
 
     private val fill = Paint(Paint.ANTI_ALIAS_FLAG)
     private val stroke = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeCap = Paint.Cap.ROUND }
-    private val sx = w / 390f
-    private val sy = h / 844f
+    // the framed scenes (arch, map) sit where Scene.frame puts them; the sky fills the screen
+    private val fr = Scene.frame(w, h)
+    private val sx = fr.sx
+    private val sy = fr.sy
+    private val ox = fr.ox
+    private val oy = fr.oy
 
     fun draw(c: Canvas, t: Float) {
         when (look.id) {
@@ -58,8 +62,8 @@ class Ambient(private val look: Look, private val w: Float, private val h: Float
         if (k < 0.12f) 0xFFFFE2B0.toInt() else if (k < 0.25f) 0xFFBFD4FF.toInt() else 0xFFF4F1E8.toInt()
     }
     private val spN = 7
-    private val spX = FloatArray(spN) { (20 + rnd.nextFloat() * 350) * sx }
-    private val spY = FloatArray(spN) { (30 + rnd.nextFloat() * 420) * sy }
+    private val spX = FloatArray(spN) { (20 + rnd.nextFloat() * 350) * (w / 390f) }
+    private val spY = FloatArray(spN) { (30 + rnd.nextFloat() * 420) * (h / 844f) }
     private val spP = FloatArray(spN) { 2.2f + rnd.nextFloat() * 2.5f }
     private val spPh = FloatArray(spN) { rnd.nextFloat() * 6.28f }
     private val sparkle = Path().apply {
@@ -114,8 +118,8 @@ class Ambient(private val look: Look, private val w: Float, private val h: Float
         shader = RadialGradient(0f, 0f, 260 * dp, 0x8CFFECBE.toInt(), 0x00FFECBE, Shader.TileMode.CLAMP)
     }
     private val moteN = 12
-    private val moteX = FloatArray(moteN) { (40 + rnd.nextFloat() * 310) * sx }
-    private val moteY = FloatArray(moteN) { (260 + rnd.nextFloat() * 460) * sy }
+    private val moteX = FloatArray(moteN) { ox + (40 + rnd.nextFloat() * 310) * sx }
+    private val moteY = FloatArray(moteN) { oy + (260 + rnd.nextFloat() * 460) * sy }
     private val moteP = FloatArray(moteN) { 9f + rnd.nextFloat() * 8f }
     private val moteO = FloatArray(moteN) { rnd.nextFloat() * 14f }
 
@@ -158,7 +162,7 @@ class Ambient(private val look: Look, private val w: Float, private val h: Float
 
         // The campfire, inked on the map
         c.save()
-        c.translate(204 * sx, 654 * sy)
+        c.translate(ox + 204 * sx, oy + 654 * sy)
         c.scale(sx, sx)
         val gp = 0.55f + 0.3f * wave(t, 2.2f, 0f)
         c.save()
@@ -212,6 +216,7 @@ class Ambient(private val look: Look, private val w: Float, private val h: Float
         cubicTo(70 * sx, 210 * sy, 130 * sx, 150 * sy, 195 * sx, 96 * sy)
         cubicTo(260 * sx, 150 * sy, 320 * sx, 210 * sy, 320 * sx, 300 * sy)
         lineTo(320 * sx, 600 * sy)
+        offset(ox, oy)
     }
     private val archMeasure = PathMeasure(arch, false)
     private val archLen = archMeasure.length
@@ -220,8 +225,8 @@ class Ambient(private val look: Look, private val w: Float, private val h: Float
         shader = RadialGradient(0f, 0f, 26 * dp, 0x80BFD8E6.toInt(), 0x00BFD8E6, Shader.TileMode.CLAMP)
     }
     private val evN = 16
-    private val evX = FloatArray(evN) { (60 + rnd.nextFloat() * 270) * sx }
-    private val evY = FloatArray(evN) { (380 + rnd.nextFloat() * 340) * sy }
+    private val evX = FloatArray(evN) { ox + (60 + rnd.nextFloat() * 270) * sx }
+    private val evY = FloatArray(evN) { oy + (380 + rnd.nextFloat() * 340) * sy }
     private val evP = FloatArray(evN) { 8f + rnd.nextFloat() * 9f }
     private val evO = FloatArray(evN) { rnd.nextFloat() * 16f }
 
@@ -237,7 +242,7 @@ class Ambient(private val look: Look, private val w: Float, private val h: Float
         }
         val f = wave(t, 5f, 0f)
         c.save()
-        c.translate(195 * sx, 82 * sy)
+        c.translate(ox + 195 * sx, oy + 82 * sy)
         val s = 1f + 0.18f * f
         c.scale(s, s)
         halo.alpha = (255 * (0.55f + 0.45f * f)).toInt()
@@ -273,9 +278,9 @@ class Ambient(private val look: Look, private val w: Float, private val h: Float
     }
 
     private fun shire(c: Canvas, t: Float) {
-        val (s, oy) = shireT
+        val (s, sox, soy) = shireT
         c.save()
-        c.translate(0f, oy)
+        c.translate(sox, soy)
         c.scale(s, s)
         val span = 660f
         cloud(c, -140f + span * (((t + 20f) % 70f) / 70f), 236f, 1f, 215)

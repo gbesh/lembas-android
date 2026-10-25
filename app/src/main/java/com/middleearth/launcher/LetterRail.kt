@@ -86,8 +86,18 @@ class LetterRail @JvmOverloads constructor(context: Context, attrs: AttributeSet
         if (c <= 0f) return
         val pad = 8 * dp
         paint.textAlign = if (onRight) Paint.Align.RIGHT else Paint.Align.LEFT
+        // on a short screen (landscape) the letters would overlap: show every second or third
+        // letter (plus the current one and the ones near your thumb), and a small dot for the rest
+        val step = kotlin.math.ceil((base * 1.15f) / c).toInt().coerceAtLeast(1)
         for ((i, ch) in letters.withIndex()) {
             val cy = top + (i + 0.5f) * c
+            val near = strength > 0f && abs(cy - touchY) / c < 1.5f
+            if (step > 1 && i % step != 0 && ch != current && !near) {
+                paint.color = dim
+                val x = if (onRight) width - pad - 2 * dp else pad + 2 * dp
+                canvas.drawCircle(x, cy, 1.1f * dp, paint)
+                continue
+            }
             val has = ch in present
             var size = base
             var shift = 0f

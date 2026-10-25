@@ -256,9 +256,9 @@ internal class Painter(private val dp: Float) {
         }
         c.drawRect(0f, 0f, w, h, sky)
 
-        val (s, oy) = Scene.shire(w, h)
+        val (s, ox, oy) = Scene.shire(w, h)
         c.save()
-        c.translate(0f, oy)
+        c.translate(ox, oy)
         c.scale(s, s)
         val p = Paint(Paint.ANTI_ALIAS_FLAG)
 
@@ -282,14 +282,16 @@ internal class Painter(private val dp: Float) {
         // Far hill
         p.color = 0xFFB9CF98.toInt()
         c.drawPath(Path().apply {
-            moveTo(0f, 520f); cubicTo(70f, 470f, 150f, 462f, 230f, 488f); cubicTo(300f, 510f, 350f, 486f, 390f, 470f)
-            lineTo(390f, 2000f); lineTo(0f, 2000f); close()
+            moveTo(-3000f, 520f); lineTo(0f, 520f)
+            cubicTo(70f, 470f, 150f, 462f, 230f, 488f); cubicTo(300f, 510f, 350f, 486f, 390f, 470f)
+            lineTo(3390f, 470f); lineTo(3390f, 2000f); lineTo(-3000f, 2000f); close()
         }, p)
         // Middle hill with the party tree
         p.color = 0xFF94B373.toInt()
         c.drawPath(Path().apply {
-            moveTo(0f, 560f); cubicTo(40f, 500f, 120f, 470f, 180f, 520f); cubicTo(220f, 552f, 300f, 560f, 390f, 540f)
-            lineTo(390f, 2000f); lineTo(0f, 2000f); close()
+            moveTo(-3000f, 560f); lineTo(0f, 560f)
+            cubicTo(40f, 500f, 120f, 470f, 180f, 520f); cubicTo(220f, 552f, 300f, 560f, 390f, 540f)
+            lineTo(3390f, 540f); lineTo(3390f, 2000f); lineTo(-3000f, 2000f); close()
         }, p)
         val trunk = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = 0xFF5B4A33.toInt(); strokeWidth = 3f; style = Paint.Style.STROKE; strokeCap = Paint.Cap.ROUND
@@ -305,8 +307,9 @@ internal class Painter(private val dp: Float) {
         // Near hill with the round door
         p.color = 0xFF6E9752.toInt()
         c.drawPath(Path().apply {
-            moveTo(0f, 640f); cubicTo(60f, 598f, 150f, 580f, 230f, 590f); cubicTo(300f, 600f, 350f, 620f, 390f, 640f)
-            lineTo(390f, 2000f); lineTo(0f, 2000f); close()
+            moveTo(-3000f, 640f); lineTo(0f, 640f)
+            cubicTo(60f, 598f, 150f, 580f, 230f, 590f); cubicTo(300f, 600f, 350f, 620f, 390f, 640f)
+            lineTo(3390f, 640f); lineTo(3390f, 2000f); lineTo(-3000f, 2000f); close()
         }, p)
         p.color = 0xFF7A6247.toInt()
         c.drawRoundRect(RectF(276f, 574f, 288f, 600f), 2f, 2f, p)
@@ -331,7 +334,7 @@ internal class Painter(private val dp: Float) {
         c.drawCircle(138f, 670f, 2.6f, p); c.drawCircle(290f, 664f, 2.6f, p)
         // Foreground meadow under the dock
         p.color = 0xFF5E8645.toInt()
-        c.drawRect(0f, 700f, 390f, 2000f, p)
+        c.drawRect(-3000f, 700f, 3390f, 2000f, p)
         c.restore()
     }
 
@@ -358,8 +361,10 @@ internal class Painter(private val dp: Float) {
         }
 
         // Hand-drawn map contours, in the design's 390×844 coordinates.
+        val fr = Scene.frame(w, h)
         c.save()
-        c.scale(w / 390f, h / 844f)
+        c.translate(fr.ox, fr.oy)
+        c.scale(fr.sx, fr.sy)
         val ink = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             style = Paint.Style.STROKE
             strokeWidth = 0.8f
@@ -424,9 +429,12 @@ internal class Painter(private val dp: Float) {
         c.drawRect(0f, 0f, w, h, base)
         stars(c, w, h, Random(1955), density = 5000f, maxY = 0.6f, brightness = 0.55f)
 
-        // Arch in the design's 390×844 coordinates, scaled to the screen.
-        val sx = w / 390f
-        val sy = h / 844f
+        // Arch in the design's 390×844 coordinates, framed to the screen.
+        val fr = Scene.frame(w, h)
+        val sx = fr.sx
+        val sy = fr.sy
+        c.save()
+        c.translate(fr.ox, fr.oy)
         fun arch(inset: Float, apex: Float): Path = Path().apply {
             moveTo((70 + inset) * sx, 600 * sy)
             lineTo((70 + inset) * sx, 300 * sy)
@@ -467,7 +475,7 @@ internal class Painter(private val dp: Float) {
         }
         for (side in listOf(1f, -1f)) {
             c.save()
-            if (side < 0) c.scale(-1f, 1f, w / 2f, 0f)
+            if (side < 0) c.scale(-1f, 1f, 195 * sx, 0f)
             val px = 70 * sx
             c.drawPath(Path().apply { moveTo(px, 560 * sy); cubicTo(px - 14 * dp, 540 * sy, px - 12 * dp, 516 * sy, px, 500 * sy) }, leaf)
             c.drawPath(Path().apply {
@@ -480,14 +488,36 @@ internal class Painter(private val dp: Float) {
             }, leaf)
             c.restore()
         }
+        c.restore()
     }
 }
 
 /** Where the artwork sits on screen, shared by the still painting and the animated layer. */
 internal object Scene {
-    /** Shire Morning is scaled to the screen width and anchored to the bottom. */
-    fun shire(w: Float, h: Float): Pair<Float, Float> {
-        val s = w / 390f
-        return s to (h - 844f * s)
+    /**
+     * Shire Morning, drawn in a 390×844 design, is scaled to fill the width on a phone and
+     * anchored to the bottom; on a wide screen (a tablet, a foldable, landscape) it's scaled to
+     * the height instead and centred, with the hills running out to both edges.
+     * Returns scale, x offset, y offset.
+     */
+    fun shire(w: Float, h: Float): Triple<Float, Float, Float> {
+        val s = minOf(w / 390f, h / 844f)
+        return Triple(s, (w - 390f * s) / 2f, h - 844f * s)
+    }
+
+    /** Where the 390×844 design sits for the framed scenes (the Elven arch, the Red Book map). */
+    class Frame(val sx: Float, val sy: Float, val ox: Float, val oy: Float)
+
+    /**
+     * On a phone this is simply the whole screen (as designed). On a wider screen the design
+     * stays in proportion (stretched sideways at most 1.5×) and is centred, so the arch doesn't
+     * flatten into a wide tunnel.
+     */
+    fun frame(w: Float, h: Float): Frame {
+        val sx0 = w / 390f
+        val sy0 = h / 844f
+        val sx = minOf(sx0, sy0 * 1.5f)
+        val sy = minOf(sy0, sx0 * 1.15f)
+        return Frame(sx, sy, (w - 390f * sx) / 2f, (h - 844f * sy) / 2f)
     }
 }

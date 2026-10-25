@@ -204,7 +204,7 @@ class ShortcutPopup(
                 // one short word each, so five fit side by side
                 text = SHORT[a.label] ?: a.label
                 typeface = bodyFont
-                setTextSize(TypedValue.COMPLEX_UNIT_SP, if (actions.size > 4) 12f else 13f)
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, when { actions.size > 5 -> 11f; actions.size > 4 -> 12f; else -> 13f })
                 ellipsize = android.text.TextUtils.TruncateAt.END
                 setTextColor(look.popupMuted)
                 setSingleLine()
@@ -217,7 +217,7 @@ class ShortcutPopup(
         box.addView(bottom)
 
         // Measure, then place above the icon (or below it if there's no room).
-        val width = if (notes.isNotEmpty() || actions.size > 4) px(296) else px(256)
+        val width = when { actions.size > 5 -> px(320); notes.isNotEmpty() || actions.size > 4 -> px(296); else -> px(256) }
         box.measure(
             View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
             View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
@@ -252,6 +252,7 @@ class ShortcutPopup(
             val lp = root.layoutParams as WindowManager.LayoutParams
             lp.flags = lp.flags or WindowManager.LayoutParams.FLAG_DIM_BEHIND
             lp.dimAmount = if (look.darkScene) 0.45f else 0.25f
+            if (Blur.behind(activity, lp, px(20))) lp.dimAmount *= 0.6f
             activity.windowManager.updateViewLayout(root, lp)
         } catch (t: Throwable) { }
 

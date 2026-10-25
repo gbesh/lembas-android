@@ -53,6 +53,7 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ListView
+import android.widget.ScrollView
 import android.widget.Space
 import android.widget.TextView
 import android.widget.Toast
@@ -81,6 +82,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
     private lateinit var ambient: AmbientView
     private lateinit var home: LinearLayout
     private lateinit var topSpace: Space
+    private lateinit var spacer: View
     private lateinit var label: TextView
     private lateinit var clock: TextView
     private lateinit var shire: TextView
@@ -89,6 +91,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
     private lateinit var meal: TextView
     private lateinit var sunArc: SunArcView
     private lateinit var music: MusicCard
+    private lateinit var live: LiveCard
     private lateinit var widgetBox: LinearLayout
     private lateinit var widgets: Widgets
     private lateinit var searchEngine: SearchEngine
@@ -391,6 +394,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
 
     /** Notifications came or went: redraw the dots. */
     private val dotsChanged: () -> Unit = {
+        if (::live.isInitialized) live.show()
         if (::adapter.isInitialized) adapter.notifyDataSetChanged()
         refreshDock()
         refreshLately()
@@ -418,6 +422,10 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
     private fun showAppMenu(e: AppEntry, anchor: View) {
         val pinned = e.key in pinnedKeys()
         val actions = ArrayList<ShortcutPopup.Action>()
+        if (Bubbles.canBubble(e)) actions.add(ShortcutPopup.Action("Bubble", R.drawable.g_chat) {
+            Haptics.feel(root, Haptics.Feel.CONFIRM)
+            Bubbles.open(this, e)
+        })
         actions.add(ShortcutPopup.Action("App info", R.drawable.g_info) {
             try { repo.launcherApps.startAppDetailsActivity(e.component, e.user, null, null) } catch (t: Exception) { }
         })
@@ -752,6 +760,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         ambient = findViewById(R.id.ambient)
         home = findViewById(R.id.home)
         topSpace = findViewById(R.id.topSpace)
+        spacer = findViewById(R.id.spacer)
         label = findViewById(R.id.label)
         clock = findViewById(R.id.clock)
         shire = findViewById(R.id.shire)
@@ -763,11 +772,16 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         music = MusicCard(this)
         home.addView(music, home.indexOfChild(sunArc) + 1, LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = (14 * dp).roundToInt() })
+        // Live Updates (a call, directions, a delivery on its way) above the music player
+        live = LiveCard(this)
+        home.addView(live, home.indexOfChild(music), LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = (14 * dp).roundToInt() })
         // and widgets under that
         widgetBox = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; visibility = View.GONE }
         home.addView(widgetBox, home.indexOfChild(music) + 1, LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = (4 * dp).roundToInt() })
         hint = findViewById(R.id.hint)
+        arrangeForShape()
         dock = findViewById(R.id.dock)
         drawer = findViewById(R.id.drawer)
         drawerTitle = findViewById(R.id.drawerTitle)
@@ -840,11 +854,86 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         return insets
     }
 
+    // ------------------------------------------------------------------ screen shape
+    private var sideways: LinearLayout? = null
+    private var sidewaysClock: FrameLayout? = null
+    private var hintWas = View.VISIBLE
+
+    private fun clockBlock(): List<View> = listOf(label, clock, shire, date, ornament, meal, sunArc)
+    private fun cardBlock(): List<View> = listOf(live, music, widgetBox)
+
+    /**
+     * Turned sideways (landscape), the clock stays centred (inside the Elven arch, over the
+     * Shire's sky) and the cards (Live Updates, music, widgets) move to a column on the right.
+     * The clock shrinks if the screen is too short for it. Upright, everything goes back.
+     */
+    private fun arrangeForShape() {
+        val wide = resources.configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+        if (wide == (sideways != null)) return
+        val clocks = clockBlock()
+        val cards = cardBlock()
+        if (wide) {
+            for (v in clocks + cards) (v.parent as? ViewGroup)?.removeView(v)
+            val mid = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER_HORIZONTAL }
+            clocks.forEach { mid.addView(it) }
+            val holder = FrameLayout(this).apply { clipChildren = false; clipToPadding = false }
+            holder.addView(mid, FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.TOP or Gravity.CENTER_HORIZONTAL))
+            val right = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER_VERTICAL }
+            cards.forEach { right.addView(it) }
+            val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; clipChildren = false }
+            row.addView(Space(this), LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f))
+            row.addView(holder, LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT))
+            row.addView(ScrollView(this).apply { isVerticalScrollBarEnabled = false; addView(right) },
+                LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f).apply { marginStart = (24 * dp).roundToInt() })
+            home.clipChildren = false
+            home.addView(row, home.indexOfChild(topSpace) + 1, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f))
+            spacer.visibility = View.GONE
+            hintWas = hint.visibility
+            hint.visibility = View.GONE
+            // shrink the clock to fit the height that's left
+            // (the clock keeps its full natural height, so nothing is cut off, and is scaled
+            // down as a whole to the height that's left)
+            holder.addOnLayoutChangeListener { _, _, top, _, bottom, _, _, _, _ ->
+                mid.measure(View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED), View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED))
+                val need = mid.measuredHeight
+                val have = (bottom - top).toFloat()
+                val sc = if (need > 0 && have > 0) (have / need).coerceAtMost(1f) else 1f
+                mid.pivotX = mid.measuredWidth / 2f; mid.pivotY = 0f
+                if (mid.scaleX != sc) { mid.scaleX = sc; mid.scaleY = sc }
+                val lp = mid.layoutParams
+                if (need > 0 && lp.height != need) { lp.height = need; holder.post { mid.layoutParams = lp } }
+            }
+            sideways = row
+            sidewaysClock = holder
+        } else {
+            val row = sideways ?: return
+            for (v in clocks + cards) (v.parent as? ViewGroup)?.removeView(v)
+            home.removeView(row)
+            var at = home.indexOfChild(topSpace) + 1
+            for (v in clocks + cards) home.addView(v, at++)
+            spacer.visibility = View.VISIBLE
+            hint.visibility = hintWas
+            sideways = null
+            sidewaysClock = null
+        }
+    }
+
+    override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
+        super.onConfigurationChanged(newConfig)
+        arrangeForShape()
+        root.post { updateTopSpace() }
+    }
+
     /** Places the clock block at the same height as in the design, whatever the screen. */
     private fun updateTopSpace() {
         val h = root.height
         if (h == 0) return
-        val want = ((h * look.contentTopFraction) - insetTop).roundToInt().coerceAtLeast(0)
+        // the arch and the map keep their proportions on wide screens, so follow where they sit
+        val top = if (look.id == "elven" || look.id == "redbook") {
+            val fr = Scene.frame(root.width.toFloat(), h.toFloat())
+            fr.oy + 844f * fr.sy * look.contentTopFraction
+        } else h * look.contentTopFraction
+        val want = (top - insetTop).roundToInt().coerceAtLeast(0)
         val lp = topSpace.layoutParams
         if (lp.height != want) {
             lp.height = want
@@ -1010,6 +1099,9 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         hint.setImageResource(look.hintRes)
         hint.imageTintList = ColorStateList.valueOf(look.hintColor)
         music.style(look.clockColor, (look.clockColor and 0x00FFFFFF) or 0xA0000000.toInt(), look.accent,
+            if (look.lightBars) 0x1A000000 else 0x24FFFFFF, Fonts.get(assets, look.displayItalicFont, 400, true),
+            Fonts.get(assets, "AlegreyaSans-Medium.ttf", 500))
+        live.style(look.clockColor, (look.clockColor and 0x00FFFFFF) or 0xA0000000.toInt(), look.accent,
             if (look.lightBars) 0x1A000000 else 0x24FFFFFF, Fonts.get(assets, look.displayItalicFont, 400, true),
             Fonts.get(assets, "AlegreyaSans-Medium.ttf", 500))
         if (modern) applyModern() else { date.visibility = View.VISIBLE; sunArc.visibility = View.GONE }
@@ -1435,6 +1527,16 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
                     else if (Dots.accessGranted(this) || Dots.turnOn(this)) { music.start(); true }
                     else {
                         Toast.makeText(this, "Allow Lembas under Notification access to show what's playing", Toast.LENGTH_LONG).show()
+                        try { startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)) } catch (_: Exception) { }
+                        false
+                    } },
+                SettingsSheet.Row("Live Updates", onOff(Live.enabled(this) && Dots.accessGranted(this))) {
+                    val on = Live.enabled(this) && Dots.accessGranted(this)
+                    prefs.edit().putBoolean(Live.PREF, !on).apply()
+                    if (on) { Live.refresh(this); live.show(); true }
+                    else if (Dots.accessGranted(this) || Dots.turnOn(this)) { Live.refresh(this); live.show(); true }
+                    else {
+                        Toast.makeText(this, "Allow Lembas under Notification access to show calls, directions and deliveries", Toast.LENGTH_LONG).show()
                         try { startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)) } catch (_: Exception) { }
                         false
                     } },
