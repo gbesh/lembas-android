@@ -138,16 +138,16 @@ import re, subprocess, xml.etree.ElementTree as ET
 subprocess.run(["adb","shell","uiautomator","dump","/sdcard/ui.xml"],capture_output=True)
 x=subprocess.run(["adb","exec-out","cat","/sdcard/ui.xml"],capture_output=True).stdout
 for n in ET.fromstring(x).iter("node"):
-    if (n.get("text") or "").strip().lower()=="clock":
+    if (n.get("text") or "").strip().lower()=="clock" and "EditText" not in (n.get("class") or ""):
         x1,y1,x2,y2=map(int,re.findall(r"\d+",n.get("bounds")))
         subprocess.run(["adb","shell","input","swipe",str((x1+x2)//2),str((y1+y2)//2),str((x1+x2)//2),str((y1+y2)//2),"900"])
         break
 PY
 sleep 2
 snap "bubble-menu"
-python3 tools/tap.py "bubble" 2>> "$S/bubbles.txt"
+python3 tools/tap.py "=bubble" 2>> "$S/bubbles.txt"
 sleep 6
 snap "bubble-open"
-adb shell dumpsys notification --noredact | grep -i -E "bubble|lembas" | head -40 >> "$S/bubbles.txt"
-adb logcat -d | grep -i -E "bubble" | grep -v -i "chatty" | tail -40 >> "$S/bubbles.txt"
+adb shell dumpsys notification --noredact | grep -i -E "middleearth|bubble_com" -A3 | head -40 >> "$S/bubbles.txt"
+adb logcat -d | grep -i -E "bubble" | grep -v -i -E "chatty|Slow delivery|PrefCtrl" | tail -40 >> "$S/bubbles.txt"
 exit 0
