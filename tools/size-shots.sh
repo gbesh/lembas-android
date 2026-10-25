@@ -29,8 +29,9 @@ done
 # turned sideways (landscape), home and the Red Book
 adb shell settings put system accelerometer_rotation 0
 adb shell settings put system user_rotation 1; sleep 6
-adb shell input keyevent KEYCODE_HOME; sleep 6
+adb shell input keyevent KEYCODE_HOME; sleep 10
 snap "landscape-home"
+adb shell dumpsys window | grep -E "mCurrentFocus|mFocusedApp" > "$S/$N-landscape-focus.txt"
 adb shell am start -n com.middleearth.launcher/.MainActivity -a com.middleearth.launcher.SEARCH > /dev/null; sleep 4
 adb shell dumpsys input_method | grep -q "mInputShown=true" && adb shell input keyevent KEYCODE_BACK
 sleep 2; snap "landscape-drawer"

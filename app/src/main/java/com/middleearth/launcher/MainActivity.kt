@@ -891,13 +891,17 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
             hintWas = hint.visibility
             hint.visibility = View.GONE
             // shrink the clock to fit the height that's left
+            // (the clock keeps its full natural height, so nothing is cut off, and is scaled
+            // down as a whole to the height that's left)
             holder.addOnLayoutChangeListener { _, _, top, _, bottom, _, _, _, _ ->
                 mid.measure(View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED), View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED))
-                val need = mid.measuredHeight.toFloat()
+                val need = mid.measuredHeight
                 val have = (bottom - top).toFloat()
                 val sc = if (need > 0 && have > 0) (have / need).coerceAtMost(1f) else 1f
                 mid.pivotX = mid.measuredWidth / 2f; mid.pivotY = 0f
                 if (mid.scaleX != sc) { mid.scaleX = sc; mid.scaleY = sc }
+                val lp = mid.layoutParams
+                if (need > 0 && lp.height != need) { lp.height = need; holder.post { mid.layoutParams = lp } }
             }
             sideways = row
             sidewaysClock = holder
