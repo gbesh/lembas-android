@@ -32,12 +32,12 @@ The Lembas watch face, watch launcher and tile have their own repo: **[gbesh/lem
 
 | Theme | Adaptive shows it | Look |
 |---|---|---|
-| **Shire Morning** (light) | sunrise → midday | Green hills, a round green door, chimney smoke, drifting clouds; left-aligned clock |
-| **Red Book** (light) | midday → sunset | Parchment and ink with red rubrics; a map with an inked campfire and line-drawn smoke |
+| **Shire Morning** (light) | sunrise → late afternoon | Green hills, a round green door, chimney smoke, drifting clouds; left-aligned clock |
+| **Red Book** (light) | late afternoon → sunset | Parchment and ink with red rubrics; a map with an inked campfire and line-drawn smoke |
 | **Starlit Night** (dark) | sunset → 11pm, and 4am → sunrise | Night sky with twinkling stars, shooting stars, mountains and today's real moon phase |
 | **Elven Silver** (deep night) | 11pm → 4am | Near-black with a silver elven arch, a travelling glint and rising silver motes |
 
-"Midday" is when the sun is highest, not 12:00 (often closer to 1pm during daylight saving). Sunrise, midday and sunset are worked out each day from your time zone's main city, so no location permission is needed. The phone, the Lembas watch face and Lembas for Windows use exactly the same sums and cities, so they all change look at the same minute. The settings sheet shows today's switch times. You can also pick one theme to use all the time.
+"Late afternoon" is when the sun has dropped to 15° above the horizon and the light turns golden: about 6pm on a Sydney summer's evening, 3:20pm in midwinter, so the fireside look always arrives with the evening, whatever the season. Sunrise, late afternoon and sunset are worked out each day from your time zone's main city, so no location permission is needed. The phone, the Lembas watch face and Lembas for Windows use exactly the same sums and cities, so they all change look at the same minute. The settings sheet shows today's switch times. You can also pick one theme to use all the time.
 
 **The home clock** comes in two styles (long-press → **Clock**):
 - **Modern** (the default): the same type as the Lembas watch face, over the look's animated scene. The date and the Shire date (e.g. *Mersday · 1 Blotmath*), the time with the hours heavy in the look's colour and the minutes light, the hobbit mealtime, a **glance line** with your next alarm (and your next calendar event, if you allow it), and the **sun arc**: today's daylight from sunrise to sunset, with the sun on it.
@@ -141,7 +141,7 @@ Lembas draws its own line-art icon for over 150 common apps (phone, messages, Wh
 |---|---|
 | `MainActivity.kt` | Home screen, drawer, dock, Lately, gestures, unlock entrance, settings |
 | `Look.kt` | The four themes: every colour, font and style choice |
-| `Sun.kt` | Sunrise / midday / sunset and the Adaptive schedule |
+| `Sun.kt` | Sunrise / late afternoon / sunset and the Adaptive schedule |
 | `Backdrop.kt` | Paints each theme's still artwork once into a bitmap |
 | `Ambient.kt` | The animated layer (stars, campfire, motes, clouds), shared with the wallpaper |
 | `LembasWallpaper.kt` | The optional live wallpaper and the system colours it hands to Android |
