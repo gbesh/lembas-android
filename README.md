@@ -56,6 +56,7 @@ The Lembas watch face, watch launcher and tile have their own repo: **[gbesh/lem
 - **Back gesture** (Android 14+): swipe back and the Red Book or the settings sheet shrinks and follows your thumb; let go to close it, or change your mind.
 - **Unlocking**, and each change of look, plays a quick entrance: the scene settles in and the text rises into place in about half a second.
 - **Double-tap empty space** to lock the phone (turn on in settings; fingerprint and face unlock keep working). It uses a tiny accessibility service that only locks the screen and reads nothing; after the whole-phone setup Lembas switches it on itself.
+- **Any screen**: the scenes keep their proportions on wide screens (tablets, foldables, big phones) and fill them edge to edge, and the wallpaper repaints for a new phone's screen. **Turned sideways**, the clock stays centred (shrinking if it must) and Live Updates, music and widgets move to a column on the right.
 - **Live Updates** under the clock: a call in progress, directions, a ride or delivery on its way, a timer, with its progress bar and time. It uses Android 16's Live Update notifications, and on any Android also ongoing calls, navigation and progress. Tap it to go back to the app. (Turn off in settings; it uses the same notification access as the dots.)
 - **Frosted glass** behind the settings sheet and app menus on Android 12+, like Android's own panels (off automatically in battery saver or when the phone's reduce-blur setting is on).
 - **Music player** under the clock while something's playing: the song, the artist, play/pause and next. Tap the song to open the app that's playing. (It uses the same notification access as the dots.)
@@ -81,6 +82,7 @@ Press Enter to open the top result. Touch and hold Lembas's own icon (in any app
 - Swipe down from the top of the list to close it.
 
 **App shortcuts**
+- **Bubble** (Android 11+): in any app's touch-and-hold menu, opens it as a floating bubble, using Android's own bubbles (the same as Messages). The first time, Android asks you to let Lembas show bubbles ("All conversations can bubble"). A few apps insist on opening full screen and leave the bubble.
 - **Long-press any app** (dock, Lately, the list or search) for its own shortcuts, such as *New tab* and *New incognito tab* for the browser or *Take a selfie* for the camera, plus *App info*, *Add to dock / Unpin*, **Rename**, **Hide from the list** (search still finds it; Settings → Hidden apps brings it back) and *Uninstall*.
 - **Swipe up on a dock or Lately icon** to open its first shortcut directly.
 - Shortcuts only appear once Lembas is your default Home app (an Android rule).
@@ -160,6 +162,7 @@ Lembas draws its own line-art icon for over 150 common apps (phone, messages, Wh
 | `Widgets.kt` | Home-screen widgets: picker, adding, resizing and the long-press menu |
 | `IconPacks.kt` | Icon packs (the standard appfilter format used by Nova, Niagara and others) |
 | `Search.kt` | Search: apps, shortcuts, contacts, sums, Google and the Play Store |
+| `Bubbles.kt` | Opening apps as bubbles |
 | `LiveCard.kt` | Live Updates on the home screen |
 | `Blur.kt` | Frosted glass behind sheets and menus |
 | `MusicCard.kt` | The music player on the home screen |
