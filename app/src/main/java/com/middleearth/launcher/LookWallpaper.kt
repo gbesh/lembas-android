@@ -88,7 +88,7 @@ object LookWallpaper {
             for (d in 0..1) {
                 val date = now.toLocalDate().plusDays(d.toLong())
                 val day = Sun.today(now.zone, date)
-                for (m in listOf(day.sunrise, day.noon, day.sunset, 23 * 60, 4 * 60)) {
+                for (m in listOf(day.sunrise, day.evening, day.sunset, 23 * 60, 4 * 60)) {
                     val t = date.atStartOfDay(now.zone).plusMinutes(m.toLong()).plusSeconds(20)
                     if (t.isAfter(now) && t.isBefore(next)) next = t
                 }

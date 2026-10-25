@@ -1488,8 +1488,8 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         fun hm(m: Int) = java.time.LocalTime.of(m / 60, m % 60).format(DateTimeFormatter.ofPattern(if (DateFormat.is24HourFormat(this)) "H:mm" else "h:mm a"))
         val times = mapOf(
             Look.ADAPTIVE to "now ${Themes.adaptive().title}",
-            Look.SHIRE.id to "${hm(day.sunrise)}–${hm(day.noon)}",
-            Look.REDBOOK.id to "${hm(day.noon)}–${hm(day.sunset)}",
+            Look.SHIRE.id to "${hm(day.sunrise)}–${hm(day.evening)}",
+            Look.REDBOOK.id to "${hm(day.evening)}–${hm(day.sunset)}",
             Look.STARLIT.id to "${hm(day.sunset)}–11pm",
             Look.ELVEN.id to "11pm–4am",
         )
@@ -1659,7 +1659,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
             return t.format(DateTimeFormatter.ofPattern(if (DateFormat.is24HourFormat(this)) "H:mm" else "h:mm a"))
         }
         val names = arrayOf(
-            "Adaptive — follows the sun: Shire Morning ${hm(day.sunrise)}–${hm(day.noon)}, Red Book until ${hm(day.sunset)}, Starlit Night until 11pm, Elven Silver until 4am",
+            "Adaptive — follows the sun: Shire Morning ${hm(day.sunrise)}–${hm(day.evening)}, Red Book until ${hm(day.sunset)}, Starlit Night until 11pm, Elven Silver until 4am",
             "Shire Morning · morning light",
             "Red Book · afternoon",
             "Starlit Night · evening",

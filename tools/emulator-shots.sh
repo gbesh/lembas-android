@@ -16,7 +16,7 @@ adb shell settings put global auto_time_zone 0
 adb shell cmd alarm set-timezone Australia/Sydney || adb shell setprop persist.sys.timezone Australia/Sydney
 adb shell input keyevent KEYCODE_WAKEUP
 adb shell wm dismiss-keyguard || true
-for t in 0921:shire 1530:redbook 2005:starlit 0130:elven; do
+for t in 0921:shire 1830:redbook 2005:starlit 0130:elven; do
   hm=${t%%:*}; n=${t##*:}
   adb shell "date $(date +%m%d)${hm}$(date +%Y).00" > /dev/null
   adb shell input keyevent KEYCODE_HOME

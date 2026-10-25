@@ -16,7 +16,11 @@ import kotlin.math.tan
  */
 object Sun {
 
-    class Day(val sunrise: Int, val noon: Int, val sunset: Int) // minutes after local midnight
+    /** Minutes after local midnight. [evening] is when the afternoon sun drops to 15° (the light turns golden). */
+    class Day(val sunrise: Int, val noon: Int, val evening: Int, val sunset: Int)
+
+    /** How high the afternoon sun is when the fireside (Red Book) look takes over. */
+    const val EVENING_SUN = 15.0
 
     // Main city for common time zones (lat, lon). Anything else is estimated from the UTC offset.
     private val CITIES: Map<String, Pair<Double, Double>> = mapOf(
@@ -78,9 +82,17 @@ object Sun {
             cosHa <= -1 -> 180.0       // midnight sun
             else -> Math.toDegrees(acos(cosHa))
         }
+        // the afternoon hour angle where the sun is EVENING_SUN° up (0 if it never climbs that high)
+        val cosHe = (sin(Math.toRadians(EVENING_SUN)) - sin(latR) * sin(dec)) / (cos(latR) * cos(dec))
+        val he = when {
+            cosHe >= 1 -> 0.0
+            cosHe <= -1 -> 180.0
+            else -> Math.toDegrees(acos(cosHe))
+        }.coerceAtMost(ha)
         return Day(
             sunrise = (noon - 4 * ha).toInt().coerceIn(0, 1439),
             noon = noon.toInt().coerceIn(0, 1439),
+            evening = (noon + 4 * he).toInt().coerceIn(0, 1439),
             sunset = (noon + 4 * ha).toInt().coerceIn(0, 1439),
         )
     }
@@ -97,8 +109,8 @@ object Themes {
 
     /**
      * Adaptive, following the sun:
-     *  sunrise → solar noon      Shire Morning (the day getting brighter)
-     *  solar noon → sunset       Red Book
+     *  sunrise → late afternoon  Shire Morning (while the sun is high)
+     *  late afternoon → sunset   Red Book by the fire (once the sun is down to 15°, the light golden)
      *  sunset → 23:00            Starlit Night
      *  23:00 → 04:00             Elven Silver
      *  04:00 → sunrise           Starlit Night
@@ -107,8 +119,8 @@ object Themes {
         val day = Sun.today(now.zone, now.toLocalDate())
         val m = now.hour * 60 + now.minute
         return when {
-            m >= day.sunrise && m < day.noon -> Look.SHIRE
-            m >= day.noon && m < day.sunset -> Look.REDBOOK
+            m >= day.sunrise && m < day.evening -> Look.SHIRE
+            m >= day.evening && m < day.sunset -> Look.REDBOOK
             m >= NIGHT_START || m < NIGHT_END -> Look.ELVEN
             else -> Look.STARLIT
         }
