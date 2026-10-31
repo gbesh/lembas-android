@@ -78,8 +78,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
 
     private lateinit var root: HomeRoot
     private lateinit var scene: FrameLayout
-    private lateinit var backdrop: BackdropView
-    private lateinit var ambient: AmbientView
+    private lateinit var backdrop: SceneView
     private lateinit var home: LinearLayout
     private lateinit var topSpace: Space
     private lateinit var spacer: View
@@ -709,7 +708,8 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         date.text = t.date
         meal.text = t.meal
         meal.visibility = if (t.meal.isEmpty()) View.GONE else View.VISIBLE
-        backdrop.refresh() // repaints only when the day changed (new moon phase)
+        backdrop.weather = Weather.code(this)
+        backdrop.refresh() // rebuilds only when the season, size or look changed
     }
 
     // ------------------------------------------------------------------ unlock entrance
@@ -757,7 +757,6 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         root = findViewById(R.id.root)
         scene = findViewById(R.id.scene)
         backdrop = findViewById(R.id.backdrop)
-        ambient = findViewById(R.id.ambient)
         home = findViewById(R.id.home)
         topSpace = findViewById(R.id.topSpace)
         spacer = findViewById(R.id.spacer)
@@ -928,11 +927,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
     private fun updateTopSpace() {
         val h = root.height
         if (h == 0) return
-        // the arch and the map keep their proportions on wide screens, so follow where they sit
-        val top = if (look.id == "elven" || look.id == "redbook") {
-            val fr = Scene.frame(root.width.toFloat(), h.toFloat())
-            fr.oy + 844f * fr.sy * look.contentTopFraction
-        } else h * look.contentTopFraction
+        val top = h * look.contentTopFraction
         val want = (top - insetTop).roundToInt().coerceAtLeast(0)
         val lp = topSpace.layoutParams
         if (lp.height != want) {
@@ -1049,8 +1044,9 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
     private fun applyLook() {
         modern = prefs.getString(PREF_HOME_STYLE, "modern") == "modern"
         backdrop.look = look
-        ambient.look = look
-        ambient.animationsOn = animationsOn()
+        backdrop.animationsOn = animationsOn()
+        backdrop.parallax = prefs.getBoolean(Themes.PREF_TILT, true)
+        backdrop.weather = Weather.code(this)
         val display = Fonts.get(assets, look.displayFont, look.clockWeight)
         val displayRegular = Fonts.get(assets, look.displayFont, 400)
         val displayMedium = Fonts.get(assets, look.displayFont, 500)
@@ -1457,7 +1453,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
 
     /** Animate the scene only while the home screen is actually showing. */
     private fun updateAmbient() {
-        ambient.active = resumed && !drawerOpen
+        backdrop.active = resumed && !drawerOpen
     }
 
     private fun showKeyboard() {
@@ -1498,7 +1494,13 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
                 SettingsSheet.Row("Clock", if (modern) "Modern" else "Classic") {
                     prefs.edit().putString(PREF_HOME_STYLE, if (modern) "classic" else "modern").apply(); recreate(); false },
                 SettingsSheet.Row("Animations", onOff(anim)) {
-                    prefs.edit().putBoolean(Themes.PREF_ANIM, !anim).apply(); ambient.animationsOn = !anim; true },
+                    prefs.edit().putBoolean(Themes.PREF_ANIM, !anim).apply(); backdrop.animationsOn = !anim; true },
+                SettingsSheet.Row("Tilt depth", onOff(prefs.getBoolean(Themes.PREF_TILT, true))) {
+                    val on = !prefs.getBoolean(Themes.PREF_TILT, true)
+                    prefs.edit().putBoolean(Themes.PREF_TILT, on).apply(); backdrop.parallax = on; true },
+                SettingsSheet.Row("Weather in the scene", onOff(Weather.on(this))) {
+                    val on = !Weather.on(this)
+                    prefs.edit().putBoolean(Themes.PREF_WEATHER, on).apply(); backdrop.weather = Weather.code(this); true },
                 SettingsSheet.Row("App icons", when {
                     themed -> "Line art"
                     IconPacks.selected(this).isNotEmpty() -> IconPacks.installed(this).firstOrNull { it.pkg == IconPacks.selected(this) }?.label ?: "Icon pack"

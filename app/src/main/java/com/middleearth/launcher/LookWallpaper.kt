@@ -67,9 +67,9 @@ object LookWallpaper {
         val h = if (turned) dm.widthPixels else dm.heightPixels
         // repaint for a new look, a new day (the moon phase) or a different screen (a new phone,
         // restored from a backup of the old one, must not keep the old phone's picture)
-        val key = look.id + "/" + LocalDate.now() + "/" + w + "x" + h
+        val key = look.id + "/" + LocalDate.now() + "/" + w + "x" + h + "/" + SceneArt.season()
         if (prefs(ctx).getString(PREF_LAST, "") == key) return
-        val bmp = Painter(dm.density).paint(look, w, h)
+        val bmp = SceneArt.still(ctx, look, w, h, dm.density)
         val wm = WallpaperManager.getInstance(ctx)
         wm.setBitmap(bmp, null, true, WallpaperManager.FLAG_SYSTEM or WallpaperManager.FLAG_LOCK)
         bmp.recycle()

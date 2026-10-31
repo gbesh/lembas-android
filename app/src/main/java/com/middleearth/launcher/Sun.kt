@@ -55,6 +55,13 @@ object Sun {
     private var cacheKey = ""
     private var cached: Day? = null
 
+    /** The main city (lat, lon) for a time zone, if it's one we know. */
+    fun place(zoneId: String): Pair<Double, Double>? = CITIES[zoneId]
+
+    /** Where to ask about the weather: the zone's city, or a point on its meridian. */
+    fun where(zone: ZoneId = ZoneId.systemDefault()): Pair<Double, Double> = CITIES[zone.id]
+        ?: (0.0 to zone.rules.getOffset(java.time.Instant.now()).totalSeconds / 240.0)
+
     @Synchronized
     fun today(zone: ZoneId = ZoneId.systemDefault(), date: LocalDate = LocalDate.now(zone)): Day {
         val key = "${zone.id}#$date"
@@ -103,6 +110,8 @@ object Themes {
     const val PREFS = "lembas"
     const val PREF_THEME = "theme"
     const val PREF_ANIM = "animations"
+    const val PREF_WEATHER = "weather"
+    const val PREF_TILT = "tilt"
 
     private const val NIGHT_START = 23 * 60
     private const val NIGHT_END = 4 * 60

@@ -4,19 +4,14 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!-- Artwork (painted once) + the gentle animated layer on top of it -->
+    <!-- The scene: still layers with the moving parts drawn between them -->
     <FrameLayout
         android:id="@+id/scene"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <com.middleearth.launcher.BackdropView
+        <com.middleearth.launcher.SceneView
             android:id="@+id/backdrop"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
-
-        <com.middleearth.launcher.AmbientView
-            android:id="@+id/ambient"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
     </FrameLayout>

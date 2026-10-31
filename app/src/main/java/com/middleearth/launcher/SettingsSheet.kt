@@ -213,10 +213,9 @@ class SettingsSheet(
         }
         val main = Handler(Looper.getMainLooper())
         Thread {
-            val painter = Painter(dp * 0.45f)
             for (id in ids) {
                 val l = if (id == Look.ADAPTIVE) Themes.adaptive() else Look.byId(id)
-                val bmp: Bitmap = try { painter.paint(l, w, h) } catch (_: Throwable) { continue }
+                val bmp: Bitmap = try { SceneArt.still(activity, l, w, h, dp * 0.45f) } catch (_: Throwable) { continue }
                 main.post { images[id]?.setImageBitmap(bmp) }
             }
         }.apply { priority = Thread.MIN_PRIORITY }.start()

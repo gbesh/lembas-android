@@ -300,7 +300,7 @@ class Look(
             subtitle = "deep night",
             windowColor = 0xFF0E1316.toInt(),
             lightBars = false,
-            contentTopFraction = 0.25f,
+            contentTopFraction = 0.11f,
             labelColor = 0xFF8E9A9E.toInt(),
             labelSizeSp = 11f,
             labelSpacing = 0.4f,

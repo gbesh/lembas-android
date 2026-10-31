@@ -6,10 +6,8 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.SharedPreferences
-import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
-import android.graphics.Paint
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
@@ -24,7 +22,7 @@ import java.time.LocalDate
  * Lembas as a live wallpaper: the same scene as the home screen, on the lock screen and
  * behind apps. It also tells Android which colours to build the system palette from, so on
  * Pixel phones quick settings, Settings, the keyboard and Google apps follow the theme.
- * Animates only while visible, at ~30 fps; otherwise it costs nothing.
+ * Animates only while visible, at the scene's own gentle frame rate; otherwise it costs nothing.
  */
 class LembasWallpaper : WallpaperService() {
 
@@ -35,17 +33,14 @@ class LembasWallpaper : WallpaperService() {
         private val main = Handler(Looper.getMainLooper())
         private val prefs = getSharedPreferences(Themes.PREFS, Context.MODE_PRIVATE)
         private val power = getSystemService(PowerManager::class.java)
-        private val paint = Paint(Paint.FILTER_BITMAP_FLAG)
         private val dp = resources.displayMetrics.density
         private val start = SystemClock.uptimeMillis()
 
         private var look: Look = Themes.current(this@LembasWallpaper)
         private var width = 0
         private var height = 0
-        private var bitmap: Bitmap? = null
-        private var ambient: Ambient? = null
+        private var scene: SceneDrawer? = null
         private var paintedKey = ""
-        private var token = 0
         private var visible = false
         private var running = false
         private var lastFrame = 0L
@@ -58,7 +53,7 @@ class LembasWallpaper : WallpaperService() {
             override fun doFrame(frameTimeNanos: Long) {
                 if (!running) return
                 val now = frameTimeNanos / 1_000_000
-                if (now - lastFrame >= 31) {
+                if (now - lastFrame >= 1000L / (scene?.fps ?: 15) - 4) {
                     lastFrame = now
                     drawFrame()
                 }
@@ -88,7 +83,7 @@ class LembasWallpaper : WallpaperService() {
         }
 
         override fun onSharedPreferenceChanged(p: SharedPreferences?, key: String?) {
-            if (key == Themes.PREF_THEME || key == Themes.PREF_ANIM) recheck()
+            if (key == Themes.PREF_THEME || key == Themes.PREF_ANIM || key == Themes.PREF_WEATHER || key == "weather_code") recheck()
         }
 
         /** Called every minute and on setting changes: switch theme when Adaptive says so. */
@@ -96,7 +91,6 @@ class LembasWallpaper : WallpaperService() {
             val want = Themes.current(this@LembasWallpaper)
             if (want.id != look.id) {
                 look = want
-                ambient = if (width > 0) Ambient(look, width.toFloat(), height.toFloat(), dp) else null
                 repaint()
                 if (Build.VERSION.SDK_INT >= 27) notifyColorsChanged()
             } else {
@@ -120,7 +114,6 @@ class LembasWallpaper : WallpaperService() {
             super.onSurfaceChanged(holder, format, w, h)
             width = w
             height = h
-            ambient = Ambient(look, w.toFloat(), h.toFloat(), dp)
             paintedKey = ""
             repaint()
             drawFrame()
@@ -147,24 +140,16 @@ class LembasWallpaper : WallpaperService() {
             else Choreographer.getInstance().removeFrameCallback(frame)
         }
 
+        /** Rebuilds the scene for a new look, size, season or day (the moon); the layers load from the app's own files. */
         private fun repaint() {
             val w = width
             val h = height
             if (w <= 0 || h <= 0) return
-            val key = "${look.id}#$w#$h#${LocalDate.now().toEpochDay()}"
+            val key = "${look.id}#$w#$h#${LocalDate.now().toEpochDay()}#${SceneArt.season()}#${Weather.code(this@LembasWallpaper)}"
             if (key == paintedKey) return
             paintedKey = key
-            val t = ++token
-            val lk = look
-            Thread {
-                val bmp = try { Painter(dp).paint(lk, w, h) } catch (e: Throwable) { null }
-                main.post {
-                    if (t == token && bmp != null) {
-                        bitmap = bmp
-                        drawFrame()
-                    }
-                }
-            }.apply { priority = Thread.MIN_PRIORITY; name = "lembas-wallpaper" }.start()
+            scene = SceneDrawer(this@LembasWallpaper, look, w, h, dp, Weather.code(this@LembasWallpaper))
+            drawFrame()
         }
 
         private fun drawFrame() {
@@ -174,10 +159,9 @@ class LembasWallpaper : WallpaperService() {
             try {
                 c = if (Build.VERSION.SDK_INT >= 26) holder.lockHardwareCanvas() else holder.lockCanvas()
                 if (c == null) return
-                val b = bitmap
-                if (b != null && b.width == width && b.height == height) c.drawBitmap(b, 0f, 0f, paint)
-                else c.drawColor(look.windowColor)
-                ambient?.draw(c, (SystemClock.uptimeMillis() - start) / 1000f)
+                val sc = scene
+                if (sc == null) c.drawColor(look.windowColor)
+                else sc.draw(c, if (running) (SystemClock.uptimeMillis() - start) / 1000f else 0f)
             } catch (t: Throwable) {
                 // Surface went away mid-frame; the next frame will try again.
             } finally {
