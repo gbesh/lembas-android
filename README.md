@@ -35,7 +35,7 @@ The Lembas watch face, watch launcher and tile have their own repo: **[gbesh/lem
 | **Shire Morning** (light) | sunrise → late afternoon | Green hills and the river, the round green door, chimney smoke, drifting clouds and a glinting river |
 | **Red Book** (light) | late afternoon → sunset | A map of the Shire on parchment, with a flickering campfire, rising embers and a swaying compass |
 | **Starlit Night** (dark) | sunset → 11pm, and 4am → sunrise | Mountains over a still lake, a lakeside cabin with a lit window, twinkling stars and today's real moon phase |
-| **Elven Silver** (deep night) | 11pm → 4am | Rivendell's silver trees on a knoll, waterfalls, mist, lanterns and rising motes, under Eärendil's star |
+| **Elven Silver** (deep night) | 11pm → 4am | Rivendell's silver trees on a knoll, mist, lanterns and rising motes, under Eärendil's star |
 
 The scenes are the same drawings as Lembas for Windows and the watch: a tall version for an upright phone and the wide panorama for tablets and landscape. They change with **the seasons** (blossom in spring, autumn leaves, snow and bare branches in winter; flipped south of the equator), can show **the weather** outside (rain, snow, fog or heavy cloud; settings → Weather in the scene), and with **tilt depth** on, the layers shift a little as you tilt the phone. The weather comes from [Open-Meteo](https://open-meteo.com) (free, no account), asked about your time zone's main city at most once an hour; nothing else is sent.
 
@@ -130,7 +130,7 @@ Lembas draws its own line-art icon for over 150 common apps (phone, messages, Wh
 ## Why it's fast
 - The launcher itself is just the Android framework and Kotlin. The only libraries (an adb client, Conscrypt and BouncyCastle) are used for the one-time setup over Wireless debugging and for installing on the watch.
 - Each scene's still layers are pre-drawn pictures in the app (WebP, about 2 MB for all four looks in four seasons, two shapes each), decoded once at the screen's size. Drawing the home screen is then two or three images plus a few dozen small shapes for the animation.
-- Animations run at a gentle rate for each scene (15–24 fps, 30 in rain or snow), only while the home screen (or the wallpaper) is actually visible. They stop when an app is open, the drawer is open or the screen is off, and pause in battery saver. A setting turns them off completely.
+- Animations run at a gentle rate for each scene (20–30 fps), only while the home screen (or the wallpaper) is actually visible. They stop when an app is open, the drawer is open or the screen is off, and pause in battery saver. A setting turns them off completely.
 - Drawing an animation frame creates no new objects, so it never triggers garbage-collection stutter.
 - Icons are rendered once in the background and cached, in memory and on disk, so even a cold start shows the drawer at once; scrolling only draws ready-made bitmaps.
 - The app is kept small: fonts trimmed to the letters Lembas uses, no 32-bit Intel libraries, no unused crypto tables.

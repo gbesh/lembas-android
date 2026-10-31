@@ -162,7 +162,7 @@ object SvgPath {
 /**
  * The moving parts of one scene, in the design's units. Each look has its own (sun, clouds,
  * chimney smoke and river glints; the campfire, embers and compass; stars, the moon, lake glints
- * and the cabin window; waterfalls, mist, lanterns and rising motes), plus the weather.
+ * and the cabin window; mist, lanterns and rising motes), plus the weather.
  */
 class Motion(private val look: String, land: Boolean, private val weather: Int, private val still: Boolean) {
     private val L = land
@@ -250,7 +250,6 @@ class Motion(private val look: String, land: Boolean, private val weather: Int, 
     // --- Elven Silver
     private val star = if (L) floatArrayOf(1160f, 150f, 1f) else floatArrayOf(540f, 140f, 1.2f)
     private val starShader = radial(90f, 0x80BFE3EC.toInt(), 0x00BFE3EC)
-    private val falls = if (L) listOf(floatArrayOf(1600f, 480f, 8f, 420f), floatArrayOf(1652f, 430f, 5f, 470f), floatArrayOf(1708f, 390f, 12f, 520f), floatArrayOf(-120f, 520f, 7f, 380f))
         else listOf(floatArrayOf(960f, 1300f, 8f, 520f), floatArrayOf(1000f, 1250f, 12f, 600f))
     private val lamps = if (L) listOf(floatArrayOf(880f, 760f), floatArrayOf(1030f, 700f), floatArrayOf(1180f, 740f), floatArrayOf(960f, 820f), floatArrayOf(1110f, 800f), floatArrayOf(1250f, 830f), floatArrayOf(760f, 820f))
         else listOf(floatArrayOf(420f, 1700f), floatArrayOf(560f, 1600f), floatArrayOf(700f, 1680f), floatArrayOf(500f, 1800f), floatArrayOf(640f, 1780f), floatArrayOf(330f, 1820f))
@@ -284,12 +283,6 @@ class Motion(private val look: String, land: Boolean, private val weather: Int, 
             }
             "elven" -> {
                 glowAt(c, star[0], star[1], star[2] * (1f + .08f * breathe(t, 6f)), .8f + .2f * breathe(t, 6f), starShader, 90f)
-                if (!still) for ((i, f) in falls.withIndex()) for (k in 0 until 3) {
-                    val p = phase(t, 2.2f + i * .3f, k * .8f + i * .3f)
-                    val y = f[1] - 120 + (f[3] + 120) * p
-                    fill.color = 0xFFF2FAFC.toInt(); fill.alpha = (178 * (if (p < .2f) p / .2f else 1 - (p - .2f) / .8f)).toInt()
-                    c.drawRoundRect(RectF(f[0] - f[2] * .2f, y, f[0] + f[2] * .6f, y + 40), f[2] * .4f, f[2] * .4f, fill)
-                }
                 val dx = if (still) 0f else (-120 * cos(2 * PI * phase(t, 80f, 0f))).toFloat()
                 glow.shader = mistShader; glow.alpha = 255
                 c.drawRect(x0 - 200 + dx, mistY[0], x1 + 200 + dx, mistY[0] + mistY[1], glow)
@@ -431,9 +424,10 @@ class Motion(private val look: String, land: Boolean, private val weather: Int, 
     /** How often this scene needs a new frame: gentle scenes less often, saving battery. */
     val fps: Int = when {
         weather == 3 || weather == 5 || weather == 4 -> 30
+        look == "shire" -> 30      // slow drifting clouds and smoke need more frames to look smooth
         look == "redbook" -> 24
         look == "elven" -> 20
-        else -> 15
+        else -> 20
     }
 }
 
