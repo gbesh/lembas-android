@@ -39,6 +39,16 @@ The Lembas watch face, watch launcher and tile have their own repo: **[gbesh/lem
 
 The scenes are the same drawings as Lembas for Windows and the watch: a tall version for an upright phone and the wide panorama for tablets and landscape. They change with **the seasons** (blossom in spring, autumn leaves, snow and bare branches in winter; flipped south of the equator), can show **the weather** outside (rain, snow, fog or heavy cloud; settings → Weather in the scene), and with **tilt depth** on, the layers shift a little as you tilt the phone. The weather comes from [Open-Meteo](https://open-meteo.com) (free, no account), asked about your time zone's main city at most once an hour; nothing else is sent.
 
+The scenes live through the day, too:
+- **The light of the hour:** the Shire warms through the afternoon, and Starlit Night deepens toward 11pm. For twenty minutes either side of sunrise and sunset, a pink and amber glow rises from the horizon.
+- **The wind:** on a windy day the clouds race and the chimney smoke leans.
+- **The moon** is tonight's real phase. It rises and sets when it really does, sits low after rising and high near midnight, and the full moon is larger.
+- **Shooting stars** cross the sky now and then, and every few seconds on meteor-shower nights (mid-August and mid-December).
+- **Visitors:** now and then, for a minute, a fox trots over the Shire, a little boat crosses the starlit lake, or an owl blinks in Rivendell's trees.
+- **Birthdays:** bunting appears across the sky on a day with a birthday in your calendar (if you've allowed calendar access).
+- **Taps:** tap the scene and it answers, with sparkles in the night sky, embers from the fire, or a puff of cloud in the Shire.
+- **Changing look:** the new scene fades in over the old one, like the light changing.
+
 "Late afternoon" is when the sun has dropped to 15° above the horizon and the light turns golden: about 6pm on a Sydney summer's evening, 3:20pm in midwinter, so the fireside look always arrives with the evening, whatever the season. Sunrise, late afternoon and sunset are worked out each day from your time zone's main city, so no location permission is needed. The phone, the Lembas watch face and Lembas for Windows use exactly the same sums and cities, so they all change look at the same minute. The settings sheet shows today's switch times. You can also pick one theme: **until the next change** (then it follows the sun again) or for good.
 
 **The home clock** comes in two styles (long-press → **Clock**):
@@ -51,7 +61,8 @@ The scenes are the same drawings as Lembas for Windows and the watch: a tall ver
 - **Swipe up** anywhere → the app drawer, *The Red Book*.
 - **Swipe down** → notifications.
 - **Tap the clock** → alarms. **Tap the Shire date** → calendar.
-- **Long-press empty space or the clock** → the settings sheet.
+- **Hold the clock** → today at a glance: the date and the Shire date, sunrise and sunset, when the look changes next, your next alarm and event.
+- **Long-press empty space** → the settings sheet.
 - **Haptics** (on by default; settings → Haptics): a light tap when an app opens, a tick as your swipe passes the point where letting go will open the Red Book (and another if you pull back), a soft snap when it lands, crisp ticks down the letter strips on letters that have apps (and only a faint tap on empty ones, so you can feel your way down the alphabet), and small confirmations when you pin, hide, copy a sum, clear a notification, resize a widget or choose a look. They use Android's own effects, so they feel right on your phone, and they follow the phone's touch-feedback setting.
 - **Dock and Lately icons press in** under your finger and spring back when you let go.
 - **The Red Book moves on a spring**: it carries the speed of your swipe, so a flick is quick and a slow drag eases home, and the list stretches a little when you scroll past either end. If you've chosen keyboard-when-opening, the keyboard rises with it.
@@ -75,7 +86,7 @@ The scenes are the same drawings as Lembas for Windows and the watch: a tall ver
 - **Little commands:** *timer 10m* or *5 min timer* starts a timer, *alarm 7:30* or *wake me 6am* sets an alarm (in your clock app); *10 km in miles*, *180 cm to ft*, *70f in c* convert units; *100 usd to eur* converts money with the European Central Bank's daily rates (fetched from frankfurter.app at most once a day).
 - **Search Google** and **Search the Play Store** for what you typed. When no app matches, the Play Store comes first, so installing something is one tap away.
 
-Press Enter to open the top result. Touch and hold Lembas's own icon (in any app list, or from another launcher) for a **Search** shortcut that opens straight into search.
+Tap the search box and your **recent searches** are there before you type (kept on the phone; *Clear recent searches* at the end). Press Enter to open the top result. Touch and hold Lembas's own icon (in any app list, or from another launcher) for a **Search** shortcut that opens straight into search.
 
 **App drawer (the same layout in every theme)**
 - **Lately** shows your four most recent apps.
@@ -88,6 +99,7 @@ Press Enter to open the top result. Touch and hold Lembas's own icon (in any app
 - **Bubble** (Android 11+): in any app's touch-and-hold menu, opens it as a floating bubble, using Android's own bubbles (the same as Messages). The first time, Android asks you to let Lembas show bubbles ("All conversations can bubble"). A few apps insist on opening full screen and leave the bubble.
 - **Long-press any app** (dock, Lately, the list or search) for its own shortcuts, such as *New tab* and *New incognito tab* for the browser or *Take a selfie* for the camera, plus *App info*, *Add to dock / Unpin*, **Rename**, **Hide from the list** (search still finds it; Settings → Hidden apps brings it back) and *Uninstall*.
 - **Swipe up on a dock or Lately icon** to open its first shortcut directly.
+- **Folders in the dock:** long-press a docked app → *Make a folder*, and choose the apps to keep with it. The folder shows them in miniature; tap it to open, long-press to rename, change its apps or undo it.
 - Shortcuts only appear once Lembas is your default Home app (an Android rule).
 
 **Settings** (long-press empty space): a sheet in the look's colours, with a preview of each look to tap, then
@@ -96,10 +108,22 @@ Press Enter to open the top result. Touch and hold Lembas's own icon (in any app
 - **Apps and search:** Red Book icons (tonal squircle, soft disc, no frame, or the classic outlines), hidden apps, contacts in search
 - **The whole phone:** theme the whole phone, animated wallpaper, still wallpaper follows the look, make Lembas your home app
 - **Watch:** put Lembas on your watch
+- **Sounds:** *Add Lembas sounds* puts a harp, bells and a horn call (the same family as Lembas for Windows) in your phone's own sound lists, for notifications and alarms. Nothing changes until you pick one.
+- **Sync:** *Sync with your PC and watch*, through your own Google account (see below).
 - **Backup:** back up your settings (look, dock, pinned, hidden and renamed apps, everything here) to a file you keep, and restore them on a new phone
 - **Updates:** automatic updates, check for updates now
 
 After an update, a short **What's new** card says what changed (once).
+
+**Hold the scene still:** a quick settings tile (edit your quick settings and add *Hold the scene still*) keeps the home screen and wallpaper still for an hour, for a meeting, a film or to save battery. The live wallpaper is also calmer on the lock screen, at half the frames.
+
+**Lembas for other home apps:** add the *Lembas scene* widget for the look's scene with the time and the Shire date, if you'd rather keep your own launcher.
+
+## Sync with your PC and watch
+
+Settings → **Sync with your PC and watch** signs in with your Google account (Google's own sign-in sheet). Lembas asks for one thing only: to keep its own small settings file in a hidden folder of your Google Drive, which only Lembas can see. It can't see any of your other files, your email or anything else.
+
+The look (or follow the sun), "keep it until", weather in the scene, the clock style and the mealtimes then stay the same on the phone and on Lembas for Windows (tray → *Sync with your phone*). The newest change wins. The watch follows the phone over the watch link, with no sign-in needed. The watch app, its tile and the Lembas complications follow; the watch face keeps its own Look setting. Turn sync off in settings at any time. See [PRIVACY.md](PRIVACY.md) for exactly what's stored, and how to delete it.
 
 ## Theming the whole phone
 
@@ -128,7 +152,8 @@ The same four looks for Windows 11 live in **[gbesh/lembas-windows](https://gith
 Lembas draws its own line-art icon for over 150 common apps (phone, messages, WhatsApp, Chrome, Spotify, Gmail, Maps, Australian banks, BOM weather and more), tinted and framed for each theme. Apps it doesn't know use their own Android 13+ themed icon if they have one, otherwise their first letter in the theme's typeface. Switch to *Original* in settings if you prefer the real icons.
 
 ## Why it's fast
-- The launcher itself is just the Android framework and Kotlin. The only libraries (an adb client, Conscrypt and BouncyCastle) are used for the one-time setup over Wireless debugging and for installing on the watch.
+- The launcher itself is just the Android framework and Kotlin. The only libraries are an adb client, Conscrypt and BouncyCastle, used for the one-time setup over Wireless debugging and for installing on the watch, plus Google Play services' sign-in and watch link, used only for sync.
+- A new scene is prepared off the main thread, so changing look never stutters. Phones with little memory load the pictures at half size.
 - Each scene's still layers are pre-drawn pictures in the app (WebP, about 2 MB for all four looks in four seasons, two shapes each), decoded once at the screen's size. Drawing the home screen is then two or three images plus a few dozen small shapes for the animation.
 - Animations run at a gentle rate for each scene (20–30 fps), only while the home screen (or the wallpaper) is actually visible. They stop when an app is open, the drawer is open or the screen is off, and pause in battery saver. A setting turns them off completely.
 - Drawing an animation frame creates no new objects, so it never triggers garbage-collection stutter.
@@ -153,6 +178,9 @@ Lembas draws its own line-art icon for over 150 common apps (phone, messages, Wh
 | `Weather.kt` | Today's weather for the scene (Open-Meteo, hourly at most) |
 | `Commands.kt` | Search commands (timers, alarms, units, currency) and typo-tolerant matching |
 | `Backup.kt`, `Quiet.kt`, `WhatsNew.kt` | Settings backup, quiet hours, the what's-new card |
+| `Sync.kt` | Sync through your Google account (Drive's hidden app folder) and the watch link |
+| `SceneExtras.kt` | The light of the hour, sunrise and sunset glow, visitors, bunting and taps |
+| `DockFolder.kt`, `Sounds.kt`, `SceneWidget.kt`, `PauseTile.kt` | Dock folders, Lembas sounds, the widget for other home apps, the quick settings tile |
 | `LembasWallpaper.kt` | The optional live wallpaper and the system colours it hands to Android |
 | `AppAdapter.kt`, `LetterRail.kt` | Drawer list and the magnifying letter strips |
 | `ShortcutPopup.kt` | Long-press menu with app shortcuts |
