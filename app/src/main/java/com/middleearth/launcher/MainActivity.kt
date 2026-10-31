@@ -864,7 +864,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
     private fun cardBlock(): List<View> = listOf(live, music, widgetBox)
 
     /**
-     * Turned sideways (landscape), the clock stays centred (inside the Elven arch, over the
+     * Turned sideways (landscape), the clock stays centred (over the
      * Shire's sky) and the cards (Live Updates, music, widgets) move to a column on the right.
      * The clock shrinks if the screen is too short for it. Upright, everything goes back.
      */

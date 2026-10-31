@@ -32,12 +32,14 @@ The Lembas watch face, watch launcher and tile have their own repo: **[gbesh/lem
 
 | Theme | Adaptive shows it | Look |
 |---|---|---|
-| **Shire Morning** (light) | sunrise → late afternoon | Green hills, a round green door, chimney smoke, drifting clouds; left-aligned clock |
-| **Red Book** (light) | late afternoon → sunset | Parchment and ink with red rubrics; a map with an inked campfire and line-drawn smoke |
-| **Starlit Night** (dark) | sunset → 11pm, and 4am → sunrise | Night sky with twinkling stars, shooting stars, mountains and today's real moon phase |
-| **Elven Silver** (deep night) | 11pm → 4am | Near-black with a silver elven arch, a travelling glint and rising silver motes |
+| **Shire Morning** (light) | sunrise → late afternoon | Green hills and the river, the round green door, chimney smoke, drifting clouds and a glinting river |
+| **Red Book** (light) | late afternoon → sunset | A map of the Shire on parchment, with a flickering campfire, rising embers and a swaying compass |
+| **Starlit Night** (dark) | sunset → 11pm, and 4am → sunrise | Mountains over a still lake, a lakeside cabin with a lit window, twinkling stars and today's real moon phase |
+| **Elven Silver** (deep night) | 11pm → 4am | Rivendell's silver trees on a knoll, waterfalls, mist, lanterns and rising motes, under Eärendil's star |
 
-"Late afternoon" is when the sun has dropped to 15° above the horizon and the light turns golden: about 6pm on a Sydney summer's evening, 3:20pm in midwinter, so the fireside look always arrives with the evening, whatever the season. Sunrise, late afternoon and sunset are worked out each day from your time zone's main city, so no location permission is needed. The phone, the Lembas watch face and Lembas for Windows use exactly the same sums and cities, so they all change look at the same minute. The settings sheet shows today's switch times. You can also pick one theme to use all the time.
+The scenes are the same drawings as Lembas for Windows and the watch: a tall version for an upright phone and the wide panorama for tablets and landscape. They change with **the seasons** (blossom in spring, autumn leaves, snow and bare branches in winter; flipped south of the equator), can show **the weather** outside (rain, snow, fog or heavy cloud; settings → Weather in the scene), and with **tilt depth** on, the layers shift a little as you tilt the phone. The weather comes from [Open-Meteo](https://open-meteo.com) (free, no account), asked about your time zone's main city at most once an hour; nothing else is sent.
+
+"Late afternoon" is when the sun has dropped to 15° above the horizon and the light turns golden: about 6pm on a Sydney summer's evening, 3:20pm in midwinter, so the fireside look always arrives with the evening, whatever the season. Sunrise, late afternoon and sunset are worked out each day from your time zone's main city, so no location permission is needed. The phone, the Lembas watch face and Lembas for Windows use exactly the same sums and cities, so they all change look at the same minute. The settings sheet shows today's switch times. You can also pick one theme: **until the next change** (then it follows the sun again) or for good.
 
 **The home clock** comes in two styles (long-press → **Clock**):
 - **Modern** (the default): the same type as the Lembas watch face, over the look's animated scene. The date and the Shire date (e.g. *Mersday · 1 Blotmath*), the time with the hours heavy in the look's colour and the minutes light, the hobbit mealtime, a **glance line** with your next alarm (and your next calendar event, if you allow it), and the **sun arc**: today's daylight from sunrise to sunset, with the sun on it.
@@ -56,7 +58,7 @@ The Lembas watch face, watch launcher and tile have their own repo: **[gbesh/lem
 - **Back gesture** (Android 14+): swipe back and the Red Book or the settings sheet shrinks and follows your thumb; let go to close it, or change your mind.
 - **Unlocking**, and each change of look, plays a quick entrance: the scene settles in and the text rises into place in about half a second.
 - **Double-tap empty space** to lock the phone (turn on in settings; fingerprint and face unlock keep working). It uses a tiny accessibility service that only locks the screen and reads nothing; after the whole-phone setup Lembas switches it on itself.
-- **Any screen**: the scenes keep their proportions on wide screens (tablets, foldables, big phones) and fill them edge to edge, and the wallpaper repaints for a new phone's screen. **Turned sideways**, the clock stays centred (shrinking if it must) and Live Updates, music and widgets move to a column on the right.
+- **Any screen**: the scenes fill any screen edge to edge (the tall scene on phones, the panorama on tablets and sideways), and the wallpaper repaints for a new phone's screen. **Turned sideways**, the clock stays centred (shrinking if it must) and Live Updates, music and widgets move to a column on the right.
 - **Live Updates** under the clock: a call in progress, directions, a ride or delivery on its way, a timer, with its progress bar and time. It uses Android 16's Live Update notifications, and on any Android also ongoing calls, navigation and progress. Tap it to go back to the app. (Turn off in settings; it uses the same notification access as the dots.)
 - **Frosted glass** behind the settings sheet and app menus on Android 12+, like Android's own panels (off automatically in battery saver or when the phone's reduce-blur setting is on).
 - **Music player** under the clock while something's playing: the song, the artist, play/pause and next. Tap the song to open the app that's playing. (It uses the same notification access as the dots.)
@@ -64,12 +66,13 @@ The Lembas watch face, watch launcher and tile have their own repo: **[gbesh/lem
 - **Widgets** under the clock: any app's widget (weather, calendar, notes…), stacked one above another. Add them from settings → **Add a widget**, which lists every widget with its preview. Android asks once whether Lembas may show widgets, and some widgets have their own setup screen. Touch and hold a widget to make it taller or shorter, move it up or down, or remove it.
 
 **Search** (*Speak, friend, and enter*, at the top of the Red Book). As you type it finds:
-- **Apps**, by name, by a word in the name, or by initials (*gm* for Google Maps); hidden apps too.
+- **Apps**, by name, by a word in the name, or by initials (*gm* for Google Maps); hidden apps too. It forgives typos: *spotfy* finds Spotify.
 - **Icon packs:** install any icon pack from the Play Store (the kind made for Nova, Niagara and similar launchers), then settings → **App icons** and choose it. Apps the pack doesn't cover keep their own icon.
 
 **App shortcuts**, such as *New incognito tab* or *Take a selfie*.
 - **Contacts**, with call and message buttons beside each. Lembas asks for contacts access the first time you choose to.
 - **A quick sum**: type *12*3+4* or *15% * 80* and the answer shows at the top. Tap it to copy.
+- **Little commands:** *timer 10m* or *5 min timer* starts a timer, *alarm 7:30* or *wake me 6am* sets an alarm (in your clock app); *10 km in miles*, *180 cm to ft*, *70f in c* convert units; *100 usd to eur* converts money with the European Central Bank's daily rates (fetched from frankfurter.app at most once a day).
 - **Search Google** and **Search the Play Store** for what you typed. When no app matches, the Play Store comes first, so installing something is one tap away.
 
 Press Enter to open the top result. Touch and hold Lembas's own icon (in any app list, or from another launcher) for a **Search** shortcut that opens straight into search.
@@ -88,12 +91,15 @@ Press Enter to open the top result. Touch and hold Lembas's own icon (in any app
 - Shortcuts only appear once Lembas is your default Home app (an Android rule).
 
 **Settings** (long-press empty space): a sheet in the look's colours, with a preview of each look to tap, then
-- **Home screen:** clock (Modern or Classic), animations, haptics, app icons (line art, original, or any installed icon pack), hobbit mealtimes, next calendar event, notification dots, Live Updates, music player, double-tap to lock, keyboard when opening the Red Book
+- **Home screen:** clock (Modern or Classic), animations, tilt depth, quiet hours (11pm–7am: no vibrations and a still scene), weather in the scene, haptics, app icons (line art, original, or any installed icon pack), hobbit mealtimes, next calendar event, notification dots, Live Updates, music player, double-tap to lock, keyboard when opening the Red Book
 - **Widgets:** add a widget
 - **Apps and search:** Red Book icons (tonal squircle, soft disc, no frame, or the classic outlines), hidden apps, contacts in search
 - **The whole phone:** theme the whole phone, animated wallpaper, still wallpaper follows the look, make Lembas your home app
 - **Watch:** put Lembas on your watch
+- **Backup:** back up your settings (look, dock, pinned, hidden and renamed apps, everything here) to a file you keep, and restore them on a new phone
 - **Updates:** automatic updates, check for updates now
+
+After an update, a short **What's new** card says what changed (once).
 
 ## Theming the whole phone
 
@@ -123,10 +129,11 @@ Lembas draws its own line-art icon for over 150 common apps (phone, messages, Wh
 
 ## Why it's fast
 - The launcher itself is just the Android framework and Kotlin. The only libraries (an adb client, Conscrypt and BouncyCastle) are used for the one-time setup over Wireless debugging and for installing on the watch.
-- Each theme's artwork is painted **once** per day into a bitmap on a background thread. Drawing the home screen is then one image plus a few dozen small shapes for the animation.
-- Animations run at about 30 fps, only while the home screen (or the wallpaper) is actually visible. They stop when an app is open, the drawer is open or the screen is off, and pause in battery saver. A setting turns them off completely.
+- Each scene's still layers are pre-drawn pictures in the app (WebP, about 2 MB for all four looks in four seasons, two shapes each), decoded once at the screen's size. Drawing the home screen is then two or three images plus a few dozen small shapes for the animation.
+- Animations run at a gentle rate for each scene (15–24 fps, 30 in rain or snow), only while the home screen (or the wallpaper) is actually visible. They stop when an app is open, the drawer is open or the screen is off, and pause in battery saver. A setting turns them off completely.
 - Drawing an animation frame creates no new objects, so it never triggers garbage-collection stutter.
-- Icons are rendered once in the background and cached; scrolling only draws ready-made bitmaps.
+- Icons are rendered once in the background and cached, in memory and on disk, so even a cold start shows the drawer at once; scrolling only draws ready-made bitmaps.
+- The app is kept small: fonts trimmed to the letters Lembas uses, no 32-bit Intel libraries, no unused crypto tables.
 - The clock updates on the system's once-a-minute tick, and only while the home screen is visible.
 
 ## Building
@@ -142,8 +149,10 @@ Lembas draws its own line-art icon for over 150 common apps (phone, messages, Wh
 | `MainActivity.kt` | Home screen, drawer, dock, Lately, gestures, unlock entrance, settings |
 | `Look.kt` | The four themes: every colour, font and style choice |
 | `Sun.kt` | Sunrise / late afternoon / sunset and the Adaptive schedule |
-| `Backdrop.kt` | Paints each theme's still artwork once into a bitmap |
-| `Ambient.kt` | The animated layer (stars, campfire, motes, clouds), shared with the wallpaper |
+| `Scene.kt` | The scenes: loads the still layers (`assets/scenes`, rendered from lembas-windows' `scenes/index.html`), draws the moving parts and weather between them, tilt depth |
+| `Weather.kt` | Today's weather for the scene (Open-Meteo, hourly at most) |
+| `Commands.kt` | Search commands (timers, alarms, units, currency) and typo-tolerant matching |
+| `Backup.kt`, `Quiet.kt`, `WhatsNew.kt` | Settings backup, quiet hours, the what's-new card |
 | `LembasWallpaper.kt` | The optional live wallpaper and the system colours it hands to Android |
 | `AppAdapter.kt`, `LetterRail.kt` | Drawer list and the magnifying letter strips |
 | `ShortcutPopup.kt` | Long-press menu with app shortcuts |
@@ -161,7 +170,7 @@ Lembas draws its own line-art icon for over 150 common apps (phone, messages, Wh
 | `Dots.kt` | Notification dots and previews |
 | `Widgets.kt` | Home-screen widgets: picker, adding, resizing and the long-press menu |
 | `IconPacks.kt` | Icon packs (the standard appfilter format used by Nova, Niagara and others) |
-| `Search.kt` | Search: apps, shortcuts, contacts, sums, Google and the Play Store |
+| `Search.kt` | Search: apps, shortcuts, contacts, sums, commands, Google and the Play Store |
 | `Bubbles.kt` | Opening apps as bubbles |
 | `LiveCard.kt` | Live Updates on the home screen |
 | `Blur.kt` | Frosted glass behind sheets and menus |
@@ -171,4 +180,5 @@ Lembas draws its own line-art icon for over 150 common apps (phone, messages, Wh
 
 ## Credits
 Fonts (downloaded at build time, SIL Open Font License): Cinzel by Natanael Gama; Cormorant Garamond by Christian Thalmann; IM Fell English by Igino Marini; Fraunces by Undercase Type; Alegreya Sans by Huerta Tipográfica.
+Weather: [Open-Meteo](https://open-meteo.com) (CC BY 4.0). Exchange rates: the European Central Bank, via [Frankfurter](https://frankfurter.app).
 Names and the Shire calendar come from J.R.R. Tolkien's legendarium. This is an unofficial fan project, not affiliated with the Tolkien Estate or any film studio.
