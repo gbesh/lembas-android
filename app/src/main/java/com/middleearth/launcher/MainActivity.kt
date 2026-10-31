@@ -158,6 +158,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         prefs = getSharedPreferences(Themes.PREFS, MODE_PRIVATE)
+        prefs.registerOnSharedPreferenceChangeListener(syncListener)
         Updater.schedule(this)
         look = Themes.current(this)
         setupWindow()
@@ -190,7 +191,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         }
 
         clock.setOnClickListener { openAlarms() }
-        clock.setOnLongClickListener { showSettings(); true }
+        clock.setOnLongClickListener { showToday(); true }
         shire.setOnClickListener { openCalendar() }
         shire.setOnLongClickListener { showSettings(); true }
         drawerTitle.setOnLongClickListener { showSettings(); true }
@@ -227,6 +228,8 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         super.onResume()
         resumed = true
         root.postDelayed({ if (resumed) WhatsNew.maybeShow(this, dialogTheme()) }, 900)
+        GoogleSync.onPulled = { if (!isFinishing) { LookWallpaper.syncAsync(this, interactive = false); recreate() } }
+        GoogleSync.sync(this)
         if (!tickRegistered) {
             val filter = IntentFilter().apply {
                 addAction(Intent.ACTION_TIME_TICK)
@@ -368,6 +371,8 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
     }
 
     override fun onDestroy() {
+        prefs.unregisterOnSharedPreferenceChangeListener(syncListener)
+        if (GoogleSync.onPulled != null) GoogleSync.onPulled = null
         repo.removeListener(this)
         Dots.removeListener(dotsChanged)
         animator?.cancel()
@@ -432,6 +437,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         actions.add(ShortcutPopup.Action(if (pinned) "Unpin" else "Add to dock", if (pinned) R.drawable.g_close else R.drawable.g_pin) {
             togglePin(e)
         })
+        if (pinned) actions.add(ShortcutPopup.Action("Make a folder", R.drawable.g_folder) { makeFolder(e) })
         actions.add(ShortcutPopup.Action("Rename", R.drawable.g_notes) { renameApp(e) })
         val hidden = repo.isHidden(e)
         actions.add(ShortcutPopup.Action(if (hidden) "Show in the list" else "Hide from the list", R.drawable.g_shield) {
@@ -601,7 +607,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
             savePinned(keys)
             prefs.edit().putBoolean(PREF_DOCK_SEEDED, true).apply()
         }
-        val entries = keys.mapNotNull { repo.byKey[it] }
+        val entries = keys.filter { DockFolder.isFolder(it) || repo.byKey[it] != null }
         if (entries.isEmpty()) {
             dock.addView(TextView(this).apply {
                 text = "Long-press an app in the Red Book to keep it here"
@@ -615,7 +621,22 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         val size = (56 * dp).roundToInt()
         val margin = (6 * dp).roundToInt()
         val bg = ripple(true)
-        for (e in entries) {
+        for (key in entries) {
+            if (DockFolder.isFolder(key)) {
+                val f = DockFolder.parse(key)
+                val apps = f.keys.mapNotNull { repo.byKey[it] }
+                val iv = ImageView(this).apply {
+                    layoutParams = LinearLayout.LayoutParams(size, size).apply { setMargins(margin, 0, margin, 0) }
+                    setBackgroundResource(bg)
+                    contentDescription = f.name
+                    setOnClickListener { Haptics.feel(it, Haptics.Feel.CONFIRM); openFolder(key) }
+                    setOnLongClickListener { Haptics.feel(it, Haptics.Feel.HOLD); folderMenu(key); true }
+                }
+                DockFolder.icon(iv, apps, dockSpec, icons, size, look)
+                dock.addView(iv)
+                continue
+            }
+            val e = repo.byKey[key] ?: continue
             val iv = ImageView(this).apply {
                 layoutParams = LinearLayout.LayoutParams(size, size).apply { setMargins(margin, 0, margin, 0) }
                 setBackgroundResource(bg)
@@ -627,6 +648,83 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
             icons.bind(e, dockSpec, iv)
             dock.addView(iv)
         }
+    }
+
+    // ------------------------------------------------------------------ dock folders (a little pouch of apps)
+
+    /** Start a folder from a docked app: choose the apps to keep with it. */
+    private fun makeFolder(first: AppEntry) {
+        val apps = repo.apps.filter { it.key != first.key }
+        val labels = apps.map { it.label }.toTypedArray()
+        val chosen = BooleanArray(apps.size)
+        AlertDialog.Builder(this, dialogTheme())
+            .setTitle("A folder with ${first.label} and…")
+            .setMultiChoiceItems(labels, chosen) { _, i, on -> chosen[i] = on }
+            .setPositiveButton("Make the folder") { _, _ ->
+                val keys = listOf(first.key) + apps.filterIndexed { i, _ -> chosen[i] }.map { it.key }
+                if (keys.size < 2) return@setPositiveButton
+                val dockKeys = pinnedKeys()
+                val at = dockKeys.indexOf(first.key)
+                val folder = DockFolder.make("Folder", keys)
+                dockKeys.removeAll { it in keys }
+                dockKeys.add(at.coerceIn(0, dockKeys.size), folder)
+                savePinned(dockKeys)
+                refreshDock()
+                renameFolder(folder)
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun openFolder(key: String) {
+        val f = DockFolder.parse(key)
+        val apps = f.keys.mapNotNull { repo.byKey[it] }
+        val labels = apps.map { it.label }.toTypedArray()
+        AlertDialog.Builder(this, dialogTheme())
+            .setTitle(f.name)
+            .setItems(labels) { _, i -> launch(apps[i], dock) }
+            .setNeutralButton("Edit") { _, _ -> folderMenu(key) }
+            .show()
+    }
+
+    private fun folderMenu(key: String) {
+        val f = DockFolder.parse(key)
+        AlertDialog.Builder(this, dialogTheme())
+            .setTitle(f.name)
+            .setItems(arrayOf("Rename", "Choose its apps", "Undo the folder")) { _, which ->
+                when (which) {
+                    0 -> renameFolder(key)
+                    1 -> {
+                        val all = repo.apps
+                        val chosen = BooleanArray(all.size) { all[it].key in f.keys }
+                        AlertDialog.Builder(this, dialogTheme()).setTitle(f.name)
+                            .setMultiChoiceItems(all.map { it.label }.toTypedArray(), chosen) { _, i, on -> chosen[i] = on }
+                            .setPositiveButton("Done") { _, _ ->
+                                val keys = all.filterIndexed { i, _ -> chosen[i] }.map { it.key }
+                                replaceFolder(key, if (keys.size >= 2) DockFolder.make(f.name, keys) else keys.firstOrNull())
+                            }.show()
+                    }
+                    2 -> { val dockKeys = pinnedKeys(); val at = dockKeys.indexOf(key)
+                        if (at >= 0) { dockKeys.removeAt(at); dockKeys.addAll(at, f.keys.take(MAX_DOCK - dockKeys.size)) }
+                        savePinned(dockKeys); refreshDock() }
+                }
+            }.show()
+    }
+
+    private fun renameFolder(key: String) {
+        val f = DockFolder.parse(key)
+        val input = android.widget.EditText(this).apply { setText(f.name); setSelection(f.name.length); setSingleLine() }
+        AlertDialog.Builder(this, dialogTheme()).setTitle("Name the folder").setView(input)
+            .setPositiveButton("OK") { _, _ -> replaceFolder(key, DockFolder.make(input.text.toString().ifBlank { "Folder" }, f.keys)) }
+            .setNegativeButton("Cancel", null).show()
+    }
+
+    private fun replaceFolder(old: String, new: String?) {
+        val dockKeys = pinnedKeys()
+        val at = dockKeys.indexOf(old)
+        if (at < 0) return
+        if (new == null) dockKeys.removeAt(at) else dockKeys[at] = new
+        savePinned(dockKeys); refreshDock()
     }
 
     private fun recordLaunch(e: AppEntry) {
@@ -711,6 +809,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         meal.visibility = if (t.meal.isEmpty()) View.GONE else View.VISIBLE
         backdrop.weather = Weather.code(this)
         backdrop.animationsOn = animationsOn() && !Quiet.now(this)
+        backdrop.bunting = birthdayToday()
         backdrop.refresh() // rebuilds only when the season, size or look changed
     }
 
@@ -946,7 +1045,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
     private fun modernHoursColor(): Int = when (look.id) {
         "shire" -> 0xFF3E6B2E.toInt()
         "redbook" -> 0xFF9A2A1C.toInt()
-        "starlit" -> 0xFFE9CC88.toInt()
+        "starlit" -> 0xFFD3C39E.toInt()
         else -> 0xFFC6DDE8.toInt()
     }
 
@@ -1238,6 +1337,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
                 runSearch(s?.toString() ?: "")
             }
         })
+        search.setOnFocusChangeListener { _, _ -> runSearch(search.text.toString()) }
         search.setOnEditorActionListener { _, actionId, event ->
             val enter = actionId == EditorInfo.IME_ACTION_GO ||
                 (event != null && event.keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_DOWN)
@@ -1247,8 +1347,31 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
     }
 
     /** Typing in search: the list switches from A-Z to results (apps, shortcuts, contacts, a sum, the web). */
+    // Your last few searches, shown as soon as you tap the search box (kept on the phone only)
+    private fun recentSearches(): List<String> = prefs.getString(PREF_RECENT_SEARCHES, "")!!.split('\n').filter { it.isNotBlank() }
+    private fun rememberSearch(q: String) {
+        val t = q.trim()
+        if (t.length < 2) return
+        val list = (listOf(t) + recentSearches().filter { !it.equals(t, ignoreCase = true) }).take(6)
+        prefs.edit().putString(PREF_RECENT_SEARCHES, list.joinToString("\n")).apply()
+    }
+    private fun showRecentSearches() {
+        val recents = recentSearches()
+        if (recents.isEmpty() || search.text.isNotEmpty()) return
+        searching = true
+        list.adapter = searchAdapter
+        railLeft.visibility = View.GONE; railRight.visibility = View.GONE; latelyBlock.visibility = View.GONE
+        searchAdapter.hits = listOf<Hit>(Hit.Header("Recent searches")) + recents.map { q ->
+            Hit.Action(q, "Search again", R.drawable.g_search) { search.setText(q); search.setSelection(q.length) }
+        } + Hit.Action("Clear recent searches", "", R.drawable.g_close) {
+            prefs.edit().remove(PREF_RECENT_SEARCHES).apply(); runSearch("")
+        }
+        updateEmpty()
+    }
+
     private fun runSearch(text: String) {
         val now = text.trim().isNotEmpty()
+        if (!now && search.hasFocus() && recentSearches().isNotEmpty()) { showRecentSearches(); return }
         if (now != searching) {
             searching = now
             list.adapter = if (now) searchAdapter else adapter
@@ -1263,6 +1386,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
     }
 
     private fun openHit(h: Hit, v: View?) {
+        if (h !is Hit.Header && search.text.isNotBlank() && !(h is Hit.Action && h.subtitle == "Search again")) rememberSearch(search.text.toString())
         when (h) {
             is Hit.App -> launch(h.e, (v as? ViewGroup)?.getChildAt(0))
             is Hit.Shortcut -> { Shortcuts.start(repo.launcherApps, h.s, v); h.app?.let { recordLaunch(it) } }
@@ -1276,6 +1400,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
     @Deprecated("Deprecated in Java")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (widgets.onResult(requestCode, resultCode)) return
+        if (GoogleSync.onResult(this, requestCode, resultCode, data)) { showSettings(); return }
         if (Backup.onResult(this, requestCode, resultCode, data) { LookWallpaper.syncAsync(this, interactive = true); recreate() }) return
         super.onActivityResult(requestCode, resultCode, data)
     }
@@ -1370,6 +1495,57 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
     }
 
     override fun onLongPressHome() = showSettings()
+
+    override fun onTapHome(x: Float, y: Float) { backdrop.poke(x, y) }
+
+    /** A birthday in the calendar today? (asked once a day, only if you allowed calendar access) */
+    private var birthdayDay = -1L
+    private var birthday = false
+    private fun birthdayToday(): Boolean {
+        val today = java.time.LocalDate.now().toEpochDay()
+        if (today == birthdayDay) return birthday
+        birthdayDay = today
+        birthday = false
+        if (checkSelfPermission(android.Manifest.permission.READ_CALENDAR) == android.content.pm.PackageManager.PERMISSION_GRANTED) try {
+            val zone = java.time.ZoneId.systemDefault()
+            val start = java.time.LocalDate.now().atStartOfDay(zone).toInstant().toEpochMilli()
+            val uri = android.provider.CalendarContract.Instances.CONTENT_URI.buildUpon()
+                .appendPath(start.toString()).appendPath((start + 86_400_000L).toString()).build()
+            contentResolver.query(uri, arrayOf(android.provider.CalendarContract.Instances.TITLE), null, null, null)?.use { c ->
+                while (c.moveToNext()) if (c.getString(0)?.contains("birthday", ignoreCase = true) == true) { birthday = true; break }
+            }
+        } catch (_: Throwable) { }
+        return birthday
+    }
+
+    /** Hold the clock: today at a glance (the date and Shire date, the sun, the next look, your alarm and next event). */
+    private fun showToday() {
+        Haptics.feel(clock, Haptics.Feel.CONFIRM)
+        val now = LocalDateTime.now()
+        val is24 = DateFormat.is24HourFormat(this)
+        val fmt = DateTimeFormatter.ofPattern(if (is24) "H:mm" else "h:mm a")
+        fun hm(m: Int) = java.time.LocalTime.of(m / 60, m % 60).format(fmt)
+        val day = Sun.today()
+        val t = Lore.homeText(look, now, true)
+        val lines = ArrayList<String>()
+        lines.add(now.format(DateTimeFormatter.ofPattern("EEEE d MMMM")))
+        lines.add(t.shire)
+        lines.add("")
+        lines.add("Sunrise ${hm(day.sunrise)}  ·  sunset ${hm(day.sunset)}")
+        if (Themes.choice(this) == Look.ADAPTIVE) {
+            val next = Themes.nextChange()
+            lines.add("${Themes.adaptive(next.plusMinutes(1)).title} from ${next.format(fmt)}")
+        } else if (Themes.keptUntil(this) > 0) {
+            lines.add("${look.title} until ${java.time.Instant.ofEpochMilli(Themes.keptUntil(this)).atZone(java.time.ZoneId.systemDefault()).format(fmt)}")
+        } else lines.add("${look.title}, kept")
+        glanceText(now, is24).takeIf { it.isNotEmpty() }?.let { lines.add(""); lines.addAll(it.split("  ·  ")) }
+        AlertDialog.Builder(this, dialogTheme())
+            .setTitle(t.label.ifEmpty { "Today" })
+            .setMessage(lines.joinToString("\n"))
+            .setPositiveButton("Alarms") { _, _ -> openAlarms() }
+            .setNeutralButton("Calendar") { _, _ -> openCalendar() }
+            .show()
+    }
 
     override fun onDoubleTapHome() {
         if (LockService.enabled(this)) { Haptics.feel(root, Haptics.Feel.CONFIRM); LockService.lock() }
@@ -1604,6 +1780,13 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
             SettingsSheet.Section("Watch", listOf(
                 SettingsSheet.Row("Put Lembas on your watch", "") { WatchSetup.start(this); false },
             )),
+            SettingsSheet.Section("Sounds", listOf(
+                SettingsSheet.Row("Add Lembas sounds", "a harp, bells and a horn call for your notifications and alarms") { Sounds.install(this); false },
+            )),
+            SettingsSheet.Section("Sync", listOf(
+                SettingsSheet.Row("Sync with your PC and watch", if (GoogleSync.enabled(this)) "On, through your Google account" else "Off") {
+                    if (GoogleSync.enabled(this)) { GoogleSync.signOut(this); true } else { GoogleSync.signIn(this); false } },
+            )),
             SettingsSheet.Section("Backup", listOf(
                 SettingsSheet.Row("Back up settings", "to a file you keep") { Backup.save(this); false },
                 SettingsSheet.Row("Restore settings", "from a backup file") { Backup.open(this); false },
@@ -1688,6 +1871,11 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
     }
 
     /** A look chosen by hand: keep it until Adaptive's next change, or for good. */
+    private val syncSoon = Runnable { GoogleSync.sync(this, force = true) }
+    private val syncListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+        if (key in GoogleSync.KEYS) { root.removeCallbacks(syncSoon); root.postDelayed(syncSoon, 1500) }
+    }
+
     private fun pickLook(id: String) {
         fun apply(until: Long) {
             Themes.choose(this, id, until)
@@ -1719,6 +1907,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         const val PREF_THEMED = "themed_icons"
         const val PREF_MEALS = "meals"
         const val PREF_HOME_STYLE = "home_style"
+        const val PREF_RECENT_SEARCHES = "recent_searches"
         const val PREF_MUSIC = "music"
         const val ACTION_SEARCH = "com.middleearth.launcher.SEARCH"
         /** Set just before a look change rebuilds the screen, so the new look fades in. */

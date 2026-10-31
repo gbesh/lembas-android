@@ -6,4 +6,5 @@
     <string name="lock_service_name">Lembas double-tap to lock</string>
     <string name="lock_service_description">Lets you lock the phone with two quick taps on an empty part of the Lembas home screen. It does nothing else: it doesn\'t read the screen or anything you do.</string>
     <string name="shortcut_search">Search</string>
+    <string name="widget_description">The Lembas scene, the time and the Shire date</string>
 </resources>

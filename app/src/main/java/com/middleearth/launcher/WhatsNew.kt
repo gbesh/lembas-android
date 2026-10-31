@@ -9,15 +9,15 @@ import android.os.Build
 object WhatsNew {
     private const val PREF = "whats_new_seen"
     /** Bump with each release that has something worth telling. */
-    private const val EDITION = 6000
+    private const val EDITION = 7000
 
     private val NOTES = listOf(
-        "New scenes, drawn to match Lembas on your PC and watch: the Shire's round door, the map by the fire, the lakeside cabin, and Rivendell's silver trees.",
-        "They change with the seasons (blossom, autumn leaves, snow), and can show the weather outside: rain, snow, fog or cloud.",
-        "Tilt depth: the scene shifts gently as you tilt the phone.",
-        "Search does more: \"timer 10m\", \"alarm 7:30\", \"10 km in miles\", \"100 usd to eur\". It also forgives typos.",
-        "Keep a look until the next change, then follow the sun again.",
-        "Quiet hours, and backing up your settings to a file, in settings.",
+        "Sync with your PC and watch, through your own Google account (settings → Sync): change the look on one and the others follow.",
+        "The scenes live a little more: the light changes through the day, sunrise and sunset glow, the wind moves the clouds and smoke, and the moon rises and sets when it really does.",
+        "Tap the scene for sparkles, embers or a puff of cloud. Keep an eye out for visitors now and then.",
+        "Hold the clock for today at a glance: the sun, the next look, your alarm and next event.",
+        "Folders in the dock, recent searches, Lembas sounds, a widget for other home apps, and a quick-settings tile to hold the scene still.",
+        "Everything is a little less yellow.",
     )
 
     fun maybeShow(a: Activity, theme: Int) {

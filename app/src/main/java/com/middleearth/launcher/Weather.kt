@@ -16,6 +16,7 @@ import java.net.URL
 object Weather {
     private const val KEY_CODE = "weather_code"
     private const val KEY_AT = "weather_at"
+    private const val KEY_WIND = "weather_wind"
     private const val HOUR = 55 * 60_000L
     private const val STALE = 4 * 60 * 60_000L
     @Volatile private var fetching = false
@@ -30,6 +31,13 @@ object Weather {
         val age = System.currentTimeMillis() - at
         if (age > HOUR) refresh(ctx.applicationContext)
         return if (age < STALE) p.getInt(KEY_CODE, 0) else 0
+    }
+
+    /** A windy day (over 30 km/h): the clouds race and the smoke leans. */
+    fun windy(ctx: Context): Boolean {
+        if (!on(ctx)) return false
+        val p = ctx.getSharedPreferences(Themes.PREFS, Context.MODE_PRIVATE)
+        return System.currentTimeMillis() - p.getLong(KEY_AT, 0) < STALE && p.getFloat(KEY_WIND, 0f) > 30f
     }
 
     /** WMO weather code → the scene's few kinds. */
@@ -49,13 +57,15 @@ object Weather {
         Thread {
             try {
                 val (lat, lon) = Sun.where()
-                val url = URL("https://api.open-meteo.com/v1/forecast?latitude=%.2f&longitude=%.2f&current=weather_code".format(java.util.Locale.US, lat, lon))
+                val url = URL("https://api.open-meteo.com/v1/forecast?latitude=%.2f&longitude=%.2f&current=weather_code,wind_speed_10m".format(java.util.Locale.US, lat, lon))
                 val c = url.openConnection() as HttpURLConnection
                 c.connectTimeout = 8000; c.readTimeout = 8000
                 val body = c.inputStream.bufferedReader().use { it.readText() }
                 c.disconnect()
-                val wmo = JSONObject(body).getJSONObject("current").getInt("weather_code")
+                val cur = JSONObject(body).getJSONObject("current")
+                val wmo = cur.getInt("weather_code")
                 ctx.getSharedPreferences(Themes.PREFS, Context.MODE_PRIVATE).edit()
+                    .putFloat(KEY_WIND, cur.optDouble("wind_speed_10m", 0.0).toFloat())
                     .putInt(KEY_CODE, fromWmo(wmo)).putLong(KEY_AT, System.currentTimeMillis()).apply()
             } catch (_: Exception) {
                 // offline: try again next hour, keep showing the last weather until it's stale

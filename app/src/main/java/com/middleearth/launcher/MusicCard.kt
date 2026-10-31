@@ -35,7 +35,7 @@ class MusicCard(ctx: Context) : LinearLayout(ctx) {
     private var controller: MediaController? = null
     private val main = Handler(Looper.getMainLooper())
     private var sessions: MediaSessionManager? = null
-    private var accent = 0xFFD9BC7A.toInt()
+    private var accent = 0xFFC4B48F.toInt()
 
     init {
         orientation = HORIZONTAL

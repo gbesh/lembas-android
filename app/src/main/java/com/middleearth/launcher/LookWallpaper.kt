@@ -51,6 +51,7 @@ object LookWallpaper {
             try { SystemTheme.apply(app, Themes.current(app), interactive) } catch (_: Throwable) { }
             try { sync(app) } catch (_: Throwable) { }
             try { schedule(app) } catch (_: Throwable) { }
+            try { SceneWidget.refresh(app) } catch (_: Throwable) { }
             done?.invoke()
         }.apply { priority = Thread.MIN_PRIORITY; name = "lembas-wallpaper" }.start()
     }

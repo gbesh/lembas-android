@@ -40,7 +40,7 @@ class SettingsSheet(
     private val dp = activity.resources.displayMetrics.density
     private fun px(v: Float) = (v * dp).roundToInt()
     private val dark = !look.lightBars
-    private val ink = if (dark) 0xFFF2EEE4.toInt() else 0xFF1E1A14.toInt()
+    private val ink = if (dark) 0xFFEFEDE7.toInt() else 0xFF1E1A14.toInt()
     private val soft = if (dark) 0xB3F2EEE4.toInt() else 0x991E1A14.toInt()
     private val surface = if (dark) 0x1FFFFFFF else 0x14000000
     private val accent = look.accent

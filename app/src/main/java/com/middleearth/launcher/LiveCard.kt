@@ -116,7 +116,7 @@ class LiveCard(ctx: Context) : LinearLayout(ctx) {
     private val chip = TextView(ctx)
     private val timer = Chronometer(ctx)
     private val bar = Bar()
-    private var accent = 0xFFD9BC7A.toInt()
+    private var accent = 0xFFC4B48F.toInt()
     private var shown: Live.Update? = null
 
     init {

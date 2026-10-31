@@ -40,7 +40,7 @@ object Dots {
     fun clear(n: Note) { try { service?.cancelNotification(n.key) } catch (_: Exception) { } }
     private val listeners = ArrayList<() -> Unit>()
     private val main = Handler(Looper.getMainLooper())
-    @Volatile var color = 0xFFD9BC7A.toInt()
+    @Volatile var color = 0xFFC4B48F.toInt()
 
     fun component(ctx: Context) = ComponentName(ctx, DotsService::class.java)
 

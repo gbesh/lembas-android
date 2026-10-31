@@ -70,11 +70,15 @@ object SceneArt {
         val x0 = if (land) -480f else 0f
     }
 
-    /** Fills [w]×[h] like "cover": centred, anchored to the bottom. Design x,y → dx + x·s, dy + y·s. */
-    class Fit(val d: Design, w: Float, h: Float, over: Float = 1f) {
+    /**
+     * Fills [w]×[h] like "cover": centred, anchored to the bottom (or, with [anchor] 0.5, cropped
+     * evenly top and bottom: Rivendell's trees stay below the clock on wide upright screens).
+     * Design x,y → dx + x·s, dy + y·s.
+     */
+    class Fit(val d: Design, w: Float, h: Float, over: Float = 1f, anchor: Float = 1f) {
         val s = max(w / d.w, h / d.h) * over
         val dx = (w - d.w * s) / 2 - d.x0 * s
-        val dy = h - d.h * s + (if (over > 1f) d.h * s * (over - 1f) / over / 2 else 0f)
+        val dy = (h - d.h * s) * anchor + (if (over > 1f) d.h * s * (over - 1f) / over / 2 else 0f)
         fun rect(shift: Float = 0f, lift: Float = 0f) = RectF(dx + d.x0 * s + shift, dy + lift, dx + (d.x0 + d.w) * s + shift, dy + d.h * s + lift)
     }
 
@@ -82,11 +86,18 @@ object SceneArt {
         override fun sizeOf(key: String, value: Bitmap) = value.byteCount / 1024
     }
 
+    /** Phones with little memory get the pictures at half size from the start (they still look soft and fine). */
+    private var lowMemory: Boolean? = null
+    private fun lowMemory(ctx: Context): Boolean = lowMemory ?: run {
+        val am = ctx.getSystemService(android.app.ActivityManager::class.java)
+        (am == null || am.isLowRamDevice || am.memoryClass < 192).also { lowMemory = it }
+    }
+
     /** One still layer, decoded at about the size it's shown ([targetH] pixels tall). */
     fun layer(ctx: Context, look: String, season: String, land: Boolean, layer: String, targetH: Int): Bitmap? {
         val name = "scenes/scene_${look}_${season}_${if (land) "l" else "p"}_$layer.webp"
         val full = if (land) 1080 else 3000
-        var sample = 1
+        var sample = if (lowMemory(ctx)) 2 else 1
         while (full / (sample * 2) >= targetH) sample *= 2
         val key = "$name@$sample"
         cache.get(key)?.let { return it }
@@ -164,7 +175,7 @@ object SvgPath {
  * chimney smoke and river glints; the campfire, embers and compass; stars, the moon, lake glints
  * and the cabin window; mist, lanterns and rising motes), plus the weather.
  */
-class Motion(private val look: String, land: Boolean, private val weather: Int, private val still: Boolean) {
+class Motion(private val look: String, land: Boolean, private val weather: Int, private val still: Boolean, private val wind: Boolean = false) {
     private val L = land
     private val fill = Paint(Paint.ANTI_ALIAS_FLAG)
     private val line = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeCap = Paint.Cap.ROUND }
@@ -201,7 +212,8 @@ class Motion(private val look: String, land: Boolean, private val weather: Int, 
 
     private fun cloud(c: Canvas, cl: Cloud, t: Float, color: Int = 0xFFFFFFFF.toInt()) {
         val span = (x1 - x0) + 1400f
-        val x = if (still) cl.x else x0 - 700f + span * phase(t, cl.dur, (cl.x - x0 + 700f) / span * cl.dur)
+        val dur = if (wind) cl.dur / 4 else cl.dur      // a windy day: the clouds race
+        val x = if (still) cl.x else x0 - 700f + span * phase(t, dur, (cl.x - x0 + 700f) / span * dur)
         c.save(); c.translate(x, cl.y); c.scale(cl.s, cl.s)
         fill.color = color; fill.alpha = (255 * cl.o).toInt()
         c.drawPath(cloudPath, fill)
@@ -275,8 +287,16 @@ class Motion(private val look: String, land: Boolean, private val weather: Int, 
                     fill.color = 0xFFFFF8E6.toInt(); fill.alpha = (255 * (.15f + .85f * k)).toInt()
                     c.drawCircle(s[0], s[1], s[2] * (.6f + .65f * k), fill)
                 }
-                glowAt(c, moon[0], moon[1], 1f + .06f * breathe(t, 7f), .75f + .25f * breathe(t, 7f), moonShader, moon[2] * 3.2f)
-                drawMoon(c, moon[0], moon[1], moon[2])
+                // tonight's moon where it really is: low after it rises, high near midnight, gone when it's set
+                val alt = moonAltitude()
+                if (alt > 0f) {
+                    val my = moon[1] + (1f - alt) * (if (L) 330f else 640f)
+                    val full = moonPhase().let { it > 0.46 && it < 0.54 }
+                    val mr = moon[2] * (if (full) 1.25f else 1f)
+                    glowAt(c, moon[0], my, (if (full) 1.35f else 1f) * (1f + .06f * breathe(t, 7f)), .75f + .25f * breathe(t, 7f), moonShader, moon[2] * 3.2f)
+                    drawMoon(c, moon[0], my, mr)
+                }
+                shootingStar(c, t)
                 for ((i, g) in listOf(floatArrayOf(-80f, 0f, 160f), floatArrayOf(-60f, 28f, 120f), floatArrayOf(-44f, 58f, 88f), floatArrayOf(-30f, 94f, 60f), floatArrayOf(-20f, 136f, 40f), floatArrayOf(-12f, 186f, 24f)).withIndex())
                     glint(c, lakeGlint[0] + g[0], lakeGlint[1] + g[1], g[2], t, 3f + i * .5f, i * .6f, if (L) 4f else 5f, 0xFFFFF3D6.toInt())
             }
@@ -338,7 +358,8 @@ class Motion(private val look: String, land: Boolean, private val weather: Int, 
                 } else {
                     val p = phase(t, 5f, k * 1.25f); val e = easeOut(p)
                     fill.color = 0xFFFFFFFF.toInt(); fill.alpha = (153 * (if (p < .15f) p / .15f else 1 - (p - .15f) / .85f)).toInt()
-                    c.drawCircle(chimney[0] + 50 * cs * e, chimney[1] - 200 * cs * e, 12 * cs * (.6f + 1.3f * e), fill)
+                    val lean = if (wind) 170f else 50f       // and the smoke leans
+                    c.drawCircle(chimney[0] + lean * cs * e, chimney[1] - (if (wind) 120 else 200) * cs * e, 12 * cs * (.6f + 1.3f * e), fill)
                 }
             }
             "starlit" -> {
@@ -353,7 +374,7 @@ class Motion(private val look: String, land: Boolean, private val weather: Int, 
                 for ((i, l) in lamps.withIndex()) {
                     val k = if (still) .5f else breathe(t, 3f + i % 3, i * .9f)
                     glowAt(c, l[0], l[1], .85f + .3f * k, .6f + .4f * k, lampShader, if (L) 22f else 28f)
-                    fill.color = 0xFFF3E3B4.toInt(); fill.alpha = 255
+                    fill.color = 0xFFE5DCC2.toInt(); fill.alpha = 255
                     c.drawCircle(l[0], l[1], if (L) 4.5f else 6f, fill)
                 }
                 if (!still) for (m in motes) {
@@ -399,10 +420,53 @@ class Motion(private val look: String, land: Boolean, private val weather: Int, 
         }
     }
 
-    /** Tonight's real moon phase, lit on the correct side for your hemisphere. */
-    private fun drawMoon(c: Canvas, cx: Float, cy: Float, r: Float) {
+    private fun moonPhase(): Double {
         var phase = ((System.currentTimeMillis() - 947182440000L) / 86_400_000.0 / 29.530588853) % 1.0
         if (phase < 0) phase += 1.0
+        return phase
+    }
+
+    /**
+     * How high the moon is, 0 (on the horizon) to 1, or below 0 when it has set. The moon crosses the
+     * sky about 50 minutes later each day: at new moon with the sun (midday), at full moon at midnight.
+     */
+    private var altAt = 0L
+    private var altCache = 1f
+    private fun moonAltitude(): Float {
+        val now = System.currentTimeMillis()
+        if (now - altAt < 60_000L) return altCache
+        altAt = now
+        val day = Sun.today()
+        val nowMin = java.time.LocalTime.now().let { it.hour * 60 + it.minute }
+        val transit = day.noon + moonPhase() * 1490.0          // minutes after midnight (can run into tomorrow)
+        val hours = ((nowMin - transit) / 60.0 + 36) % 24.84 - 12.42
+        altCache = cos(hours / 24.84 * 2 * PI).toFloat() * 1.4f - 0.15f
+        altCache = altCache.coerceAtMost(1f)
+        return altCache
+    }
+
+    /** Now and then a shooting star; every few seconds on meteor-shower nights (mid-August, mid-December). */
+    private val meteorNight = java.time.LocalDate.now().let { (it.monthValue == 8 && it.dayOfMonth in 11..13) || (it.monthValue == 12 && it.dayOfMonth in 13..15) }
+    private fun shootingStar(c: Canvas, t: Float) {
+        if (still) return
+        val dur = if (meteorNight) 6f else 23f
+        val p = phase(t, dur, 3f) / (2.2f / dur)        // 0..1 over 2.2 s, then waits
+        if (p >= 1f) return
+        val n = floor(t / dur).toInt()
+        val sx = x0 + (x1 - x0) * (0.25f + 0.5f * ((n * 0.618f) % 1f))
+        val sy = (if (L) 80f else 260f) + 120f * ((n * 0.382f) % 1f)
+        val len = if (L) 160f else 220f
+        val hx = sx + len * p; val hy = sy + len * .35f * p
+        line.color = 0xFFFFFFFF.toInt(); line.strokeWidth = if (L) 2.4f else 3.2f
+        line.alpha = (255 * sin(PI * p)).toInt()
+        line.shader = LinearGradient(hx - 90, hy - 30, hx, hy, 0x00FFFFFF, 0xFFFFFFFF.toInt(), Shader.TileMode.CLAMP)
+        c.drawLine(hx - 90, hy - 30, hx, hy, line)
+        line.shader = null
+    }
+
+    /** Tonight's real moon phase, lit on the correct side for your hemisphere. */
+    private fun drawMoon(c: Canvas, cx: Float, cy: Float, r: Float) {
+        val phase = moonPhase()
         fill.color = 0xFF2A3058.toInt(); fill.alpha = 255
         c.drawCircle(cx, cy, r, fill)
         val termW = (r * cos(2 * PI * phase)).toFloat()
@@ -435,10 +499,13 @@ class SceneDrawer(ctx: Context, val look: Look, val w: Int, val h: Int, dp: Floa
     val land = w > h
     val season = SceneArt.season()
     private val design = SceneArt.Design(land)
-    private val fit = SceneArt.Fit(design, w.toFloat(), h.toFloat(), if (parallax) 1.04f else 1f)
+    // Rivendell on a wide upright screen (a tablet): crop evenly, so the trees stay below the clock
+    private val fit = SceneArt.Fit(design, w.toFloat(), h.toFloat(), if (parallax) 1.04f else 1f,
+        anchor = if (look.id == "elven" && !land && h.toFloat() / w < 2f) .5f else 1f)
+    val extras = SceneExtras(look.id, w, h, dp, still)
     private val names = SceneArt.LAYERS[look.id] ?: listOf("back")
     private val bitmaps = names.map { SceneArt.layer(ctx, look.id, season, land, it, (design.h * fit.s).toInt()) }
-    private val motion = Motion(look.id, land, weather, still)
+    private val motion = Motion(look.id, land, weather, still, wind = !still && Weather.windy(ctx))
     private val paint = Paint(Paint.FILTER_BITMAP_FLAG or Paint.DITHER_FLAG)
     private val maxShift = 12 * dp
     val fps get() = motion.fps
@@ -465,6 +532,7 @@ class SceneDrawer(ctx: Context, val look: Look, val w: Int, val h: Int, dp: Floa
         val front = names.indexOf("front")
         if (front >= 0) layer(front, 1f)
         moving(1f) { motion.over(it, t) }
+        extras.draw(c)
     }
 }
 
@@ -496,7 +564,26 @@ class SceneView @JvmOverloads constructor(context: Context, attrs: AttributeSet?
         set(value) { if (field != value) { field = value; rebuild(); update() } }
 
     /** Rebuild if something that changes the picture changed (look, size, season, weather). */
-    fun refresh() = rebuild()
+    fun refresh() { update(); rebuild() }
+
+    /** A birthday in the calendar today: bunting across the sky. */
+    var bunting = false
+        set(value) { field = value; drawer?.extras?.bunting = value; invalidate() }
+
+    /** Tapped the scene: sparkles, embers or a puff of cloud where you touched. */
+    fun poke(x: Float, y: Float) {
+        val d = drawer ?: return
+        if (!animationsOn) return
+        d.extras.poke(x, y)
+        ensureTicking()
+    }
+
+    // The new scene is drawn off the main thread (no hitch when the look changes), then fades in
+    // over the old one for a couple of seconds, like the light changing.
+    private var old: SceneDrawer? = null
+    private var fadeStart = 0L
+    private val fadeMs = 2000L
+    private var building = 0
 
     private fun rebuild() {
         val w = width; val h = height
@@ -504,9 +591,33 @@ class SceneView @JvmOverloads constructor(context: Context, attrs: AttributeSet?
         val key = "${look.id}#$w#$h#${SceneArt.season()}#$weather#$parallax"
         if (key == builtFor && drawer != null) { invalidate(); return }
         builtFor = key
-        drawer = SceneDrawer(context, look, w, h, resources.displayMetrics.density, weather, parallax = parallax)
-        invalidate()
+        val token = ++building
+        val lk = look; val wx = weather; val px = parallax; val dpx = resources.displayMetrics.density
+        Thread {
+            val d = try { SceneDrawer(context, lk, w, h, dpx, wx, parallax = px) } catch (_: Throwable) { null }
+            post {
+                if (token != building || d == null) return@post
+                d.extras.bunting = bunting
+                val prev = drawer
+                val fade = prev != null && prev.look.id != d.look.id && animationsOn
+                old = if (fade) prev else null
+                fadeStart = SystemClock.uptimeMillis()
+                drawer = d
+                if (fade) ensureTicking()
+                invalidate()
+            }
+        }.apply { priority = Thread.NORM_PRIORITY - 1; name = "lembas-scene" }.start()
     }
+
+    /** Keep drawing frames for a fade or a tap even when the scene itself is still. */
+    private val ticker = object : Choreographer.FrameCallback {
+        override fun doFrame(frameTimeNanos: Long) {
+            invalidate()
+            val fading = old != null && SystemClock.uptimeMillis() - fadeStart < fadeMs
+            if (!running && (fading || drawer?.extras?.busy == true)) Choreographer.getInstance().postFrameCallback(this)
+        }
+    }
+    private fun ensureTicking() { if (!running) Choreographer.getInstance().postFrameCallback(ticker) }
 
     private val frame = object : Choreographer.FrameCallback {
         override fun doFrame(frameTimeNanos: Long) {
@@ -520,13 +631,26 @@ class SceneView @JvmOverloads constructor(context: Context, attrs: AttributeSet?
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) = rebuild()
 
+    private val fadePaint = android.graphics.Paint()
     override fun onDraw(canvas: Canvas) {
         val t = (SystemClock.uptimeMillis() - start) / 1000f
-        drawer?.draw(canvas, if (running) t else 0f, tiltX, tiltY) ?: canvas.drawColor(look.windowColor)
+        val tt = if (running) t else 0f
+        val o = old
+        val f = (SystemClock.uptimeMillis() - fadeStart).toFloat() / fadeMs
+        if (o != null && f < 1f) {
+            o.draw(canvas, tt, tiltX, tiltY)
+            val k = f * f * (3 - 2 * f)
+            canvas.saveLayerAlpha(0f, 0f, width.toFloat(), height.toFloat(), (255 * k).toInt())
+            drawer?.draw(canvas, tt, tiltX, tiltY)
+            canvas.restore()
+            return
+        }
+        old = null
+        drawer?.draw(canvas, tt, tiltX, tiltY) ?: canvas.drawColor(look.windowColor)
     }
 
     private fun update() {
-        val should = animationsOn && active && isAttachedToWindow && power?.isPowerSaveMode != true
+        val should = animationsOn && active && isAttachedToWindow && power?.isPowerSaveMode != true && !Themes.paused(context)
         if (should != running) {
             running = should
             if (should) Choreographer.getInstance().postFrameCallback(frame)

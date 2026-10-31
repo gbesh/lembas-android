@@ -29,6 +29,8 @@ class HomeRoot @JvmOverloads constructor(context: Context, attrs: AttributeSet? 
         fun onLongPressHome()
         /** Two quick taps on empty space (Lembas locks the phone, if you turned that on). */
         fun onDoubleTapHome() {}
+        /** One tap on empty space: the scene answers (sparkles, embers, a puff of cloud). */
+        fun onTapHome(x: Float, y: Float) {}
         /** True for touches that belong to something else: the letter strips, or a dock icon (swipe-up = shortcut). */
         fun touchBlocked(x: Float, y: Float): Boolean
     }
@@ -68,7 +70,7 @@ class HomeRoot @JvmOverloads constructor(context: Context, attrs: AttributeSet? 
             val quick = ev.eventTime - lastTapAt < ViewConfiguration.getDoubleTapTimeout() &&
                 abs(ev.x - lastTapX) < slop * 4 && abs(ev.y - lastTapY) < slop * 4
             if (quick) { lastTapAt = 0L; callbacks?.onDoubleTapHome() }
-            else { lastTapAt = ev.eventTime; lastTapX = ev.x; lastTapY = ev.y }
+            else { lastTapAt = ev.eventTime; lastTapX = ev.x; lastTapY = ev.y; callbacks?.onTapHome(ev.x, ev.y) }
         }
         return true
     }

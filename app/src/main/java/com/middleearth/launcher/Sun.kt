@@ -113,6 +113,7 @@ object Themes {
     const val PREF_WEATHER = "weather"
     const val PREF_TILT = "tilt"
     const val PREF_KEEP_UNTIL = "keep_until"
+    const val PREF_PAUSE_UNTIL = "pause_until"
 
     private const val NIGHT_START = 23 * 60
     private const val NIGHT_END = 4 * 60
@@ -174,6 +175,10 @@ object Themes {
         val c = choice(context)
         return if (c == Look.ADAPTIVE) adaptive() else Look.byId(c)
     }
+
+    /** "Hold still for an hour" (the quick settings tile): the scene stays still until then. */
+    fun paused(context: Context): Boolean =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getLong(PREF_PAUSE_UNTIL, 0) > System.currentTimeMillis()
 
     fun animationsOn(context: Context): Boolean =
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(PREF_ANIM, true)

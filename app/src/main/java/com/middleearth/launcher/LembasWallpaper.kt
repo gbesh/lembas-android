@@ -33,6 +33,7 @@ class LembasWallpaper : WallpaperService() {
         private val main = Handler(Looper.getMainLooper())
         private val prefs = getSharedPreferences(Themes.PREFS, Context.MODE_PRIVATE)
         private val power = getSystemService(PowerManager::class.java)
+        private val keyguard = getSystemService(android.app.KeyguardManager::class.java)
         private val dp = resources.displayMetrics.density
         private val start = SystemClock.uptimeMillis()
 
@@ -53,7 +54,9 @@ class LembasWallpaper : WallpaperService() {
             override fun doFrame(frameTimeNanos: Long) {
                 if (!running) return
                 val now = frameTimeNanos / 1_000_000
-                if (now - lastFrame >= 1000L / (scene?.fps ?: 15) - 4) {
+                // calmer on the lock screen: half the frames
+                val fps = (scene?.fps ?: 15) / (if (keyguard?.isKeyguardLocked == true) 2 else 1)
+                if (now - lastFrame >= 1000L / fps - 4) {
                     lastFrame = now
                     drawFrame()
                 }
@@ -83,7 +86,7 @@ class LembasWallpaper : WallpaperService() {
         }
 
         override fun onSharedPreferenceChanged(p: SharedPreferences?, key: String?) {
-            if (key == Themes.PREF_THEME || key == Themes.PREF_ANIM || key == Themes.PREF_WEATHER || key == "weather_code") recheck()
+            if (key == Themes.PREF_THEME || key == Themes.PREF_ANIM || key == Themes.PREF_WEATHER || key == "weather_code" || key == Themes.PREF_PAUSE_UNTIL) recheck()
         }
 
         /** Called every minute and on setting changes: switch theme when Adaptive says so. */
@@ -133,7 +136,8 @@ class LembasWallpaper : WallpaperService() {
         }
 
         private fun updateRunning() {
-            val should = visible && Themes.animationsOn(this@LembasWallpaper) && !Quiet.now(this@LembasWallpaper) && power?.isPowerSaveMode != true
+            val should = visible && Themes.animationsOn(this@LembasWallpaper) && !Quiet.now(this@LembasWallpaper) &&
+                !Themes.paused(this@LembasWallpaper) && power?.isPowerSaveMode != true
             if (should == running) return
             running = should
             if (should) Choreographer.getInstance().postFrameCallback(frame)

@@ -96,6 +96,13 @@ class IconCache private constructor(private val context: Context) {
         request(entry, spec, key) { bmp -> if (view.tag == key) view.setImageBitmap(bmp) }
     }
 
+    /** The icon as a bitmap, now if it's ready or as soon as it is (for the dock's folders). */
+    fun render(entry: AppEntry, spec: Spec, cb: (Bitmap) -> Unit) {
+        val key = entry.key + "#" + spec.id
+        cache.get(key)?.let { cb(it); return }
+        request(entry, spec, key, cb)
+    }
+
     fun preload(entries: List<AppEntry>, spec: Spec) {
         for (e in entries) {
             val key = e.key + "#" + spec.id
