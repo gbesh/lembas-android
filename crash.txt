@@ -1,0 +1,498 @@
+10-31 18:15:37.564   968   968 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-31 18:15:37.568   522   908 I ActivityManager: Process WebViewLoader-x86_64 (pid 968) has died: psvc PER 
+10-31 18:15:37.570   522   541 D DisplayManagerService: Drop pending events for gone uid 1037
+10-31 18:15:37.572   522   908 D OomAdjuster: Not killing cached processes
+10-31 18:15:37.573   522   608 D CompatibilityChangeReporter: Compat change id reported: 265195908; UID 10171; state: ENABLED
+10-31 18:15:37.574   522   608 D CompatibilityChangeReporter: Compat change id reported: 265195908; UID 10119; state: ENABLED
+10-31 18:15:37.574   522   553 I libprocessgroup: Successfully killed process cgroup uid 1037 pid 968 in 2ms
+10-31 18:15:37.574   338   338 I Zygote  : Process 968 exited cleanly (0)
+10-31 18:15:37.576   522   522 I StatsCompanionService: Told statsd that StatsCompanionService is alive.
+10-31 18:15:37.576   522   522 V SystemServerTiming: OnBootPhase_600_com.android.server.stats.StatsCompanion$Lifecycle took to complete: 13ms
+10-31 18:15:37.576   522   522 D SystemServerTiming: OnBootPhase_600_com.android.server.scheduling.RebootReadinessManagerService$Lifecycle
+10-31 18:15:37.576   522   522 V SystemServerTiming: OnBootPhase_600_com.android.server.scheduling.RebootReadinessManagerService$Lifecycle took to complete: 0ms
+10-31 18:15:37.576   522   522 D SystemServerTiming: OnBootPhase_600_com.android.server.stats.pull.StatsPullAtomService
+--
+10-31 01:30:20.165  5794  5794 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 0 <<<<<<
+10-31 01:30:20.182   844   844 D CentralSurfaces: Received new disable state: enaihbcrso.qingr (unchanged)
+10-31 01:30:20.206   522   540 W Looper  : Drained
+10-31 01:30:20.227  1424  1500 W ChimeraUtils: Module com.google.android.gms.nearby_en missing resource null(0)
+10-31 01:30:20.269  1424  1500 W ChimeraUtils: Module com.google.android.gms.nearby_en missing resource null(0)
+10-31 01:30:20.410  5794  5794 I AndroidRuntime: Using default boot image
+10-31 01:30:20.410  5794  5794 I AndroidRuntime: Leaving lock profiling enabled
+10-31 01:30:20.481   844   844 D DLObserver: remove listener: com.android.systemui.dock.DockManagerExtensionsKt$retrieveIsDocked$1$callback$1@d83dc16
+10-31 01:30:20.482   844   844 D DLObserver: remove listener: com.android.systemui.dock.DockManagerExtensionsKt$retrieveIsDocked$1$callback$1@d379997
+10-31 01:30:20.485   844   912 D ControlsListingControllerImpl: Unsubscribing callback
+10-31 01:30:20.485   844   912 D ControlsListingControllerImpl: Unsubscribing callback
+10-31 01:30:20.486   844   844 D DLObserver: remove listener: com.android.systemui.dock.DockManagerExtensionsKt$retrieveIsDocked$1$callback$1@39144a1
+10-31 01:30:20.486   844   844 D DLObserver: remove listener: com.android.systemui.dock.DockManagerExtensionsKt$retrieveIsDocked$1$callback$1@d4976c6
+10-31 01:30:20.487   844   844 D DLObserver: remove listener: com.android.systemui.dock.DockManagerExtensionsKt$retrieveIsDocked$1$callback$1@6199423
+10-31 01:30:20.487   844   844 D DLObserver: remove listener: com.android.systemui.dock.DockManagerExtensionsKt$retrieveIsDocked$1$callback$1@5208508
+10-31 01:30:20.497   844   912 D ControlsListingControllerImpl: Unsubscribing callback
+10-31 01:30:20.505  1473  5355 I Icing   : Indexing com.google.android.gms-apps from com.google.android.gms
+10-31 01:30:20.538  1473  5355 I Icing   : Indexing done com.google.android.gms-apps
+10-31 01:30:20.548  5794  5794 I app_process: Core platform API reporting enabled, enforcing=false
+--
+10-31 01:30:22.924  5794  5794 D AndroidRuntime: Calling main entry com.android.commands.content.Content
+10-31 01:30:23.069  5794  5794 W System  : No Compatibility callbacks set! Querying change 263076149
+10-31 01:30:23.069  5794  5794 W System  : No Compatibility callbacks set! Querying change 263076149
+10-31 01:30:23.069  5794  5794 W System  : No Compatibility callbacks set! Querying change 263076149
+10-31 01:30:23.242  1010  5823 D TrafficStats: tagSocket(68) with statsTag=0xffffff81, statsUid=-1
+10-31 01:30:23.243  1010  5823 D TrafficStats: tagSocket(68) with statsTag=0xffffff81, statsUid=-1
+10-31 01:30:23.244  1010  5822 D TrafficStats: tagSocket(75) with statsTag=0xffffff81, statsUid=-1
+10-31 01:30:23.244  1010  5822 D TrafficStats: tagSocket(75) with statsTag=0xffffff81, statsUid=-1
+10-31 01:30:23.265  1033  1033 D BluetoothPbapService:  onChange on contact uri 
+10-31 01:30:23.268   337  5824 I resolv  : ResNSendHandler::run: 0 / {100 983140 100 983140 1073 1}
+10-31 01:30:23.269   337  5825 I resolv  : ResNSendHandler::run: 0 / {100 983140 100 983140 1073 1}
+10-31 01:30:23.269   337  5825 I resolv  : res_stats_usable_server: too many resolution errors, ignoring server
+10-31 01:30:23.269   337  5824 I resolv  : res_stats_usable_server: too many resolution errors, ignoring server
+--
+10-31 01:30:23.278  5794  5794 D AndroidRuntime: Shutting down VM
+10-31 01:30:23.283   337  5827 I resolv  : GetAddrInfoHandler::run: {100 983140 100 983140 1073 1}
+10-31 01:30:23.284   337  5828 I resolv  : GetAddrInfoHandler::run: {100 983140 100 983140 1073 1}
+10-31 01:30:23.290   337  5829 I resolv  : res_nmkquery: (QUERY, IN, AAAA)
+10-31 01:30:23.290   337  5829 I resolv  : res_stats_usable_server: too many resolution errors, ignoring server
+10-31 01:30:23.290   337  5830 I resolv  : res_nmkquery: (QUERY, IN, AAAA)
+10-31 01:30:23.291   337  5830 I resolv  : res_stats_usable_server: too many resolution errors, ignoring server
+10-31 01:30:23.291   337  5829 I resolv  : res_nsend: used send_dg 0 terrno: 101
+10-31 01:30:23.291   337  5830 I resolv  : res_nsend: used send_dg 0 terrno: 101
+10-31 01:30:23.291   337  5829 I resolv  : res_nsend: used send_dg 0 terrno: 101
+10-31 01:30:23.291   337  5829 I resolv  : doQuery: rcode=0, ancount=0, return value=-111
+10-31 01:30:23.291   337  5830 I resolv  : res_nsend: used send_dg 0 terrno: 101
+10-31 01:30:23.291   337  5830 I resolv  : doQuery: rcode=0, ancount=0, return value=-111
+--
+10-31 01:30:24.648  5833  5833 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 0 <<<<<<
+10-31 01:30:24.651   158  5770 I keystore2: system/security/keystore2/src/watchdog.rs:319 - Watchdog thread idle -> terminating. Have a great day.
+10-31 01:30:24.679  5833  5833 I AndroidRuntime: Using default boot image
+10-31 01:30:24.679  5833  5833 I AndroidRuntime: Leaving lock profiling enabled
+10-31 01:30:24.682  5833  5833 I app_process: Core platform API reporting enabled, enforcing=false
+10-31 01:30:24.682  5833  5833 I app_process: Using CollectorTypeCC GC.
+10-31 01:30:24.818  5085  5104 D EGL_emulation: app_time_stats: avg=78.27ms min=57.34ms max=108.98ms count=13
+10-31 01:30:24.908  5833  5833 D nativeloader: InitDefaultPublicLibraries for_preload=1: libandroid.so:libaaudio.so:libamidi.so:libbinder_ndk.so:libc.so:libcamera2ndk.so:libdl.so:libEGL.so:libGLESv1_CM.so:libGLESv2.so:libGLESv3.so:libicu.so:libicui18n.so:libicuuc.so:libjnigraphics.so:liblog.so:libmediandk.so:libm.so:libnativehelper.so:libnativewindow.so:libOpenMAXAL.so:libOpenSLES.so:libRS.so:libstdc++.so:libsync.so:libvulkan.so:libwebviewchromium_plat_support.so:libz.so
+10-31 01:30:24.978  5833  5833 D app_process: Time zone APEX ICU file found: /apex/com.android.tzdata/etc/icu/icu_tzdata.dat
+10-31 01:30:24.979  5833  5833 D app_process: I18n APEX ICU file found: /apex/com.android.i18n/etc/icu/icudt72l.dat
+10-31 01:30:24.985  5833  5833 W app_process: Unexpected CPU variant for x86: x86_64.
+10-31 01:30:24.985  5833  5833 W app_process: Known variants: atom, sandybridge, silvermont, goldmont, goldmont-plus, tremont, kabylake, default
+10-31 01:30:25.112  5833  5833 D AndroidRuntime: Calling main entry com.android.commands.content.Content
+10-31 01:30:25.116  5833  5833 W System  : No Compatibility callbacks set! Querying change 263076149
+10-31 01:30:25.116  5833  5833 W System  : No Compatibility callbacks set! Querying change 263076149
+10-31 01:30:25.116  5833  5833 W System  : No Compatibility callbacks set! Querying change 263076149
+10-31 01:30:25.121  5833  5833 D AndroidRuntime: Shutting down VM
+10-31 01:30:25.276   522  2492 D PackageManager: Instant App installer not found with android.intent.action.INSTALL_INSTANT_APP_PACKAGE
+10-31 01:30:25.277   522  2492 D PackageManager: Clear ephemeral installer activity
+10-31 01:30:25.287   522   921 D PackageManager: Instant App installer not found with android.intent.action.INSTALL_INSTANT_APP_PACKAGE
+10-31 01:30:25.287   522   921 D PackageManager: Clear ephemeral installer activity
+10-31 01:30:25.888  5085  5104 D EGL_emulation: app_time_stats: avg=73.33ms min=53.67ms max=96.50ms count=14
+10-31 01:30:26.068  1424  1432 I .gms.persistent: Background young concurrent copying GC freed 244948(14MB) AllocSpace objects, 2(268KB) LOS objects, 38% free, 20MB/32MB, paused 27us,28us total 314.972ms
+10-31 01:30:26.222  1424  5768 W ChimeraUtils: Module com.google.android.gms.nearby_en missing resource null(0)
+10-31 01:30:26.226  1424  5768 W ChimeraUtils: Module com.google.android.gms.nearby_en missing resource null(0)
+10-31 01:30:26.324   845   870 I PermissionControllerServiceImpl: Updating user sensitive for uid 10154
+10-31 01:30:26.363  1057  1057 D CarrierSvcBindHelper: onPackageModified: com.google.android.contacts
+10-31 01:30:26.364  1057  1057 D CarrierSvcBindHelper: No carrier app for: 0
+10-31 01:30:26.373  5846  5846 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 0 <<<<<<
+10-31 01:30:26.375   522   628 I InputReader: Reconfiguring input devices, changes=KEYBOARD_LAYOUTS
+10-31 01:30:26.382  5846  5846 I AndroidRuntime: Using default boot image
+10-31 01:30:26.382  1033  1033 V MediaPlayerList: mPackageChangedBroadcastReceiver: action: android.intent.action.PACKAGE_CHANGED
+10-31 01:30:26.384   844   912 D StylusManager: Stylus InputDevice changed: 14 virtio_input_multi_touch_11
+10-31 01:30:26.386  5846  5846 I AndroidRuntime: Leaving lock profiling enabled
+10-31 01:30:26.390  5846  5846 I app_process: Core platform API reporting enabled, enforcing=false
+10-31 01:30:26.392  1033  1033 V MediaPlayerList: mPackageChangedBroadcastReceiver: action: android.intent.action.PACKAGE_CHANGED
+10-31 01:30:26.392  5846  5846 I app_process: Using CollectorTypeCC GC.
+10-31 01:30:26.409   844   844 D ControlsListingControllerImpl: ServiceConfig reloaded, count: 0
+10-31 01:30:26.411   522   550 E system_server: No package ID 7f found for resource ID 0x7f080107.
+10-31 01:30:26.411   522   550 E system_server: No package ID 7f found for resource ID 0x7f150560.
+10-31 01:30:26.425  1730  1730 I BgTaskExecutorImpl: Starting EXCLUSIVE background task UPLOAD_ASSISTANT_DEVICE_SETTINGS.
+10-31 01:30:26.462  1730  5425 I NetworkRecognitionRnr: Using pair HTTP connection
+10-31 01:30:26.469  1730  2610 I A       : [Upload] Connected
+10-31 01:30:26.478   844   912 D StylusManager: Stylus InputDevice changed: 12 virtio_input_multi_touch_9
+10-31 01:30:26.478   844   912 D StylusManager: Stylus InputDevice changed: 7 virtio_input_multi_touch_4
+10-31 01:30:26.479   844   912 D StylusManager: Stylus InputDevice changed: 11 virtio_input_multi_touch_8
+--
+10-31 01:30:26.908  5846  5846 D AndroidRuntime: Calling main entry com.android.commands.content.Content
+10-31 01:30:26.952  5085  5104 D EGL_emulation: app_time_stats: avg=79.56ms min=48.19ms max=115.04ms count=13
+10-31 01:30:27.002  5846  5846 W System  : No Compatibility callbacks set! Querying change 263076149
+10-31 01:30:27.002  5846  5846 W System  : No Compatibility callbacks set! Querying change 263076149
+10-31 01:30:27.002  5846  5846 W System  : No Compatibility callbacks set! Querying change 263076149
+10-31 01:30:27.040  1424  5850 I Fitness : OnPackageChangedOperation got intent: Intent { act=android.intent.action.PACKAGE_CHANGED dat=package: flg=0x45000010 pkg=com.google.android.gms cmp=com.google.android.gms/.chimera.PersistentIntentOperationService (has extras) } [CONTEXT service_id=17 ]
+10-31 01:30:27.046  1424  5860 I Fitness : FitCleanupIntentOperation received Intent android.intent.action.PACKAGE_CHANGED [CONTEXT service_id=17 ]
+10-31 01:30:27.152   522   532 I system_server: Background young concurrent copying GC freed 1076559(23MB) AllocSpace objects, 7(140KB) LOS objects, 46% free, 27MB/50MB, paused 13.451ms,54us total 262.874ms
+10-31 01:30:27.366   844   844 D StatusBarIconController: ignoring old pipeline callbacks, because the new mobile icons are enabled
+10-31 01:30:27.524  1033  1033 D BluetoothPbapService:  onChange on contact uri 
+10-31 01:30:27.526  5846  5846 D AndroidRuntime: Shutting down VM
+10-31 01:30:27.556  1033  5880 D BluetoothPbapUtils: primaryVersionCounter = 0, secondaryVersionCounter=0
+10-31 01:30:27.665   522  1684 W AppSearchIcing: icing-search-engine.cc:283: Error: 5, Message: Document (android$contacts/, 1) not found.
+10-31 01:30:27.675  1424  3353 I NetworkScheduler.Stats: Task com.google.android.gms/com.google.android.gms.icing.proxy.IcingInternalCorporaUpdateService started execution. cause:9 exec_start_elapsed_seconds: 174 [CONTEXT service_id=218 ]
+10-31 01:30:27.699  1424  5753 I NetworkScheduler.Stats: Task com.google.android.gms/com.google.android.gms.icing.proxy.IcingInternalCorporaUpdateService finished executing. cause:9 result: 1 elapsed_millis: 77 uptime_millis: 77 exec_start_elapsed_seconds: 174 [CONTEXT service_id=218 ]
+10-31 01:30:27.968  5085  5104 D EGL_emulation: app_time_stats: avg=75.33ms min=58.63ms max=95.38ms count=13
+10-31 01:30:28.069  1473  5874 I Icing   : Indexing com.google.android.gms-apps from com.google.android.gms
+10-31 01:30:28.104  1424  1432 I .gms.persistent: Background concurrent copying GC freed 303174(16MB) AllocSpace objects, 1(200KB) LOS objects, 49% free, 17MB/35MB, paused 31us,21us total 341.251ms
+10-31 01:30:28.136  1473  5874 I Icing   : Indexing done com.google.android.gms-apps
+10-31 01:30:28.505  1473  5874 I Icing   : Indexing com.google.android.gms-internal.3p:MobileApplication from com.google.android.gms
+10-31 01:30:28.538  1473  5874 I Icing   : Indexing done com.google.android.gms-internal.3p:MobileApplication
+10-31 01:30:28.668   522  2492 W JobScheduler: Job didn't exist in JobStore: 8eed5a2 #u0a154/7 com.google.android.contacts/com.google.android.apps.contacts.shortcut.ShortcutJobService
+10-31 01:30:29.058  5085  5104 D EGL_emulation: app_time_stats: avg=76.32ms min=57.09ms max=98.60ms count=14
+10-31 01:30:29.058  5882  5882 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 0 <<<<<<
+10-31 01:30:29.063  5882  5882 I AndroidRuntime: Using default boot image
+10-31 01:30:29.063  5882  5882 I AndroidRuntime: Leaving lock profiling enabled
+10-31 01:30:29.066  5882  5882 I app_process: Core platform API reporting enabled, enforcing=false
+10-31 01:30:29.066  5882  5882 I app_process: Using CollectorTypeCC GC.
+10-31 01:30:29.339  5882  5882 D nativeloader: InitDefaultPublicLibraries for_preload=1: libandroid.so:libaaudio.so:libamidi.so:libbinder_ndk.so:libc.so:libcamera2ndk.so:libdl.so:libEGL.so:libGLESv1_CM.so:libGLESv2.so:libGLESv3.so:libicu.so:libicui18n.so:libicuuc.so:libjnigraphics.so:liblog.so:libmediandk.so:libm.so:libnativehelper.so:libnativewindow.so:libOpenMAXAL.so:libOpenSLES.so:libRS.so:libstdc++.so:libsync.so:libvulkan.so:libwebviewchromium_plat_support.so:libz.so
+10-31 01:30:29.359  5882  5882 D app_process: Time zone APEX ICU file found: /apex/com.android.tzdata/etc/icu/icu_tzdata.dat
+10-31 01:30:29.359  5882  5882 D app_process: I18n APEX ICU file found: /apex/com.android.i18n/etc/icu/icudt72l.dat
+10-31 01:30:29.366  5882  5882 W app_process: Unexpected CPU variant for x86: x86_64.
+10-31 01:30:29.366  5882  5882 W app_process: Known variants: atom, sandybridge, silvermont, goldmont, goldmont-plus, tremont, kabylake, default
+10-31 01:30:29.410  5882  5882 D AndroidRuntime: Calling main entry com.android.commands.content.Content
+10-31 01:30:29.460  5882  5882 W System  : No Compatibility callbacks set! Querying change 263076149
+10-31 01:30:29.460  5882  5882 W System  : No Compatibility callbacks set! Querying change 263076149
+10-31 01:30:29.460  5882  5882 W System  : No Compatibility callbacks set! Querying change 263076149
+10-31 01:30:29.567   522  1888 D PackageManager: Instant App installer not found with android.intent.action.INSTALL_INSTANT_APP_PACKAGE
+10-31 01:30:29.567   522  1888 D PackageManager: Clear ephemeral installer activity
+10-31 01:30:29.592  1033  1033 D BluetoothPbapService:  onChange on contact uri 
+10-31 01:30:29.602  5882  5882 D AndroidRuntime: Shutting down VM
+10-31 01:30:29.608   522  1825 D PackageManager: Instant App installer not found with android.intent.action.INSTALL_INSTANT_APP_PACKAGE
+10-31 01:30:29.608   522  1825 D PackageManager: Clear ephemeral installer activity
+10-31 01:30:29.613  1033  5895 D BluetoothPbapUtils: primaryVersionCounter = 0, secondaryVersionCounter=0
+10-31 01:30:29.884   522   532 I system_server: Background young concurrent copying GC freed 1146434(23MB) AllocSpace objects, 4(208KB) LOS objects, 45% free, 27MB/50MB, paused 67us,55us total 121.492ms
+10-31 01:30:29.897   522  2492 W ProcessStats: Tracking association SourceState{efd6e49 com.google.android.gms.persistent/10131 ImpBg #9873} whose proc state 6 is better than process ProcessState{ada1f5a com.google.android.gms/10131 pkg=com.google.android.gms} proc state 8 (536 skipped)
+10-31 01:30:29.903  1424  2777 I NetworkScheduler.Stats: Task com.google.android.gms/com.google.android.gms.icing.proxy.IcingInternalCorporaUpdateService started execution. cause:9 exec_start_elapsed_seconds: 176 [CONTEXT service_id=218 ]
+10-31 01:30:29.910  1424  5753 I NetworkScheduler.Stats: Task com.google.android.gms/com.google.android.gms.icing.proxy.IcingInternalCorporaUpdateService finished executing. cause:9 result: 1 elapsed_millis: 131 uptime_millis: 131 exec_start_elapsed_seconds: 176 [CONTEXT service_id=218 ]
+10-31 01:30:30.074  5085  5104 D EGL_emulation: app_time_stats: avg=75.28ms min=49.11ms max=95.21ms count=13
+10-31 01:30:30.181   522   615 D ActivityManager: freezing 1929 android.process.media
+10-31 01:30:30.182   522   615 D ActivityManager: freezing 1058 com.android.settings
+10-31 01:30:30.183   522   615 D ActivityManager: freezing 3890 com.google.android.configupdater
+10-31 01:30:30.183   522   615 D ActivityManager: freezing 3743 com.android.dynsystem:dynsystem
+--
+10-31 01:30:34.223  5904  5904 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 0 <<<<<<
+10-31 01:30:34.264  5085  5104 D EGL_emulation: app_time_stats: avg=71.79ms min=52.62ms max=91.49ms count=14
+10-31 01:30:34.264  5904  5904 I AndroidRuntime: Using default boot image
+10-31 01:30:34.265  5904  5904 I AndroidRuntime: Leaving lock profiling enabled
+10-31 01:30:34.267  5904  5904 I app_process: Core platform API reporting enabled, enforcing=false
+10-31 01:30:34.269  5904  5904 I app_process: Using CollectorTypeCC GC.
+10-31 01:30:34.546  5904  5904 D nativeloader: InitDefaultPublicLibraries for_preload=1: libandroid.so:libaaudio.so:libamidi.so:libbinder_ndk.so:libc.so:libcamera2ndk.so:libdl.so:libEGL.so:libGLESv1_CM.so:libGLESv2.so:libGLESv3.so:libicu.so:libicui18n.so:libicuuc.so:libjnigraphics.so:liblog.so:libmediandk.so:libm.so:libnativehelper.so:libnativewindow.so:libOpenMAXAL.so:libOpenSLES.so:libRS.so:libstdc++.so:libsync.so:libvulkan.so:libwebviewchromium_plat_support.so:libz.so
+10-31 01:30:34.609  5904  5904 D app_process: Time zone APEX ICU file found: /apex/com.android.tzdata/etc/icu/icu_tzdata.dat
+10-31 01:30:34.609  5904  5904 D app_process: I18n APEX ICU file found: /apex/com.android.i18n/etc/icu/icudt72l.dat
+10-31 01:30:34.633  5904  5904 W app_process: Unexpected CPU variant for x86: x86_64.
+10-31 01:30:34.633  5904  5904 W app_process: Known variants: atom, sandybridge, silvermont, goldmont, goldmont-plus, tremont, kabylake, default
+10-31 01:30:34.728  5904  5904 D AndroidRuntime: Calling main entry com.android.commands.content.Content
+10-31 01:30:34.732  5904  5904 W System  : No Compatibility callbacks set! Querying change 263076149
+10-31 01:30:34.732  5904  5904 W System  : No Compatibility callbacks set! Querying change 263076149
+10-31 01:30:34.732  5904  5904 W System  : No Compatibility callbacks set! Querying change 263076149
+10-31 01:30:34.751  5904  5904 D AndroidRuntime: Shutting down VM
+10-31 01:30:34.756  1473  5355 W native  : W0000 00:00:1793370634.756044    5355 scoring-util.cc:87] decaying future time: time may have changed.
+10-31 01:30:34.759  1473  5355 W native  : W0000 00:00:1793370634.759482    5355 scoring-util.cc:87] decaying future time: time may have changed.
+10-31 01:30:34.759  1473  5355 W native  : W0000 00:00:1793370634.759640    5355 scoring-util.cc:87] decaying future time: time may have changed.
+10-31 01:30:35.044  1473  5355 I Icing   : Indexing com.google.android.gms-phones_data_id from com.google.android.gms
+10-31 01:30:35.164  1473  5355 I Icing   : Indexing done com.google.android.gms-phones_data_id
+10-31 01:30:35.266  5085  5104 D EGL_emulation: app_time_stats: avg=76.28ms min=63.19ms max=99.06ms count=13
+10-31 01:30:35.482   522   560 D WallpaperCropper: WPMS.generateCrop
+10-31 01:30:35.484   522   560 V WallpaperCropper: crop: w=1080 h=2400
+10-31 01:30:35.484   522   560 V WallpaperCropper: dims: w=4800 h=2400
+10-31 01:30:35.484   522   560 V WallpaperCropper: meas: w=1080 h=2400
+10-31 01:30:35.484   522   560 V WallpaperCropper: crop?=false scale?=false
+10-31 01:30:35.512   522   560 V WallpaperCropper: WPMS.generateCrop took to complete: 28ms
+--
+10-31 01:31:38.658  6694  6694 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 0 <<<<<<
+10-31 01:31:38.669  6694  6694 I AndroidRuntime: Using default boot image
+10-31 01:31:38.669  6694  6694 I AndroidRuntime: Leaving lock profiling enabled
+10-31 01:31:38.671  6694  6694 I app_process: Core platform API reporting enabled, enforcing=false
+10-31 01:31:38.671  6694  6694 I app_process: Using CollectorTypeCC GC.
+10-31 01:31:38.778  6694  6694 D nativeloader: InitDefaultPublicLibraries for_preload=1: libandroid.so:libaaudio.so:libamidi.so:libbinder_ndk.so:libc.so:libcamera2ndk.so:libdl.so:libEGL.so:libGLESv1_CM.so:libGLESv2.so:libGLESv3.so:libicu.so:libicui18n.so:libicuuc.so:libjnigraphics.so:liblog.so:libmediandk.so:libm.so:libnativehelper.so:libnativewindow.so:libOpenMAXAL.so:libOpenSLES.so:libRS.so:libstdc++.so:libsync.so:libvulkan.so:libwebviewchromium_plat_support.so:libz.so
+10-31 01:31:38.790  6694  6694 D app_process: Time zone APEX ICU file found: /apex/com.android.tzdata/etc/icu/icu_tzdata.dat
+10-31 01:31:38.790  6694  6694 D app_process: I18n APEX ICU file found: /apex/com.android.i18n/etc/icu/icudt72l.dat
+10-31 01:31:38.796  6694  6694 W app_process: Unexpected CPU variant for x86: x86_64.
+10-31 01:31:38.796  6694  6694 W app_process: Known variants: atom, sandybridge, silvermont, goldmont, goldmont-plus, tremont, kabylake, default
+10-31 01:31:38.799  6694  6694 W app_process: ClassLoaderContext shared library size mismatch. Expected=2, found=0 (PCL[]{PCL[/system/framework/android.test.base.jar*836642756]#PCL[/system/framework/android.test.mock.jar*3186112116]} | PCL[])
+10-31 01:31:38.802  6694  6694 W app_process: ClassLoaderContext classpath size mismatch. expected=0, found=1 (PCL[]{PCL[/system/framework/android.test.runner.jar*4168958247]{PCL[/system/framework/android.test.base.jar*836642756]#PCL[/system/framework/android.test.mock.jar*3186112116]}#PCL[/system/framework/android.test.base.jar*836642756]} | PCL[/system/framework/android.test.runner.jar*4168958247])
+10-31 01:31:38.816  6694  6694 D AndroidRuntime: Calling main entry com.android.commands.uiautomator.Launcher
+10-31 01:31:38.818  6694  6694 D UiAutomationConnection: Created on user UserHandle{0}
+10-31 01:31:38.818  6694  6694 I UiAutomation: Initialized for user 0 on display 0
+10-31 01:31:38.818  6694  6694 W UiAutomation: Created with deprecatead constructor, assumes DEFAULT_DISPLAY
+10-31 01:31:38.819   522  2448 D AccessibilityManagerService: changeCurrentUserForTestAutomationIfNeededLocked(0): ignoring because device doesn't support visible background users
+10-31 01:31:38.819   522  2448 I UiAutomationManager: Registering UiTestAutomationService (id=com.android.server.accessibility/UiAutomation) when called by user 0
+10-31 01:31:38.822   522  2448 W WindowMagnificationMgr: requestConnection duplicated request: connect=false, mConnectionState=DISCONNECTED
+10-31 01:31:38.823  6694  6708 V UiAutomation: Init UiAutomation@31fdd71[id=1, displayId=0, flags=0]
+10-31 01:31:38.824  1660  3559 I AiAiEcho: Settings changed for uri: content://settings/secure/accessibility_enabled
+10-31 01:31:38.824  1660  1916 I AiAiEcho: Predicting[0]: 
+10-31 01:31:38.825  1660  1916 I AiAiEcho: EchoTargets: 
+10-31 01:31:38.825  1660  1916 I AiAiEcho: Filtered by AiAi flag check: 
+10-31 01:31:38.826   522   522 D BatterySaverPolicy: accessibility changed to true, updating policy.
+--
+10-31 01:31:39.866  6694  6694 D AndroidRuntime: Shutting down VM
+10-31 01:31:39.866  1660  1916 I AiAiEcho: #postPredictionTargets: Sending updates to UISurface lockscreen with targets# 0 (types=[])
+10-31 01:31:39.868   844   844 W PageIndicator: Total number of pages invalid: 0. Assuming 1 page.
+10-31 01:31:39.870   522   522 D BatterySaverPolicy: accessibility changed to false, updating policy.
+10-31 01:31:40.063   522  2448 D OomAdjuster: Not killing cached processes
+10-31 01:31:40.170   522   615 D ActivityManager: freezing 2314 com.google.android.contacts
+10-31 01:31:40.190  6129  6282 I NetworkScheduler.Stats: Task com.google.android.gms/com.google.android.gms.phenotype.service.sync.PhenotypeConfigurator started execution. cause:4 exec_start_elapsed_seconds: 246 [CONTEXT service_id=218 ]
+10-31 01:31:40.579  6129  6325 I HeterodyneSyncer: Removed 0 invalid users [CONTEXT service_id=51 ]
+10-31 01:31:40.734  5108  5108 D TaplEvents: TIS / TouchInteractionService.onInputEvent: MotionEvent { action=ACTION_DOWN, actionButton=0, id[0]=0, x[0]=540.0, y[0]=1900.0, toolType[0]=TOOL_TYPE_FINGER, buttonState=0, classification=NONE, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=247245, downTime=247245, deviceId=-1, source=0x1002, displayId=0, eventId=-355345357 }
+10-31 01:31:40.800  6593  6612 D EGL_emulation: app_time_stats: avg=4252.67ms min=4252.67ms max=4252.67ms count=1
+10-31 01:31:41.141  5108  5108 D TaplEvents: TIS / TouchInteractionService.onInputEvent: MotionEvent { action=ACTION_UP, actionButton=0, id[0]=0, x[0]=540.0, y[0]=900.0, toolType[0]=TOOL_TYPE_FINGER, buttonState=0, classification=NONE, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=247622, downTime=247245, deviceId=-1, source=0x1002, displayId=0, eventId=-468285910 }
+10-31 01:31:41.227  6129  6325 I HeterodyneSyncScheduler: Scheduling adaptive one off task with window [14400, 604800] in seconds [CONTEXT service_id=51 ]
+10-31 01:31:41.251  6129  6688 I NamespaceManager: Package com.android.refreshratecontrol name not found! Using module version.
+--
+10-31 01:31:42.246  6723  6723 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 0 <<<<<<
+10-31 01:31:42.250  6723  6723 I AndroidRuntime: Using default boot image
+10-31 01:31:42.250  6723  6723 I AndroidRuntime: Leaving lock profiling enabled
+10-31 01:31:42.251  6723  6723 I app_process: Core platform API reporting enabled, enforcing=false
+10-31 01:31:42.251  6723  6723 I app_process: Using CollectorTypeCC GC.
+10-31 01:31:42.301  6723  6723 D nativeloader: InitDefaultPublicLibraries for_preload=1: libandroid.so:libaaudio.so:libamidi.so:libbinder_ndk.so:libc.so:libcamera2ndk.so:libdl.so:libEGL.so:libGLESv1_CM.so:libGLESv2.so:libGLESv3.so:libicu.so:libicui18n.so:libicuuc.so:libjnigraphics.so:liblog.so:libmediandk.so:libm.so:libnativehelper.so:libnativewindow.so:libOpenMAXAL.so:libOpenSLES.so:libRS.so:libstdc++.so:libsync.so:libvulkan.so:libwebviewchromium_plat_support.so:libz.so
+10-31 01:31:42.309  6723  6723 D app_process: Time zone APEX ICU file found: /apex/com.android.tzdata/etc/icu/icu_tzdata.dat
+10-31 01:31:42.309  6723  6723 D app_process: I18n APEX ICU file found: /apex/com.android.i18n/etc/icu/icudt72l.dat
+10-31 01:31:42.314  6723  6723 W app_process: Unexpected CPU variant for x86: x86_64.
+10-31 01:31:42.314  6723  6723 W app_process: Known variants: atom, sandybridge, silvermont, goldmont, goldmont-plus, tremont, kabylake, default
+10-31 01:31:42.315  6723  6723 W app_process: ClassLoaderContext shared library size mismatch. Expected=2, found=0 (PCL[]{PCL[/system/framework/android.test.base.jar*836642756]#PCL[/system/framework/android.test.mock.jar*3186112116]} | PCL[])
+10-31 01:31:42.316  6723  6723 W app_process: ClassLoaderContext classpath size mismatch. expected=0, found=1 (PCL[]{PCL[/system/framework/android.test.runner.jar*4168958247]{PCL[/system/framework/android.test.base.jar*836642756]#PCL[/system/framework/android.test.mock.jar*3186112116]}#PCL[/system/framework/android.test.base.jar*836642756]} | PCL[/system/framework/android.test.runner.jar*4168958247])
+10-31 01:31:42.328  6723  6723 D AndroidRuntime: Calling main entry com.android.commands.uiautomator.Launcher
+10-31 01:31:42.330  6723  6723 D UiAutomationConnection: Created on user UserHandle{0}
+10-31 01:31:42.330  6723  6723 I UiAutomation: Initialized for user 0 on display 0
+10-31 01:31:42.330  6723  6723 W UiAutomation: Created with deprecatead constructor, assumes DEFAULT_DISPLAY
+10-31 01:31:42.331   522  2448 D AccessibilityManagerService: changeCurrentUserForTestAutomationIfNeededLocked(0): ignoring because device doesn't support visible background users
+10-31 01:31:42.331   522  2448 I UiAutomationManager: Registering UiTestAutomationService (id=com.android.server.accessibility/UiAutomation) when called by user 0
+10-31 01:31:42.332   522  2448 W WindowMagnificationMgr: requestConnection duplicated request: connect=false, mConnectionState=DISCONNECTED
+10-31 01:31:42.333  1660  2857 I AiAiEcho: Settings changed for uri: content://settings/secure/accessibility_enabled
+10-31 01:31:42.333  6723  6737 V UiAutomation: Init UiAutomation@daa4715[id=2, displayId=0, flags=0]
+10-31 01:31:42.333  1660  1916 I AiAiEcho: Predicting[0]: 
+10-31 01:31:42.334  1660  1916 I AiAiEcho: EchoTargets: 
+10-31 01:31:42.334  1660  1916 I AiAiEcho: Filtered by AiAi flag check: 
+10-31 01:31:42.334  1660  1916 I AiAiEcho: Ranked targets strategy: SORT, count: 0, ranking metadata: 
+--
+10-31 01:31:43.367  6723  6723 D AndroidRuntime: Shutting down VM
+10-31 01:31:43.368  1660  1916 I AiAiEcho: Predicting[0]: 
+10-31 01:31:43.368  1660  1916 I AiAiEcho: EchoTargets: 
+10-31 01:31:43.368  1660  1916 I AiAiEcho: Filtered by AiAi flag check: 
+10-31 01:31:43.368  1660  1916 I AiAiEcho: Ranked targets strategy: SORT, count: 0, ranking metadata: 
+10-31 01:31:43.369  1660  1916 I AiAiEcho: #postPredictionTargets: Sending updates to UISurface lockscreen with targets# 0 (types=[])
+10-31 01:31:43.369   522   522 D BatterySaverPolicy: accessibility changed to false, updating policy.
+10-31 01:31:43.371   844   844 W PageIndicator: Total number of pages invalid: 0. Assuming 1 page.
+10-31 01:31:44.019     0     0 W healthd : battery l=100 v=5000 t=25.0 h=2 st=2 c=900000 fc=3000000 cc=10 chg=a
+10-31 01:31:44.014   522  1897 W BatteryExternalStatsWorker: error reading Bluetooth stats: 11
+10-31 01:31:44.014   522   537 D TelephonyManager: requestModemActivityInfo: Sending result to app: ModemActivityInfo{ mTimestamp=250525 mSleepTimeMs=0 mIdleTimeMs=250490 mActivityStatsTechSpecificInfo=[{mRat=UNKNOWN,mFrequencyRange=UNKNOWN,mTxTimeMs[]=[0, 0, 0, 0, 0],mRxTimeMs=0}]}
+10-31 01:31:44.034   337   337 I netd    : tetherGetStats() -> {[]} <0.46ms>
+10-31 01:31:44.227  5108  5108 D TaplEvents: TIS / TouchInteractionService.onInputEvent: MotionEvent { action=ACTION_DOWN, actionButton=0, id[0]=0, x[0]=540.0, y[0]=1900.0, toolType[0]=TOOL_TYPE_FINGER, buttonState=0, classification=NONE, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=250738, downTime=250738, deviceId=-1, source=0x1002, displayId=0, eventId=-752023011 }
+--
+10-31 01:31:45.716  6748  6748 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 0 <<<<<<
+10-31 01:31:45.720  6748  6748 I AndroidRuntime: Using default boot image
+10-31 01:31:45.720  6748  6748 I AndroidRuntime: Leaving lock profiling enabled
+10-31 01:31:45.721  6748  6748 I app_process: Core platform API reporting enabled, enforcing=false
+10-31 01:31:45.721  6748  6748 I app_process: Using CollectorTypeCC GC.
+10-31 01:31:45.770  6748  6748 D nativeloader: InitDefaultPublicLibraries for_preload=1: libandroid.so:libaaudio.so:libamidi.so:libbinder_ndk.so:libc.so:libcamera2ndk.so:libdl.so:libEGL.so:libGLESv1_CM.so:libGLESv2.so:libGLESv3.so:libicu.so:libicui18n.so:libicuuc.so:libjnigraphics.so:liblog.so:libmediandk.so:libm.so:libnativehelper.so:libnativewindow.so:libOpenMAXAL.so:libOpenSLES.so:libRS.so:libstdc++.so:libsync.so:libvulkan.so:libwebviewchromium_plat_support.so:libz.so
+10-31 01:31:45.778  6748  6748 D app_process: Time zone APEX ICU file found: /apex/com.android.tzdata/etc/icu/icu_tzdata.dat
+10-31 01:31:45.778  6748  6748 D app_process: I18n APEX ICU file found: /apex/com.android.i18n/etc/icu/icudt72l.dat
+10-31 01:31:45.783  6748  6748 W app_process: Unexpected CPU variant for x86: x86_64.
+10-31 01:31:45.783  6748  6748 W app_process: Known variants: atom, sandybridge, silvermont, goldmont, goldmont-plus, tremont, kabylake, default
+10-31 01:31:45.784  6748  6748 W app_process: ClassLoaderContext shared library size mismatch. Expected=2, found=0 (PCL[]{PCL[/system/framework/android.test.base.jar*836642756]#PCL[/system/framework/android.test.mock.jar*3186112116]} | PCL[])
+10-31 01:31:45.785  6748  6748 W app_process: ClassLoaderContext classpath size mismatch. expected=0, found=1 (PCL[]{PCL[/system/framework/android.test.runner.jar*4168958247]{PCL[/system/framework/android.test.base.jar*836642756]#PCL[/system/framework/android.test.mock.jar*3186112116]}#PCL[/system/framework/android.test.base.jar*836642756]} | PCL[/system/framework/android.test.runner.jar*4168958247])
+10-31 01:31:45.797  6748  6748 D AndroidRuntime: Calling main entry com.android.commands.uiautomator.Launcher
+10-31 01:31:45.799  6748  6748 D UiAutomationConnection: Created on user UserHandle{0}
+10-31 01:31:45.799  6748  6748 I UiAutomation: Initialized for user 0 on display 0
+10-31 01:31:45.799  6748  6748 W UiAutomation: Created with deprecatead constructor, assumes DEFAULT_DISPLAY
+10-31 01:31:45.800   522   537 D AccessibilityManagerService: changeCurrentUserForTestAutomationIfNeededLocked(0): ignoring because device doesn't support visible background users
+10-31 01:31:45.801   522   537 I UiAutomationManager: Registering UiTestAutomationService (id=com.android.server.accessibility/UiAutomation) when called by user 0
+10-31 01:31:45.802   522   537 W WindowMagnificationMgr: requestConnection duplicated request: connect=false, mConnectionState=DISCONNECTED
+10-31 01:31:45.802  1660  2857 I AiAiEcho: Settings changed for uri: content://settings/secure/accessibility_enabled
+10-31 01:31:45.803  1660  1916 I AiAiEcho: Predicting[0]: 
+10-31 01:31:45.803  1660  1916 I AiAiEcho: EchoTargets: 
+10-31 01:31:45.803  1660  1916 I AiAiEcho: Filtered by AiAi flag check: 
+10-31 01:31:45.803   522   522 D BatterySaverPolicy: accessibility changed to true, updating policy.
+10-31 01:31:45.803  1660  1916 I AiAiEcho: Ranked targets strategy: SORT, count: 0, ranking metadata: 
+--
+10-31 01:31:46.838  6748  6748 D AndroidRuntime: Shutting down VM
+10-31 01:31:47.692  5108  5108 D TaplEvents: TIS / TouchInteractionService.onInputEvent: MotionEvent { action=ACTION_DOWN, actionButton=0, id[0]=0, x[0]=540.0, y[0]=2172.0, toolType[0]=TOOL_TYPE_FINGER, buttonState=0, classification=NONE, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=254203, downTime=254203, deviceId=-1, source=0x1002, displayId=0, eventId=-850000164 }
+10-31 01:31:47.692  5108  5108 D TaplEvents: TIS / TouchInteractionService.onInputEvent: MotionEvent { action=ACTION_UP, actionButton=0, id[0]=0, x[0]=540.0, y[0]=2172.0, toolType[0]=TOOL_TYPE_FINGER, buttonState=0, classification=NONE, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=254203, downTime=254203, deviceId=-1, source=0x1002, displayId=0, eventId=-755220756 }
+10-31 01:31:47.730   399   783 W AudioFlinger: createTrack_l(): mismatch between requested flags (00000004) and output flags (00000002)
+10-31 01:31:47.732   399   783 D AF::TrackHandle: OpPlayAudio: track:55 usage:13 not muted
+10-31 01:31:47.751   399   783 D audioserver: FGS Logger Transaction failed
+10-31 01:31:47.751   399   783 D audioserver: -129
+10-31 01:31:47.814   399   507 D AudioFlinger: mixer(0x71c853df0930) throttle end: throttle time(33)
+10-31 01:31:47.843  6593  6612 D EGL_emulation: app_time_stats: avg=572.29ms min=27.88ms max=3160.42ms count=6
+10-31 01:31:47.846   522   537 D CompatibilityChangeReporter: Compat change id reported: 168419799; UID 10192; state: DISABLED
+10-31 01:31:47.847   522   537 D CompatibilityChangeReporter: Compat change id reported: 273564678; UID 10192; state: DISABLED
+10-31 01:31:47.849  6593  6593 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=falsecallback=u0.s4@88474da
+10-31 01:31:47.849   522  2495 D CoreBackPreview: Window{f000aa5 u0 com.middleearth.launcher/com.middleearth.launcher.MainActivity}: Setting back callback null
+--
+10-31 01:31:51.079  6785  6785 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 0 <<<<<<
+10-31 01:31:51.082  6785  6785 I AndroidRuntime: Using default boot image
+10-31 01:31:51.082  6785  6785 I AndroidRuntime: Leaving lock profiling enabled
+10-31 01:31:51.083  6785  6785 I app_process: Core platform API reporting enabled, enforcing=false
+10-31 01:31:51.084  6785  6785 I app_process: Using CollectorTypeCC GC.
+10-31 01:31:51.133  6785  6785 D nativeloader: InitDefaultPublicLibraries for_preload=1: libandroid.so:libaaudio.so:libamidi.so:libbinder_ndk.so:libc.so:libcamera2ndk.so:libdl.so:libEGL.so:libGLESv1_CM.so:libGLESv2.so:libGLESv3.so:libicu.so:libicui18n.so:libicuuc.so:libjnigraphics.so:liblog.so:libmediandk.so:libm.so:libnativehelper.so:libnativewindow.so:libOpenMAXAL.so:libOpenSLES.so:libRS.so:libstdc++.so:libsync.so:libvulkan.so:libwebviewchromium_plat_support.so:libz.so
+10-31 01:31:51.141  6785  6785 D app_process: Time zone APEX ICU file found: /apex/com.android.tzdata/etc/icu/icu_tzdata.dat
+10-31 01:31:51.141  6785  6785 D app_process: I18n APEX ICU file found: /apex/com.android.i18n/etc/icu/icudt72l.dat
+10-31 01:31:51.146  6785  6785 W app_process: Unexpected CPU variant for x86: x86_64.
+10-31 01:31:51.146  6785  6785 W app_process: Known variants: atom, sandybridge, silvermont, goldmont, goldmont-plus, tremont, kabylake, default
+10-31 01:31:51.147  6785  6785 W app_process: ClassLoaderContext shared library size mismatch. Expected=2, found=0 (PCL[]{PCL[/system/framework/android.test.base.jar*836642756]#PCL[/system/framework/android.test.mock.jar*3186112116]} | PCL[])
+10-31 01:31:51.147  6785  6785 W app_process: ClassLoaderContext classpath size mismatch. expected=0, found=1 (PCL[]{PCL[/system/framework/android.test.runner.jar*4168958247]{PCL[/system/framework/android.test.base.jar*836642756]#PCL[/system/framework/android.test.mock.jar*3186112116]}#PCL[/system/framework/android.test.base.jar*836642756]} | PCL[/system/framework/android.test.runner.jar*4168958247])
+10-31 01:31:51.159  6785  6785 D AndroidRuntime: Calling main entry com.android.commands.uiautomator.Launcher
+10-31 01:31:51.161  6785  6785 D UiAutomationConnection: Created on user UserHandle{0}
+10-31 01:31:51.161  6785  6785 I UiAutomation: Initialized for user 0 on display 0
+10-31 01:31:51.161  6785  6785 W UiAutomation: Created with deprecatead constructor, assumes DEFAULT_DISPLAY
+10-31 01:31:51.162   522  2495 D AccessibilityManagerService: changeCurrentUserForTestAutomationIfNeededLocked(0): ignoring because device doesn't support visible background users
+10-31 01:31:51.162   522  2495 I UiAutomationManager: Registering UiTestAutomationService (id=com.android.server.accessibility/UiAutomation) when called by user 0
+10-31 01:31:51.163   522  2495 W WindowMagnificationMgr: requestConnection duplicated request: connect=false, mConnectionState=DISCONNECTED
+10-31 01:31:51.163  1660  2857 I AiAiEcho: Settings changed for uri: content://settings/secure/accessibility_enabled
+10-31 01:31:51.164   522   522 D BatterySaverPolicy: accessibility changed to true, updating policy.
+10-31 01:31:51.164  1660  1916 I AiAiEcho: Predicting[0]: 
+10-31 01:31:51.164  1660  1916 I AiAiEcho: EchoTargets: 
+10-31 01:31:51.164  1660  1916 I AiAiEcho: Filtered by AiAi flag check: 
+10-31 01:31:51.164  1660  1916 I AiAiEcho: Ranked targets strategy: SORT, count: 0, ranking metadata: 
+--
+10-31 01:31:52.182  6785  6785 D AndroidRuntime: Shutting down VM
+10-31 01:31:52.372   522   551 D OomAdjuster: Not killing cached processes
+10-31 01:31:52.380  6195  6804 I ChimeraConfigurator: Starting update, reason: 4 urgentFeatures: vision.ocr:-1
+10-31 01:31:52.388  6195  6804 I ChimeraConfigurator: Detected pending changes for urgent request: [vision.ocr]. Pending module sets: container:2318189190800+mlkit.ocr.common,tflite_dynamite:2640104055100800+tflite_dynamite,vision_ocr:2316024025100000+vision.ocr
+10-31 01:31:52.392  6195  6804 I GmsDebugLogger: [73] 1801
+10-31 01:31:52.393  6195  6804 W ZappDownloader: No successful module downloads for requested features [vision.ocr].
+10-31 01:31:52.393  6195  6804 I GmsDebugLogger: [30] [VisionOcrDynamite.integ:231602402100000],[TfliteDynamiteDynamite.integ:264010405100800],[MlkitOcrCommon.optional:231818100800]
+10-31 01:31:52.395  6195  6804 W ChimeraConfigService: Retry attempt was throttled. [CONTEXT service_id=264 ]
+10-31 01:31:52.395  6195  6804 I GmsDebugLogger: [83] 1 [vision.ocr]
+10-31 01:31:52.396  6195  6803 W Vision  : Request for optional module download of ocr failed. Request again.
+10-31 01:31:52.396  6195  6803 W Vision  : Would have logged:
+10-31 01:31:52.396  6195  6803 W Vision  : # dsae@37884fe7
+10-31 01:31:52.396  6195  6803 I Vision  : Schedule retrying download ocr at 258908 with backoff 20 seconds
+--
+10-31 01:31:56.437  6829  6829 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 0 <<<<<<
+10-31 01:31:56.441  6829  6829 I AndroidRuntime: Using default boot image
+10-31 01:31:56.441  6829  6829 I AndroidRuntime: Leaving lock profiling enabled
+10-31 01:31:56.443  6829  6829 I app_process: Core platform API reporting enabled, enforcing=false
+10-31 01:31:56.443  6829  6829 I app_process: Using CollectorTypeCC GC.
+10-31 01:31:56.492  6829  6829 D nativeloader: InitDefaultPublicLibraries for_preload=1: libandroid.so:libaaudio.so:libamidi.so:libbinder_ndk.so:libc.so:libcamera2ndk.so:libdl.so:libEGL.so:libGLESv1_CM.so:libGLESv2.so:libGLESv3.so:libicu.so:libicui18n.so:libicuuc.so:libjnigraphics.so:liblog.so:libmediandk.so:libm.so:libnativehelper.so:libnativewindow.so:libOpenMAXAL.so:libOpenSLES.so:libRS.so:libstdc++.so:libsync.so:libvulkan.so:libwebviewchromium_plat_support.so:libz.so
+10-31 01:31:56.500  6829  6829 D app_process: Time zone APEX ICU file found: /apex/com.android.tzdata/etc/icu/icu_tzdata.dat
+10-31 01:31:56.500  6829  6829 D app_process: I18n APEX ICU file found: /apex/com.android.i18n/etc/icu/icudt72l.dat
+10-31 01:31:56.504  6829  6829 W app_process: Unexpected CPU variant for x86: x86_64.
+10-31 01:31:56.504  6829  6829 W app_process: Known variants: atom, sandybridge, silvermont, goldmont, goldmont-plus, tremont, kabylake, default
+10-31 01:31:56.505  6829  6829 W app_process: ClassLoaderContext shared library size mismatch. Expected=2, found=0 (PCL[]{PCL[/system/framework/android.test.base.jar*836642756]#PCL[/system/framework/android.test.mock.jar*3186112116]} | PCL[])
+10-31 01:31:56.506  6829  6829 W app_process: ClassLoaderContext classpath size mismatch. expected=0, found=1 (PCL[]{PCL[/system/framework/android.test.runner.jar*4168958247]{PCL[/system/framework/android.test.base.jar*836642756]#PCL[/system/framework/android.test.mock.jar*3186112116]}#PCL[/system/framework/android.test.base.jar*836642756]} | PCL[/system/framework/android.test.runner.jar*4168958247])
+10-31 01:31:56.518  6829  6829 D AndroidRuntime: Calling main entry com.android.commands.uiautomator.Launcher
+10-31 01:31:56.520  6829  6829 D UiAutomationConnection: Created on user UserHandle{0}
+10-31 01:31:56.520  6829  6829 I UiAutomation: Initialized for user 0 on display 0
+10-31 01:31:56.520  6829  6829 W UiAutomation: Created with deprecatead constructor, assumes DEFAULT_DISPLAY
+10-31 01:31:56.521   522   598 D AccessibilityManagerService: changeCurrentUserForTestAutomationIfNeededLocked(0): ignoring because device doesn't support visible background users
+10-31 01:31:56.521   522   598 I UiAutomationManager: Registering UiTestAutomationService (id=com.android.server.accessibility/UiAutomation) when called by user 0
+10-31 01:31:56.523   522   598 W WindowMagnificationMgr: requestConnection duplicated request: connect=false, mConnectionState=DISCONNECTED
+10-31 01:31:56.524  6829  6843 V UiAutomation: Init UiAutomation@28eb8d3[id=5, displayId=0, flags=0]
+10-31 01:31:56.524   522   522 D BatterySaverPolicy: accessibility changed to true, updating policy.
+10-31 01:31:56.524  1660  2857 I AiAiEcho: Settings changed for uri: content://settings/secure/accessibility_enabled
+10-31 01:31:56.525  1660  1916 I AiAiEcho: Predicting[0]: 
+10-31 01:31:56.525  1660  1916 I AiAiEcho: EchoTargets: 
+10-31 01:31:56.525  1660  1916 I AiAiEcho: Filtered by AiAi flag check: 
+--
+10-31 01:31:57.551  6829  6829 D AndroidRuntime: Shutting down VM
+10-31 01:31:57.552   522   522 D BatterySaverPolicy: accessibility changed to false, updating policy.
+10-31 01:31:58.405  5108  5108 D TaplEvents: TIS / TouchInteractionService.onInputEvent: MotionEvent { action=ACTION_DOWN, actionButton=0, id[0]=0, x[0]=539.0, y[0]=1360.0, toolType[0]=TOOL_TYPE_FINGER, buttonState=0, classification=NONE, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=264915, downTime=264915, deviceId=-1, source=0x1002, displayId=0, eventId=-886560815 }
+10-31 01:31:58.405  5108  5108 D TaplEvents: TIS / TouchInteractionService.onInputEvent: MotionEvent { action=ACTION_UP, actionButton=0, id[0]=0, x[0]=539.0, y[0]=1360.0, toolType[0]=TOOL_TYPE_FINGER, buttonState=0, classification=NONE, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=264915, downTime=264915, deviceId=-1, source=0x1002, displayId=0, eventId=-779951892 }
+10-31 01:31:58.417   399   783 D audioserver: FGS Logger Transaction failed
+10-31 01:31:58.417   399   783 D audioserver: -129
+10-31 01:31:58.470   399   507 D AudioFlinger: mixer(0x71c853df0930) throttle end: throttle time(33)
+10-31 01:31:58.549  6853  6853 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 0 <<<<<<
+10-31 01:31:58.554  6853  6853 I AndroidRuntime: Using default boot image
+10-31 01:31:58.554  6853  6853 I AndroidRuntime: Leaving lock profiling enabled
+10-31 01:31:58.557  6853  6853 I app_process: Core platform API reporting enabled, enforcing=false
+10-31 01:31:58.557  6853  6853 I app_process: Using CollectorTypeCC GC.
+10-31 01:31:58.577  1058  1096 D EGL_emulation: app_time_stats: avg=1489.17ms min=54.75ms max=2923.59ms count=2
+10-31 01:31:58.584   399   507 D audioserver: FGS Logger Transaction failed
+10-31 01:31:58.584   399   507 D audioserver: -129
+10-31 01:31:58.646  6853  6853 D nativeloader: InitDefaultPublicLibraries for_preload=1: libandroid.so:libaaudio.so:libamidi.so:libbinder_ndk.so:libc.so:libcamera2ndk.so:libdl.so:libEGL.so:libGLESv1_CM.so:libGLESv2.so:libGLESv3.so:libicu.so:libicui18n.so:libicuuc.so:libjnigraphics.so:liblog.so:libmediandk.so:libm.so:libnativehelper.so:libnativewindow.so:libOpenMAXAL.so:libOpenSLES.so:libRS.so:libstdc++.so:libsync.so:libvulkan.so:libwebviewchromium_plat_support.so:libz.so
+10-31 01:31:58.684  6853  6853 D app_process: Time zone APEX ICU file found: /apex/com.android.tzdata/etc/icu/icu_tzdata.dat
+10-31 01:31:58.684  6853  6853 D app_process: I18n APEX ICU file found: /apex/com.android.i18n/etc/icu/icudt72l.dat
+10-31 01:31:58.699  6853  6853 W app_process: Unexpected CPU variant for x86: x86_64.
+10-31 01:31:58.699  6853  6853 W app_process: Known variants: atom, sandybridge, silvermont, goldmont, goldmont-plus, tremont, kabylake, default
+10-31 01:31:58.704  6853  6853 W app_process: ClassLoaderContext shared library size mismatch. Expected=2, found=0 (PCL[]{PCL[/system/framework/android.test.base.jar*836642756]#PCL[/system/framework/android.test.mock.jar*3186112116]} | PCL[])
+10-31 01:31:58.705  6853  6853 W app_process: ClassLoaderContext classpath size mismatch. expected=0, found=1 (PCL[]{PCL[/system/framework/android.test.runner.jar*4168958247]{PCL[/system/framework/android.test.base.jar*836642756]#PCL[/system/framework/android.test.mock.jar*3186112116]}#PCL[/system/framework/android.test.base.jar*836642756]} | PCL[/system/framework/android.test.runner.jar*4168958247])
+10-31 01:31:58.729  6853  6853 D AndroidRuntime: Calling main entry com.android.commands.uiautomator.Launcher
+10-31 01:31:58.739  6853  6853 D UiAutomationConnection: Created on user UserHandle{0}
+10-31 01:31:58.739  6853  6853 I UiAutomation: Initialized for user 0 on display 0
+10-31 01:31:58.739  6853  6853 W UiAutomation: Created with deprecatead constructor, assumes DEFAULT_DISPLAY
+10-31 01:31:58.742   522  1897 D AccessibilityManagerService: changeCurrentUserForTestAutomationIfNeededLocked(0): ignoring because device doesn't support visible background users
+10-31 01:31:58.742   522  1897 I UiAutomationManager: Registering UiTestAutomationService (id=com.android.server.accessibility/UiAutomation) when called by user 0
+10-31 01:31:58.744   522  1897 W WindowMagnificationMgr: requestConnection duplicated request: connect=false, mConnectionState=DISCONNECTED
+10-31 01:31:58.745   522   522 D BatterySaverPolicy: accessibility changed to true, updating policy.
+10-31 01:31:58.750  1660  5093 I AiAiEcho: Settings changed for uri: content://settings/secure/accessibility_enabled
+10-31 01:31:58.751  1660  1916 I AiAiEcho: Predicting[0]: 
+10-31 01:31:58.751  1660  1916 I AiAiEcho: EchoTargets: 
+10-31 01:31:58.751  1660  1916 I AiAiEcho: Filtered by AiAi flag check: 
+10-31 01:31:58.751  1660  1916 I AiAiEcho: Ranked targets strategy: SORT, count: 0, ranking metadata: 
+--
+10-31 01:31:59.753  6853  6853 D AndroidRuntime: Shutting down VM
+10-31 01:31:59.753  1660  1916 I AiAiEcho: Predicting[0]: 
+10-31 01:31:59.753  1660  1916 I AiAiEcho: EchoTargets: 
+10-31 01:31:59.753  1660  1916 I AiAiEcho: Filtered by AiAi flag check: 
+10-31 01:31:59.753  1660  1916 I AiAiEcho: Ranked targets strategy: SORT, count: 0, ranking metadata: 
+10-31 01:31:59.755  1660  1916 I AiAiEcho: #postPredictionTargets: Sending updates to UISurface lockscreen with targets# 0 (types=[])
+10-31 01:31:59.756   844   844 W PageIndicator: Total number of pages invalid: 0. Assuming 1 page.
+10-31 01:31:59.759   522   522 D BatterySaverPolicy: accessibility changed to false, updating policy.
+10-31 01:32:00.002  1660  1916 I AiAiEcho: Predicting[0]: 
+10-31 01:32:00.002  1660  1916 I AiAiEcho: EchoTargets: 
+10-31 01:32:00.002  1660  1916 I AiAiEcho: Filtered by AiAi flag check: 
+10-31 01:32:00.002  1660  1916 I AiAiEcho: Ranked targets strategy: SORT, count: 0, ranking metadata: 
+10-31 01:32:00.002  1660  1916 I AiAiEcho: #postPredictionTargets: Sending updates to UISurface lockscreen with targets# 0 (types=[])
+--
+10-31 01:32:04.936  6944  6944 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 0 <<<<<<
+10-31 01:32:04.940  6944  6944 I AndroidRuntime: Using default boot image
+10-31 01:32:04.940  6944  6944 I AndroidRuntime: Leaving lock profiling enabled
+10-31 01:32:04.942  6944  6944 I app_process: Core platform API reporting enabled, enforcing=false
+10-31 01:32:04.942  6944  6944 I app_process: Using CollectorTypeCC GC.
+10-31 01:32:04.990  6944  6944 D nativeloader: InitDefaultPublicLibraries for_preload=1: libandroid.so:libaaudio.so:libamidi.so:libbinder_ndk.so:libc.so:libcamera2ndk.so:libdl.so:libEGL.so:libGLESv1_CM.so:libGLESv2.so:libGLESv3.so:libicu.so:libicui18n.so:libicuuc.so:libjnigraphics.so:liblog.so:libmediandk.so:libm.so:libnativehelper.so:libnativewindow.so:libOpenMAXAL.so:libOpenSLES.so:libRS.so:libstdc++.so:libsync.so:libvulkan.so:libwebviewchromium_plat_support.so:libz.so
+10-31 01:32:04.998  6944  6944 D app_process: Time zone APEX ICU file found: /apex/com.android.tzdata/etc/icu/icu_tzdata.dat
+10-31 01:32:04.998  6944  6944 D app_process: I18n APEX ICU file found: /apex/com.android.i18n/etc/icu/icudt72l.dat
+10-31 01:32:05.003  6944  6944 W app_process: Unexpected CPU variant for x86: x86_64.
+10-31 01:32:05.003  6944  6944 W app_process: Known variants: atom, sandybridge, silvermont, goldmont, goldmont-plus, tremont, kabylake, default
+10-31 01:32:05.004  6944  6944 W app_process: ClassLoaderContext shared library size mismatch. Expected=2, found=0 (PCL[]{PCL[/system/framework/android.test.base.jar*836642756]#PCL[/system/framework/android.test.mock.jar*3186112116]} | PCL[])
+10-31 01:32:05.005  6944  6944 W app_process: ClassLoaderContext classpath size mismatch. expected=0, found=1 (PCL[]{PCL[/system/framework/android.test.runner.jar*4168958247]{PCL[/system/framework/android.test.base.jar*836642756]#PCL[/system/framework/android.test.mock.jar*3186112116]}#PCL[/system/framework/android.test.base.jar*836642756]} | PCL[/system/framework/android.test.runner.jar*4168958247])
+10-31 01:32:05.020  6944  6944 D AndroidRuntime: Calling main entry com.android.commands.uiautomator.Launcher
+10-31 01:32:05.022  6944  6944 D UiAutomationConnection: Created on user UserHandle{0}
+10-31 01:32:05.022  6944  6944 I UiAutomation: Initialized for user 0 on display 0
+10-31 01:32:05.022  6944  6944 W UiAutomation: Created with deprecatead constructor, assumes DEFAULT_DISPLAY
+10-31 01:32:05.023   522  2492 D AccessibilityManagerService: changeCurrentUserForTestAutomationIfNeededLocked(0): ignoring because device doesn't support visible background users
+10-31 01:32:05.023   522  2492 I UiAutomationManager: Registering UiTestAutomationService (id=com.android.server.accessibility/UiAutomation) when called by user 0
+10-31 01:32:05.025   522  2492 W WindowMagnificationMgr: requestConnection duplicated request: connect=false, mConnectionState=DISCONNECTED
+10-31 01:32:05.026   522   522 D BatterySaverPolicy: accessibility changed to true, updating policy.
+10-31 01:32:05.027  1660  2957 I AiAiEcho: Settings changed for uri: content://settings/secure/accessibility_enabled
+10-31 01:32:05.029  1660  1916 I AiAiEcho: Predicting[0]: 
+10-31 01:32:05.029  1660  1916 I AiAiEcho: EchoTargets: 
+10-31 01:32:05.029  1660  1916 I AiAiEcho: Filtered by AiAi flag check: 
+10-31 01:32:05.029  1660  1916 I AiAiEcho: Ranked targets strategy: SORT, count: 0, ranking metadata: 
+--
+10-31 01:32:06.068  6944  6944 D AndroidRuntime: Shutting down VM
+10-31 01:32:06.070   522   522 D BatterySaverPolicy: accessibility changed to false, updating policy.
+10-31 01:32:06.337   522   598 D OomAdjuster: Not killing cached processes
+10-31 01:32:07.057     0     0 I binder  : undelivered transaction 716727, process died.
+10-31 01:32:06.990  6962  6962 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 0 <<<<<<
+10-31 01:32:06.994  6962  6962 I AndroidRuntime: Using default boot image
+10-31 01:32:06.994  6962  6962 I AndroidRuntime: Leaving lock profiling enabled
+10-31 01:32:06.995  6962  6962 I app_process: Core platform API reporting enabled, enforcing=false
+10-31 01:32:06.996  6962  6962 I app_process: Using CollectorTypeCC GC.
+10-31 01:32:07.034  6877  6900 D EGL_emulation: app_time_stats: avg=996.69ms min=987.01ms max=1006.37ms count=2
+10-31 01:32:07.058  6962  6962 D nativeloader: InitDefaultPublicLibraries for_preload=1: libandroid.so:libaaudio.so:libamidi.so:libbinder_ndk.so:libc.so:libcamera2ndk.so:libdl.so:libEGL.so:libGLESv1_CM.so:libGLESv2.so:libGLESv3.so:libicu.so:libicui18n.so:libicuuc.so:libjnigraphics.so:liblog.so:libmediandk.so:libm.so:libnativehelper.so:libnativewindow.so:libOpenMAXAL.so:libOpenSLES.so:libRS.so:libstdc++.so:libsync.so:libvulkan.so:libwebviewchromium_plat_support.so:libz.so
+10-31 01:32:07.069  6962  6962 D app_process: Time zone APEX ICU file found: /apex/com.android.tzdata/etc/icu/icu_tzdata.dat
+10-31 01:32:07.069  6962  6962 D app_process: I18n APEX ICU file found: /apex/com.android.i18n/etc/icu/icudt72l.dat
+10-31 01:32:07.073  6962  6962 W app_process: Unexpected CPU variant for x86: x86_64.
+10-31 01:32:07.073  6962  6962 W app_process: Known variants: atom, sandybridge, silvermont, goldmont, goldmont-plus, tremont, kabylake, default
+10-31 01:32:07.074  6962  6962 W app_process: ClassLoaderContext shared library size mismatch. Expected=2, found=0 (PCL[]{PCL[/system/framework/android.test.base.jar*836642756]#PCL[/system/framework/android.test.mock.jar*3186112116]} | PCL[])
+10-31 01:32:07.075  6962  6962 W app_process: ClassLoaderContext classpath size mismatch. expected=0, found=1 (PCL[]{PCL[/system/framework/android.test.runner.jar*4168958247]{PCL[/system/framework/android.test.base.jar*836642756]#PCL[/system/framework/android.test.mock.jar*3186112116]}#PCL[/system/framework/android.test.base.jar*836642756]} | PCL[/system/framework/android.test.runner.jar*4168958247])
+10-31 01:32:07.086  6962  6962 D AndroidRuntime: Calling main entry com.android.commands.uiautomator.Launcher
+10-31 01:32:07.088  6962  6962 D UiAutomationConnection: Created on user UserHandle{0}
+10-31 01:32:07.088  6962  6962 I UiAutomation: Initialized for user 0 on display 0
+10-31 01:32:07.089  6962  6962 W UiAutomation: Created with deprecatead constructor, assumes DEFAULT_DISPLAY
+10-31 01:32:07.089   522   598 D AccessibilityManagerService: changeCurrentUserForTestAutomationIfNeededLocked(0): ignoring because device doesn't support visible background users
+10-31 01:32:07.090   522   598 I UiAutomationManager: Registering UiTestAutomationService (id=com.android.server.accessibility/UiAutomation) when called by user 0
+10-31 01:32:07.090   522   598 W WindowMagnificationMgr: requestConnection duplicated request: connect=false, mConnectionState=DISCONNECTED
+10-31 01:32:07.091  6962  6976 V UiAutomation: Init UiAutomation@ce8c0ed[id=8, displayId=0, flags=0]
+10-31 01:32:07.092   522   522 D BatterySaverPolicy: accessibility changed to true, updating policy.
+10-31 01:32:07.092  1660  2957 I AiAiEcho: Settings changed for uri: content://settings/secure/accessibility_enabled
+10-31 01:32:07.093  1660  1916 I AiAiEcho: Predicting[0]: 
+10-31 01:32:07.093  1660  1916 I AiAiEcho: EchoTargets: 
+10-31 01:32:07.093  1660  1916 I AiAiEcho: Filtered by AiAi flag check: 
+--
+10-31 01:32:08.110  6962  6962 D AndroidRuntime: Shutting down VM
+10-31 01:32:08.113   522   522 D BatterySaverPolicy: accessibility changed to false, updating policy.
+10-31 01:32:08.114   844   844 W PageIndicator: Total number of pages invalid: 0. Assuming 1 page.
+10-31 01:32:08.252  6877  6897 D DeferrableExecutor: DeferrableExecutor unblocked after max task delay
+10-31 01:32:08.972  5108  5108 D TaplEvents: TIS / TouchInteractionService.onInputEvent: MotionEvent { action=ACTION_DOWN, actionButton=0, id[0]=0, x[0]=539.0, y[0]=993.0, toolType[0]=TOOL_TYPE_FINGER, buttonState=0, classification=NONE, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=275483, downTime=275483, deviceId=-1, source=0x1002, displayId=0, eventId=-335273962 }
+10-31 01:32:08.975  5108  5108 D TaplEvents: TIS / TouchInteractionService.onInputEvent: MotionEvent { action=ACTION_UP, actionButton=0, id[0]=0, x[0]=539.0, y[0]=993.0, toolType[0]=TOOL_TYPE_FINGER, buttonState=0, classification=NONE, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=275483, downTime=275483, deviceId=-1, source=0x1002, displayId=0, eventId=-1047621020 }
+10-31 01:32:08.986   399   416 D audioserver: FGS Logger Transaction failed
+10-31 01:32:08.987   399   416 D audioserver: -129
+10-31 01:32:08.991   844   879 V WindowManagerShell: Transition requested: android.os.BinderProxy@43628c7 TransitionRequestInfo { type = CLOSE, triggerTask = null, remoteTransition = null, displayChange = null }
+10-31 01:32:09.011   402   402 I BpBinder: onLastStrongRef automatically unlinking death recipients: 
+10-31 01:32:09.035   399   507 D AudioFlinger: mixer(0x71c853df0930) throttle end: throttle time(33)
+10-31 01:32:09.193  6877  6900 D EGL_emulation: app_time_stats: avg=1079.33ms min=994.51ms max=1164.14ms count=2
+10-31 01:32:09.193  6877  6877 I AlarmClock: AnalogAppWidgetProvider: processing Intent { act=com.android.deskclock.UPDATE_APP_WIDGET flg=0x10000010 cmp=com.google.android.deskclock/com.android.alarmclock.AnalogAppWidgetProvider } 

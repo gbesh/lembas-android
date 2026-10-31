@@ -1,0 +1,56 @@
+  set_bubbles PACKAGE PREFERENCE (0=none 1=all 2=selected) [user_id (current user if not specified)]
+  set_bubbles_channel PACKAGE CHANNEL_ID ALLOW [user_id (current user if not specified)]
+tapped Bubble
+    NotificationRecord(0x0b1e4d07: pkg=com.middleearth.launcher user=UserHandle{0} id=1 tag=bubble_com.google.android.deskclock importance=4 key=0|com.middleearth.launcher|1|bubble_com.google.android.deskclock|10192: Notification(channel=bubbles shortcut=bubble_com.google.android.deskclock contentView=null vibrate=null sound=null defaults=0x0 flags=0x1008 color=0x00000000 category=msg vis=PRIVATE))
+      uid=10192 userId=0
+      opPkg=com.middleearth.launcher
+      icon=Icon(typ=RESOURCE pkg=com.middleearth.launcher id=0x7f0600ac)
+      flags=0x1008
+      originalFlags=0x8
+      pri=0
+      key=0|com.middleearth.launcher|1|bubble_com.google.android.deskclock|10192
+      seen=false
+      groupKey=0|com.middleearth.launcher|1|bubble_com.google.android.deskclock|10192
+      notification=
+            fullscreenIntent=null
+            contentIntent=PendingIntent{1c91e34: PendingIntentRecord{ef9def9 com.middleearth.launcher startActivity (allowlist: 3798d8c:+30s0ms/0/NOTIFICATION_SERVICE/NotificationManagerService)}}
+            deleteIntent=null
+            number=0
+            groupAlertBehavior=0
+--
+                android.appInfo=ApplicationInfo (ApplicationInfo{a0de45d com.middleearth.launcher})
+                android.messages=Parcelable[] (1)
+                  [0] Bundle[{extras=Bundle[{}], sender_person=android.app.Person@4a0cc9c0, sender=Clock, text=Open in a bubble, time=1793370687298}]
+                android.messagingUser=Person (android.app.Person@9aa2142)
+--
+      shortcut=bubble_com.google.android.deskclock found valid? true
+      mUserVisOverride=-1000
+    NotificationRecord(0x0bc8b2a3: pkg=android user=UserHandle{-1} id=2147483647 tag=ranker_group importance=2 key=-1|android|2147483647|ranker_group|1000|ranker_group: Notification(channel=DEVELOPER shortcut=null contentView=null vibrate=null sound=null defaults=0x0 flags=0x702 color=0x00000000 groupKey=ranker_group vis=PRIVATE))
+      uid=1000 userId=-1
+--
+      AppSettings: com.middleearth.launcher (10192) importance=DEFAULT userSet=false
+        NotificationChannel{mId='bubbles', mName=Apps in bubbles, mDescription=hasDescription , mImportance=4, mBypassDnd=false, mLockscreenVisibility=-1000, mSound=null, mLights=false, mLightColor=0, mVibration=null, mUserLockedFields=0, mUserVisibleTaskShown=false, mVibrationEnabled=false, mShowBadge=false, mDeleted=false, mDeletedTimeMs=-1, mGroup='null', mAudioAttributes=null, mBlockableSystem=false, mAllowBubbles=-1, mImportanceLockedDefaultApp=false, mOriginalImp=4, mParent=null, mConversationId=null, mDemoted=false, mImportantConvo=false}
+      AppSettings: com.google.android.onetimeinitializer (10125)
+      AppSettings: com.android.internal.emulation.pixel_7 (10067)
+--
+      key='com.middleearth.launcher',
+      numEnqueuedByApp=1,
+      numPostedByApp=1,
+      numUpdatedByApp=1,
+10-31 18:15:37.029   844   844 V WindowManagerShell: Adding init callback for BubbleController
+10-31 18:15:37.052   844   879 V WindowManagerShell: Adding external interface from BubbleController with key extra_shell_bubbles
+10-31 18:15:37.052   844   879 V WindowManagerShell: Adding dump callback for BubbleController
+10-31 18:15:37.052   844   879 V WindowManagerShell: 	BubbleController init took 2ms
+10-31 18:16:11.468  4140  4212 W IndexDataConverter: Skipping index for null-key item IndexData.Builder {title: Bubbles,package: com.android.settings}
+10-31 01:31:27.650   522  1684 W AppSearchIcing: icing-search-engine.cc:283: Error: 5, Message: Failed to find DocumentId by key: android$com.middleearth.launcher/com.middleearth.launcher, bubble_com.google.android.deskclock;Key not found 10465987369754233170 in DynamicTrieKeyMapper /data/system_ce/0/appsearch/icing/document_dir/key_mapper_dir/key_mapper.
+10-31 01:31:27.651   522   550 E ShortcutService: Failed to report usage via AppSearch. Failed to find DocumentId by key: android$com.middleearth.launcher/com.middleearth.launcher, bubble_com.google.android.deskclock;Key not found 10465987369754233170 in DynamicTrieKeyMapper /data/system_ce/0/appsearch/icing/document_dir/key_mapper_dir/key_mapper.
+10-31 01:31:27.796   844   879 W Looper  : Slow dispatch took 218ms wmshell.main h=android.os.Handler c=com.android.wm.shell.bubbles.BubbleController$BubblesImpl$$ExternalSyntheticLambda4@5668a03 m=0
+10-31 01:31:27.864   522  1895 D CoreBackPreview: Window{775ea68 u0 Bubbles!}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@2f34514, mPriority=0, mIsAnimationCallback=false}
+10-31 01:31:27.921   844   879 W View    : requestLayout() improperly called by com.android.wm.shell.bubbles.animation.PhysicsAnimationLayout{5a3c515 V.E...... ......ID 0,0-1080,2400} during layout: running second layout pass
+10-31 01:31:27.967   522   633 I ImeTracker: com.middleearth.launcher:bf0b4c49: onRequestHide at ORIGIN_SERVER_HIDE_INPUT reason HIDE_BUBBLES
+10-31 01:31:27.991   522  1895 W InputManager-JNI: Input channel object '[Gesture Monitor] bubbles-gesture (client)' was disposed without first being removed with the input manager!
+10-31 01:31:28.286   844   879 V WindowManagerShell: Directly starting a new transition type=1 wct=WindowContainerTransaction { changes = {} hops = [{StartShortcut: options=Bundle[{android.activity.splashScreenStyle=-1, android.activity.launchCookie=android.os.Binder@26eeaad, android:activity.packageName=com.android.systemui, android.pendingIntent.backgroundActivityAllowed=true, android.pendingIntent.backgroundActivityAllowedByPermission=true, android:activity.applyActivityFlagsForBubbles=true, android:activity.animExitRes=0, android:activity.launchBounds=Rect(42, 369 - 1038, 2155), android.activity.windowingMode=6, android.activity.removeWithTaskOrganizer=true, android:transaction.hop.shortcut_calling_package=com.android.systemui, android:activity.animStartListener=null, android.activity.launchTypeBubble=true, android:activity.animType=1, android.activity.alwaysOnTop=true, android:activity.backgroundColor=0, android:activity.animEnterRes=0}] info=ShortcutInfo {id=***, flags=0x2e89 [DynIc-fPensIc-aStrRetsLiv], packageName=com.middleearth.launcher, activity=ComponentInfo{com.middleearth.launcher/com.middleearth.launcher.MainActivity}, shortLabel=***, resId=0[null], longLabel=***, resId=0[null], disabledMessage=***, resId=0[null], disabledReason=[Not disabled], categories={android.shortcut.conversation}, persons=[android.app.Person@b45940ee], icon=null, rank=0, timestamp=1793370687274, intents=null, extras=null}}] errorCallbackToken=null taskFragmentOrganizer=null } handler=com.android.wm.shell.taskview.TaskViewTransitions@388d1e2
+10-31 01:31:28.327   844   879 W Looper  : Slow dispatch took 41ms wmshell.main h=android.view.ViewRootImpl$ViewRootHandler c=com.android.wm.shell.bubbles.BubbleExpandedView$5$$ExternalSyntheticLambda0@8006973 m=0
+10-31 01:31:29.089   522  1870 W InputManager-JNI: Input channel object '[Gesture Monitor] bubbles-gesture (client)' was disposed without first being removed with the input manager!
+10-31 01:31:29.386   522   540 V WindowManager:     startWCT=WindowContainerTransaction { changes = {} hops = [{StartShortcut: options=Bundle[{android.activity.splashScreenStyle=-1, android.activity.launchCookie=android.os.BinderProxy@29ab0e, android:activity.packageName=com.android.systemui, android.pendingIntent.backgroundActivityAllowed=true, android.pendingIntent.backgroundActivityAllowedByPermission=true, android:activity.applyActivityFlagsForBubbles=true, android:activity.animExitRes=0, android:activity.launchBounds=Rect(42, 369 - 1038, 2155), android.activity.windowingMode=6, android.activity.removeWithTaskOrganizer=true, android:activity.animStartListener=null, android.activity.launchTypeBubble=true, android:activity.animType=1, android.activity.alwaysOnTop=true, android:activity.backgroundColor=0, android:activity.animEnterRes=0}] info=ShortcutInfo {id=***, flags=0x2e89 [DynIc-fPensIc-aStrRetsLiv], packageName=com.middleearth.launcher, activity=ComponentInfo{com.middleearth.launcher/com.middleearth.launcher.MainActivity}, shortLabel=***, resId=0[null], longLabel=***, resId=0[null], disabledMessage=***, resId=0[null], disabledReason=[Not disabled], categories={android.shortcut.conversation}, persons=[android.app.Person@b45940ee], icon=null, rank=0, timestamp=1793370687274, intents=null, extras=null}}] errorCallbackToken=null taskFragmentOrganizer=null }
+10-31 01:31:30.114   522  2426 W InputManager-JNI: Input channel object '[Gesture Monitor] bubbles-gesture (client)' was disposed without first being removed with the input manager!
