@@ -1019,7 +1019,12 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
             setTextSize(TypedValue.COMPLEX_UNIT_SP, sizeSp)
             setTextColor(color)
             letterSpacing = spacing
-            if (look.textShadow) setShadowLayer(14 * dp, 0f, 2 * dp, 0x99000000.toInt()) else setShadowLayer(0f, 0f, 0f, 0)
+            // night scenes: a soft halo in the sky's own colour keeps the words clear over trees and stars
+            when {
+                look.textShadow -> setShadowLayer(14 * dp, 0f, 2 * dp, 0x99000000.toInt())
+                look.darkScene -> setShadowLayer(10 * dp, 0f, 0f, (look.windowColor and 0xFFFFFF) or 0xE6000000.toInt())
+                else -> setShadowLayer(0f, 0f, 0f, 0)
+            }
         }
         home.gravity = Gravity.CENTER_HORIZONTAL
         for (v in listOf(label, clock, shire, date, meal, ornament)) {

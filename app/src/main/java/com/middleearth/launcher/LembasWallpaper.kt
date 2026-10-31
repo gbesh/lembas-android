@@ -148,8 +148,13 @@ class LembasWallpaper : WallpaperService() {
             val key = "${look.id}#$w#$h#${LocalDate.now().toEpochDay()}#${SceneArt.season()}#${Weather.code(this@LembasWallpaper)}"
             if (key == paintedKey) return
             paintedKey = key
-            scene = SceneDrawer(this@LembasWallpaper, look, w, h, dp, Weather.code(this@LembasWallpaper))
-            drawFrame()
+            val lk = look
+            val wx = Weather.code(this@LembasWallpaper)
+            // decode the layers off the main thread; keep showing the old scene until they're ready
+            Thread {
+                val sc = try { SceneDrawer(this@LembasWallpaper, lk, w, h, dp, wx) } catch (_: Throwable) { null }
+                main.post { if (paintedKey == key && sc != null) { scene = sc; drawFrame() } else if (sc == null) paintedKey = "" }
+            }.apply { priority = Thread.NORM_PRIORITY - 1; name = "lembas-wallpaper" }.start()
         }
 
         private fun drawFrame() {

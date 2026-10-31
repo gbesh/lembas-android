@@ -90,11 +90,16 @@ object SceneArt {
         while (full / (sample * 2) >= targetH) sample *= 2
         val key = "$name@$sample"
         cache.get(key)?.let { return it }
-        return try {
-            ctx.assets.open(name).use { input ->
-                BitmapFactory.decodeStream(input, null, BitmapFactory.Options().apply { inSampleSize = sample })
-            }?.also { it.prepareToDraw(); cache.put(key, it) }
-        } catch (_: Exception) { null }
+        // short of memory (a big screen, a busy phone): drop what's cached and try once more at half size
+        for (attempt in 0..1) {
+            val sz = sample shl attempt
+            try {
+                ctx.assets.open(name).use { input ->
+                    BitmapFactory.decodeStream(input, null, BitmapFactory.Options().apply { inSampleSize = sz })
+                }?.let { it.prepareToDraw(); cache.put(key, it); return it }
+            } catch (_: OutOfMemoryError) { cache.evictAll() } catch (_: Exception) { return null }
+        }
+        return null
     }
 
     /** The whole scene as one still picture (the wallpaper, the look previews). */
