@@ -250,7 +250,6 @@ class Motion(private val look: String, land: Boolean, private val weather: Int, 
     // --- Elven Silver
     private val star = if (L) floatArrayOf(1160f, 150f, 1f) else floatArrayOf(540f, 140f, 1.2f)
     private val starShader = radial(90f, 0x80BFE3EC.toInt(), 0x00BFE3EC)
-        else listOf(floatArrayOf(960f, 1300f, 8f, 520f), floatArrayOf(1000f, 1250f, 12f, 600f))
     private val lamps = if (L) listOf(floatArrayOf(880f, 760f), floatArrayOf(1030f, 700f), floatArrayOf(1180f, 740f), floatArrayOf(960f, 820f), floatArrayOf(1110f, 800f), floatArrayOf(1250f, 830f), floatArrayOf(760f, 820f))
         else listOf(floatArrayOf(420f, 1700f), floatArrayOf(560f, 1600f), floatArrayOf(700f, 1680f), floatArrayOf(500f, 1800f), floatArrayOf(640f, 1780f), floatArrayOf(330f, 1820f))
     private val lampShader = radial(if (L) 22f else 28f, 0x73F3E3B4, 0x00F3E3B4)
