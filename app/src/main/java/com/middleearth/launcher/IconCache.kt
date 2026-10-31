@@ -106,6 +106,48 @@ class IconCache private constructor(private val context: Context) {
     fun evictPackage(pkg: String) {
         val prefix = "$pkg/"
         for (k in cache.snapshot().keys) if (k.startsWith(prefix)) cache.remove(k)
+        exec.execute { dir.listFiles()?.forEach { if (it.name.startsWith("${pkg}_")) it.delete() } }
+    }
+
+    // ---------------------------------------------------------------- disk cache
+    // Rendered icons are kept on disk too, so a cold start (after a reboot, or Android reclaiming
+    // memory) shows the drawer at once instead of rendering every icon again. A file is named for
+    // the app, the look and style, and when the app was last updated, so updates redraw by themselves.
+
+    // one folder per Lembas version, so a Lembas update (new glyphs, new styles) starts afresh
+    private val dir: java.io.File = run {
+        val self = try { context.packageManager.getPackageInfo(context.packageName, 0).lastUpdateTime } catch (_: Throwable) { 0L }
+        val name = "icons-" + self.toString(36)
+        context.cacheDir.listFiles()?.forEach { if (it.name.startsWith("icons") && it.name != name) it.deleteRecursively() }
+        java.io.File(context.cacheDir, name).apply { mkdirs() }
+    }
+
+    private fun diskFile(entry: AppEntry, key: String): java.io.File {
+        val stamp = try { java.io.File(entry.info.applicationInfo.sourceDir).lastModified() } catch (_: Throwable) { 0L }
+        val h = (key + "#" + stamp).hashCode().toUInt().toString(36) + (key + stamp).length.toString(36)
+        return java.io.File(dir, "${entry.packageName}_$h.png")
+    }
+
+    private fun loadDisk(f: java.io.File): Bitmap? = try {
+        if (f.exists()) android.graphics.BitmapFactory.decodeFile(f.path)?.also { it.prepareToDraw() } else null
+    } catch (_: Throwable) { null }
+
+    private fun saveDisk(f: java.io.File, b: Bitmap) {
+        try {
+            val tmp = java.io.File(f.path + ".tmp")
+            tmp.outputStream().use { b.compress(Bitmap.CompressFormat.PNG, 100, it) }
+            tmp.renameTo(f)
+            trimDisk()
+        } catch (_: Throwable) { }
+    }
+
+    private var saves = 0
+    /** Keeps the folder under ~8 MB, dropping the oldest icons first. */
+    private fun trimDisk() {
+        if (++saves % 50 != 0) return
+        val files = dir.listFiles()?.sortedBy { it.lastModified() } ?: return
+        var total = files.sumOf { it.length() }
+        for (f in files) { if (total < 8L shl 20) break; total -= f.length(); f.delete() }
     }
 
     private fun request(entry: AppEntry, spec: Spec, key: String, cb: ((Bitmap) -> Unit)?) {
@@ -118,7 +160,8 @@ class IconCache private constructor(private val context: Context) {
         if (cb != null) newList.add(cb)
         waiting[key] = newList
         exec.execute {
-            val bmp = try { render(entry, spec) } catch (t: Throwable) { null }
+            val file = diskFile(entry, key)
+            val bmp = loadDisk(file) ?: try { render(entry, spec).also { saveDisk(file, it) } } catch (t: Throwable) { null }
             main.post {
                 val cbs = waiting.remove(key)
                 if (bmp != null) {

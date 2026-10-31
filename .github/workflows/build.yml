@@ -35,8 +35,16 @@ jobs:
           get Fraunces-Italic.ttf           "$base/fraunces/Fraunces-Italic%5BSOFT%2CWONK%2Copsz%2Cwght%5D.ttf"
           get AlegreyaSans-Medium.ttf       "$base/alegreyasans/AlegreyaSans-Medium.ttf"
           cd ..
-          # phone: assets/fonts with their family names
-          mkdir -p app/src/main/assets/fonts && cp fonts/*.ttf app/src/main/assets/fonts/
+          # keep only the letters Lembas uses (Latin, accents, punctuation, a few symbols): a
+          # smaller app, the same look; the variable axes stay
+          pip install --quiet fonttools
+          mkdir -p app/src/main/assets/fonts
+          for f in fonts/*.ttf; do
+            pyftsubset "$f" --output-file="app/src/main/assets/fonts/$(basename "$f")" \
+              --unicodes="U+0020-007E,U+00A0-017F,U+0218-021B,U+02BC,U+02C6,U+02DA,U+02DC,U+1E00-1EFF,U+2000-206F,U+20AC,U+2116,U+2122,U+2190-2193,U+2212,U+2215,U+221E,U+2248,U+2260,U+2264,U+2265,U+25CF,U+2600-2606,U+263C,U+2726,U+2727" \
+              --layout-features='*' --notdef-outline --name-IDs='*' --no-hinting
+          done
+          du -ch fonts/*.ttf | tail -1; du -ch app/src/main/assets/fonts/*.ttf | tail -1
 
       - uses: gradle/actions/setup-gradle@v4
 

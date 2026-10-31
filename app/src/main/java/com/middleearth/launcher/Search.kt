@@ -88,16 +88,18 @@ class SearchEngine(private val activity: Activity, private val repo: AppReposito
         val apps = matchApps(n)
         val sc = matchShortcuts(n)
         val calc = Calculator.evaluate(q)
-        done(assemble(q, calc, apps, sc, null))
+        val cmds = Commands.evaluate(activity, q) { if (gen == generation) search(query, done) }
+        done(assemble(q, calc, cmds, apps, sc, null))
         if (contactsAllowed && q.length >= 2) exec.execute {
             val contacts = queryContacts(q)
-            main.post { if (gen == generation) done(assemble(q, calc, apps, sc, contacts)) }
+            main.post { if (gen == generation) done(assemble(q, calc, cmds, apps, sc, contacts)) }
         }
     }
 
-    private fun assemble(q: String, calc: String?, apps: List<AppEntry>, sc: List<Pair<ShortcutInfo, AppEntry?>>, contacts: List<Hit.Contact>?): List<Hit> {
+    private fun assemble(q: String, calc: String?, cmds: List<Hit>, apps: List<AppEntry>, sc: List<Pair<ShortcutInfo, AppEntry?>>, contacts: List<Hit.Contact>?): List<Hit> {
         val out = ArrayList<Hit>()
         if (calc != null) out.add(Hit.Calc(q, calc))
+        out.addAll(cmds)
         if (apps.isNotEmpty()) { out.add(Hit.Header("Apps")); apps.mapTo(out) { Hit.App(it) } }
         if (sc.isNotEmpty()) { out.add(Hit.Header("Shortcuts")); sc.mapTo(out) { Hit.Shortcut(it.first, it.second) } }
         if (!contacts.isNullOrEmpty()) { out.add(Hit.Header("Contacts")); out.addAll(contacts) }
@@ -111,9 +113,13 @@ class SearchEngine(private val activity: Activity, private val repo: AppReposito
         return out
     }
 
-    /** Name starts with it, then a word in the name does, then initials ("gm" = Google Maps), then anywhere in the name. */
+    /**
+     * Name starts with it, then a word in the name does, then initials ("gm" = Google Maps), then
+     * anywhere in the name, then (forgiving typos) a name that's one slip away ("spotfy").
+     */
     private fun matchApps(n: String): List<AppEntry> {
         val starts = ArrayList<AppEntry>(); val words = ArrayList<AppEntry>(); val initials = ArrayList<AppEntry>(); val contains = ArrayList<AppEntry>()
+        val near = ArrayList<AppEntry>()
         for (e in repo.allApps) {
             val s = e.searchNorm
             when {
@@ -121,9 +127,11 @@ class SearchEngine(private val activity: Activity, private val repo: AppReposito
                 s.contains(" $n") -> words.add(e)
                 n.length >= 2 && initialsOf(e.norm).startsWith(n) -> initials.add(e)
                 s.contains(n) -> contains.add(e)
+                Fuzzy.close(n, e.norm) -> near.add(e)
             }
         }
-        return (starts + words + initials + contains).take(8)
+        val exact = starts + words + initials + contains
+        return (if (exact.size >= 3) exact else exact + near).take(8)
     }
 
     private fun initialsOf(s: String) = s.split(' ', '-', '.').filter { it.isNotEmpty() }.joinToString("") { it.take(1) }

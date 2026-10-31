@@ -133,7 +133,7 @@ class LembasWallpaper : WallpaperService() {
         }
 
         private fun updateRunning() {
-            val should = visible && Themes.animationsOn(this@LembasWallpaper) && power?.isPowerSaveMode != true
+            val should = visible && Themes.animationsOn(this@LembasWallpaper) && !Quiet.now(this@LembasWallpaper) && power?.isPowerSaveMode != true
             if (should == running) return
             running = should
             if (should) Choreographer.getInstance().postFrameCallback(frame)

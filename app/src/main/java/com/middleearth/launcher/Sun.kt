@@ -112,6 +112,7 @@ object Themes {
     const val PREF_ANIM = "animations"
     const val PREF_WEATHER = "weather"
     const val PREF_TILT = "tilt"
+    const val PREF_KEEP_UNTIL = "keep_until"
 
     private const val NIGHT_START = 23 * 60
     private const val NIGHT_END = 4 * 60
@@ -135,8 +136,39 @@ object Themes {
         }
     }
 
-    fun choice(context: Context): String =
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(PREF_THEME, Look.ADAPTIVE) ?: Look.ADAPTIVE
+    /** The chosen look, or Adaptive once a "keep it until…" choice has run out. */
+    fun choice(context: Context): String {
+        val p = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val until = p.getLong(PREF_KEEP_UNTIL, 0)
+        if (until > 0 && System.currentTimeMillis() >= until) {
+            p.edit().putString(PREF_THEME, Look.ADAPTIVE).remove(PREF_KEEP_UNTIL).apply()
+            return Look.ADAPTIVE
+        }
+        return p.getString(PREF_THEME, Look.ADAPTIVE) ?: Look.ADAPTIVE
+    }
+
+    /** Pick a look; [until] (epoch ms) hands back to Adaptive then, 0 keeps it for good. */
+    fun choose(context: Context, id: String, until: Long = 0) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putString(PREF_THEME, id).apply {
+            if (until > 0 && id != Look.ADAPTIVE) putLong(PREF_KEEP_UNTIL, until) else remove(PREF_KEEP_UNTIL)
+        }.apply()
+    }
+
+    fun keptUntil(context: Context): Long = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getLong(PREF_KEEP_UNTIL, 0)
+
+    /** When Adaptive would next change look on its own (sunrise, the 15° sun, sunset, 11pm, 4am). */
+    fun nextChange(now: ZonedDateTime = ZonedDateTime.now()): ZonedDateTime {
+        var next = now.plusDays(2)
+        for (d in 0..1) {
+            val date = now.toLocalDate().plusDays(d.toLong())
+            val day = Sun.today(now.zone, date)
+            for (m in listOf(day.sunrise, day.evening, day.sunset, NIGHT_START, NIGHT_END)) {
+                val t = date.atStartOfDay(now.zone).plusMinutes(m.toLong()).plusSeconds(20)
+                if (t.isAfter(now) && t.isBefore(next)) next = t
+            }
+        }
+        return next
+    }
 
     fun current(context: Context): Look {
         val c = choice(context)

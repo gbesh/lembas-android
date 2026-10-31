@@ -46,7 +46,7 @@ object Haptics {
     }
 
     fun feel(v: View?, f: Feel) {
-        if (v == null || !enabled(v.context)) return
+        if (v == null || !enabled(v.context) || Quiet.now(v.context)) return
         val sdk = Build.VERSION.SDK_INT
         val c = when (f) {
             Feel.LIGHT -> H.KEYBOARD_TAP

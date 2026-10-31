@@ -43,6 +43,12 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+    packaging {
+        // the adb client's TLS library ships for every processor; 32-bit Intel phones are gone
+        jniLibs { excludes += listOf("lib/x86/**") }
+        // BouncyCastle's post-quantum tables: unused (Lembas only makes one RSA certificate)
+        resources { excludes += listOf("org/bouncycastle/pqc/**", "META-INF/versions/9/OSGI-INF/**", "**/*.kotlin_builtins", "DebugProbesKt.bin") }
+    }
     lint {
         // Don't let style warnings stop the cloud build.
         abortOnError = false

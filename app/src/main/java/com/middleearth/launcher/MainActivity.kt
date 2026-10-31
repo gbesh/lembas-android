@@ -226,6 +226,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
     override fun onResume() {
         super.onResume()
         resumed = true
+        root.postDelayed({ if (resumed) WhatsNew.maybeShow(this, dialogTheme()) }, 900)
         if (!tickRegistered) {
             val filter = IntentFilter().apply {
                 addAction(Intent.ACTION_TIME_TICK)
@@ -709,6 +710,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         meal.text = t.meal
         meal.visibility = if (t.meal.isEmpty()) View.GONE else View.VISIBLE
         backdrop.weather = Weather.code(this)
+        backdrop.animationsOn = animationsOn() && !Quiet.now(this)
         backdrop.refresh() // rebuilds only when the season, size or look changed
     }
 
@@ -1044,7 +1046,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
     private fun applyLook() {
         modern = prefs.getString(PREF_HOME_STYLE, "modern") == "modern"
         backdrop.look = look
-        backdrop.animationsOn = animationsOn()
+        backdrop.animationsOn = animationsOn() && !Quiet.now(this)
         backdrop.parallax = prefs.getBoolean(Themes.PREF_TILT, true)
         backdrop.weather = Weather.code(this)
         val display = Fonts.get(assets, look.displayFont, look.clockWeight)
@@ -1269,6 +1271,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
     @Deprecated("Deprecated in Java")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (widgets.onResult(requestCode, resultCode)) return
+        if (Backup.onResult(this, requestCode, resultCode, data) { LookWallpaper.syncAsync(this, interactive = true); recreate() }) return
         super.onActivityResult(requestCode, resultCode, data)
     }
 
@@ -1494,10 +1497,12 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
                 SettingsSheet.Row("Clock", if (modern) "Modern" else "Classic") {
                     prefs.edit().putString(PREF_HOME_STYLE, if (modern) "classic" else "modern").apply(); recreate(); false },
                 SettingsSheet.Row("Animations", onOff(anim)) {
-                    prefs.edit().putBoolean(Themes.PREF_ANIM, !anim).apply(); backdrop.animationsOn = !anim; true },
+                    prefs.edit().putBoolean(Themes.PREF_ANIM, !anim).apply(); backdrop.animationsOn = !anim && !Quiet.now(this); true },
                 SettingsSheet.Row("Tilt depth", onOff(prefs.getBoolean(Themes.PREF_TILT, true))) {
                     val on = !prefs.getBoolean(Themes.PREF_TILT, true)
                     prefs.edit().putBoolean(Themes.PREF_TILT, on).apply(); backdrop.parallax = on; true },
+                SettingsSheet.Row("Quiet hours, 11pm–7am", if (Quiet.enabled(this)) "No vibrations, still scene" else "Off") {
+                    prefs.edit().putBoolean(Quiet.PREF, !Quiet.enabled(this)).apply(); backdrop.animationsOn = animationsOn() && !Quiet.now(this); true },
                 SettingsSheet.Row("Weather in the scene", onOff(Weather.on(this))) {
                     val on = !Weather.on(this)
                     prefs.edit().putBoolean(Themes.PREF_WEATHER, on).apply(); backdrop.weather = Weather.code(this); true },
@@ -1594,17 +1599,17 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
             SettingsSheet.Section("Watch", listOf(
                 SettingsSheet.Row("Put Lembas on your watch", "") { WatchSetup.start(this); false },
             )),
+            SettingsSheet.Section("Backup", listOf(
+                SettingsSheet.Row("Back up settings", "to a file you keep") { Backup.save(this); false },
+                SettingsSheet.Row("Restore settings", "from a backup file") { Backup.open(this); false },
+            )),
             SettingsSheet.Section("Updates", listOf(
                 SettingsSheet.Row("Automatic updates", onOff(Updater.enabled(this))) {
                     Updater.setEnabled(this, !Updater.enabled(this)); true },
                 SettingsSheet.Row("Check for updates now", "version ${versionName()}") { checkForUpdate(); false },
             )),
         )
-        SettingsSheet(this, look, Themes.choice(this), times) { id ->
-            prefs.edit().putString(Themes.PREF_THEME, id).apply()
-            LookWallpaper.syncAsync(this, interactive = true)
-            if (Themes.current(this).id != look.id) changeLook()
-        }.show(sections) { showSettings() }
+        SettingsSheet(this, look, Themes.choice(this), times) { id -> pickLook(id) }.show(sections) { showSettings() }
     }
 
     private fun versionName(): String = try {
@@ -1671,10 +1676,26 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         AlertDialog.Builder(this, dialogTheme())
             .setTitle("Theme")
             .setSingleChoiceItems(names, current) { dialog, which ->
-                prefs.edit().putString(Themes.PREF_THEME, ids[which]).apply()
-                LookWallpaper.syncAsync(this, interactive = true)
                 dialog.dismiss()
-                if (Themes.current(this).id != look.id) changeLook()
+                pickLook(ids[which])
+            }
+            .show()
+    }
+
+    /** A look chosen by hand: keep it until Adaptive's next change, or for good. */
+    private fun pickLook(id: String) {
+        fun apply(until: Long) {
+            Themes.choose(this, id, until)
+            LookWallpaper.syncAsync(this, interactive = true)
+            if (Themes.current(this).id != look.id) changeLook()
+        }
+        if (id == Look.ADAPTIVE) { apply(0); return }
+        val next = Themes.nextChange()
+        val at = next.format(DateTimeFormatter.ofPattern(if (DateFormat.is24HourFormat(this)) "H:mm" else "h:mm a"))
+        AlertDialog.Builder(this, dialogTheme())
+            .setTitle("Keep ${Look.byId(id).title}")
+            .setItems(arrayOf("Until $at, then follow the sun again", "Until I change it")) { _, which ->
+                apply(if (which == 0) next.toInstant().toEpochMilli() else 0)
             }
             .show()
     }
