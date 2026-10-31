@@ -123,7 +123,7 @@ After an update, a short **What's new** card says what changed (once).
 
 Settings → **Sync with your PC and watch** signs in with your Google account (Google's own sign-in sheet). Lembas asks for one thing only: to keep its own small settings file in a hidden folder of your Google Drive, which only Lembas can see. It can't see any of your other files, your email or anything else.
 
-The look (or follow the sun), "keep it until", weather in the scene, the clock style and the mealtimes then stay the same on the phone and on Lembas for Windows (tray → *Sync with your phone*). The newest change wins. The watch follows the phone over the watch link, with no sign-in needed. The watch app, its tile and the Lembas complications follow; the watch face keeps its own Look setting. Turn sync off in settings at any time. See [PRIVACY.md](PRIVACY.md) for exactly what's stored, and how to delete it.
+The look (or follow the sun), "keep it until", weather in the scene, the clock style and the mealtimes then stay the same on the phone and on Lembas for Windows (tray → *Sync with your phone*). The newest change wins. The watch follows the phone over the watch link, with no sign-in needed. The watch app, its tiles, the Lembas complications and the watch face all follow. Turn sync off in settings at any time. See [PRIVACY.md](PRIVACY.md) for exactly what's stored, and how to delete it.
 
 ## Theming the whole phone
 
