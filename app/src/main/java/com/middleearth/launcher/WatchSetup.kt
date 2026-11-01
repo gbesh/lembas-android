@@ -43,18 +43,31 @@ object WatchSetup {
         })
         val code = EditText(activity).apply { inputType = InputType.TYPE_CLASS_NUMBER; hint = "Pairing code" }
         box.addView(code)
+        // If the phone can't find the watch by itself (some Wi-Fi routers hide it), the addresses
+        // the watch shows can be typed in instead
+        box.addView(TextView(activity).apply {
+            text = "\nIf Lembas can't find the watch, also type the addresses the watch shows (optional):"
+            textSize = 13f
+        })
+        val pairAt = EditText(activity).apply { inputType = InputType.TYPE_CLASS_TEXT; hint = "Pairing address, e.g. 192.168.1.23:37005" }
+        val connectAt = EditText(activity).apply { inputType = InputType.TYPE_CLASS_TEXT; hint = "Wireless debugging address, e.g. 192.168.1.23:41234" }
+        box.addView(pairAt); box.addView(connectAt)
+        box.addView(TextView(activity).apply {
+            text = "The pairing address is under the code on the Pair new device screen; the other is on the main Wireless debugging screen (IP address & port)."
+            textSize = 12f
+        })
         AlertDialog.Builder(activity).setTitle("Lembas on your watch").setView(box)
-            .setPositiveButton("Install") { _, _ -> run(activity, code.text.toString().filter { it.isDigit() }) }
+            .setPositiveButton("Install") { _, _ -> run(activity, code.text.toString().filter { it.isDigit() }, pairAt.text.toString().trim(), connectAt.text.toString().trim()) }
             .setNegativeButton("Cancel", null).show()
     }
 
-    private fun run(activity: Activity, code: String) {
+    private fun run(activity: Activity, code: String, pairAt: String = "", connectAt: String = "") {
         val progress = AlertDialog.Builder(activity).setTitle("Lembas on your watch").setMessage("Looking for the watch…")
             .setCancelable(false).show()
         val main = Handler(Looper.getMainLooper())
         fun say(t: String) = main.post { progress.setMessage(t) }
         Thread {
-            val result = try { install(activity, code, ::say) } catch (e: Throwable) { "Something went wrong: ${e.message}" }
+            val result = try { install(activity, code, pairAt, connectAt, ::say) } catch (e: Throwable) { "Something went wrong: ${e.message}" }
             main.post {
                 progress.dismiss()
                 AlertDialog.Builder(activity).setTitle(if (result == null) "Lembas is on your watch" else "Lembas on your watch")
@@ -67,12 +80,23 @@ object WatchSetup {
     }
 
     /** Returns null when it worked, or what went wrong. */
-    private fun install(activity: Activity, code: String, say: (String) -> Unit): String? {
+    /** "192.168.1.23:41234" → (host, port), or null. */
+    private fun address(s: String): Pair<String, Int>? {
+        val m = Regex("^\\s*([0-9]{1,3}(?:\\.[0-9]{1,3}){3}|\\[?[0-9a-fA-F:]+\\]?)\\s*[: ]\\s*([0-9]{2,5})\\s*$").find(s) ?: return null
+        return m.groupValues[1].trim('[', ']') to m.groupValues[2].toInt()
+    }
+
+    private fun install(activity: Activity, code: String, pairAt: String, connectAt: String, say: (String) -> Unit): String? {
         val ctx = activity.applicationContext
         if (code.length < 6) return "Type the six-digit code the watch shows under Pair new device."
         val ownIps = AdbLink.ownAddresses()
-        val pairing = AdbLink.discoverAll(ctx, AdbLink.PAIRING, 8000).firstOrNull { it.first.hostAddress !in ownIps }
-            ?: return "Couldn't find the watch. Keep Pair new device open on the watch, with the watch and phone on the same Wi-Fi, and try again."
+        val typedPair = address(pairAt)
+        val typedConnect = address(connectAt)
+        if (pairAt.isNotEmpty() && typedPair == null) return "That pairing address doesn't look right: type it as the watch shows it, like 192.168.1.23:37005."
+        if (connectAt.isNotEmpty() && typedConnect == null) return "That Wireless debugging address doesn't look right: type it as the watch shows it, like 192.168.1.23:41234."
+        val pairing = typedPair?.let { java.net.InetAddress.getByName(it.first) to it.second }
+            ?: AdbLink.discoverAll(ctx, AdbLink.PAIRING, 8000).firstOrNull { it.first.hostAddress !in ownIps }
+            ?: return "Couldn't find the watch on the Wi-Fi (some routers hide it). Run this again and also type the two addresses the watch shows: the pairing address (under the code) and the Wireless debugging address (IP address & port)."
         val host = pairing.first.hostAddress ?: return "Couldn't find the watch's address."
         val link = AdbLink.watch(ctx)
         say("Pairing with the watch…")
@@ -80,8 +104,9 @@ object WatchSetup {
             return "The watch didn't accept that code. A new code appears each time you open Pair new device."
         }
         say("Connecting…")
-        val connect = AdbLink.discoverAll(ctx, AdbLink.CONNECT, 8000).firstOrNull { it.first.hostAddress == host }
-            ?: return "Paired, but couldn't connect. Keep Wireless debugging on and try again."
+        val connect = typedConnect?.let { java.net.InetAddress.getByName(it.first) to it.second }
+            ?: AdbLink.discoverAll(ctx, AdbLink.CONNECT, 8000).firstOrNull { it.first.hostAddress == host }
+            ?: return "Paired, but couldn't find where to connect. Run this again and also type the Wireless debugging address (IP address & port, on the watch's main Wireless debugging screen)."
         try { if (!link.connect(host, connect.second)) return "Paired, but couldn't connect. Keep Wireless debugging on and try again." }
         catch (e: Exception) { return "Paired, but couldn't connect: ${e.message}" }
         try {
