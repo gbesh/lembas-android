@@ -37,7 +37,7 @@ The Lembas watch face, watch launcher and tile have their own repo: **[gbesh/lem
 | **Starlit Night** (dark) | sunset → 11pm, and 4am → sunrise | Mountains over a still lake, a lakeside cabin with a lit window, twinkling stars and today's real moon phase |
 | **Elven Silver** (deep night) | 11pm → 4am | Rivendell's silver trees on a knoll, mist, lanterns and rising motes, under Eärendil's star |
 
-The scenes are the same drawings as Lembas for Windows and the watch: a tall version for an upright phone and the wide panorama for tablets and landscape. They change with **the seasons** (blossom in spring, autumn leaves, snow and bare branches in winter; flipped south of the equator), can show **the weather** outside (rain, snow, fog or heavy cloud; settings → Weather in the scene), and with **tilt depth** on, the layers shift a little as you tilt the phone. The weather comes from [Open-Meteo](https://open-meteo.com) (free, no account), asked about your time zone's main city at most once an hour; nothing else is sent.
+The scenes are the same drawings as Lembas for Windows and the watch: a tall version for an upright phone and the wide panorama for tablets and landscape. They change with **the seasons** (blossom in spring, autumn leaves, snow and bare branches in winter; flipped south of the equator), can show **the weather** outside (rain, snow, fog or heavy cloud; settings → Weather in the scene), and with **tilt depth** on, the layers shift a little as you tilt the phone. The weather comes from [Open-Meteo](https://open-meteo.com) (free, no account), asked about your time zone's main city every 20 minutes or so (or, with settings → **Weather for where you are** on, about your area, rounded to about a kilometre). Rain shows only when rain is actually falling: a forecast of light drizzle on a damp, humid evening shows as cloud.
 
 The scenes live through the day, too:
 - **The light of the hour:** the Shire warms through the afternoon, and Starlit Night deepens toward 11pm. For twenty minutes either side of sunrise and sunset, a pink and amber glow rises from the horizon.
@@ -123,7 +123,7 @@ After an update, a short **What's new** card says what changed (once).
 
 Settings → **Sync with your PC and watch** signs in with your Google account (Google's own sign-in sheet). Lembas asks for one thing only: to keep its own small settings file in a hidden folder of your Google Drive, which only Lembas can see. It can't see any of your other files, your email or anything else.
 
-The look (or follow the sun), "keep it until", weather in the scene, the clock style and the mealtimes then stay the same on the phone and on Lembas for Windows (tray → *Sync with your phone*). The newest change wins. The watch follows the phone over the watch link, with no sign-in needed. The watch app, its tiles, the Lembas complications and the watch face all follow. Turn sync off in settings at any time. See [PRIVACY.md](PRIVACY.md) for exactly what's stored, and how to delete it.
+The look (or follow the sun), "keep it until", weather in the scene, the clock style, the mealtimes (and your rounded area, if Weather for where you are is on) then stay the same on the phone and on Lembas for Windows (tray → *Sync with your phone*). The newest change wins. The watch follows the phone over the watch link, with no sign-in needed. The watch app, its tiles, the Lembas complications and the watch face all follow. Turn sync off in settings at any time. See [PRIVACY.md](PRIVACY.md) for exactly what's stored, and how to delete it.
 
 ## Theming the whole phone
 
@@ -175,7 +175,8 @@ Lembas draws its own line-art icon for over 150 common apps (phone, messages, Wh
 | `Look.kt` | The four themes: every colour, font and style choice |
 | `Sun.kt` | Sunrise / late afternoon / sunset and the Adaptive schedule |
 | `Scene.kt` | The scenes: loads the still layers (`assets/scenes`, rendered from lembas-windows' `scenes/index.html`), draws the moving parts and weather between them, tilt depth |
-| `Weather.kt` | Today's weather for the scene (Open-Meteo, hourly at most) |
+| `Weather.kt` | Today's weather for the scene (Open-Meteo, every 20 minutes or so) |
+| `Here.kt` | Weather for where you are (optional): the phone's approximate area, rounded to about a kilometre |
 | `Commands.kt` | Search commands (timers, alarms, units, currency) and typo-tolerant matching |
 | `Backup.kt`, `Quiet.kt`, `WhatsNew.kt` | Settings backup, quiet hours, the what's-new card |
 | `Sync.kt` | Sync through your Google account (Drive's hidden app folder) and the watch link |
