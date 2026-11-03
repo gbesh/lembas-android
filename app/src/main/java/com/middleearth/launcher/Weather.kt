@@ -8,8 +8,8 @@ import java.net.URL
 /**
  * Today's weather in the scene: rain, snow, fog or heavy cloud drawn over the Shire, the lake
  * and Rivendell (never over the map by the fire). It asks Open-Meteo (free, no account, no key)
- * about the time zone's main city at most once an hour; no location permission. Switch it off
- * in settings and nothing is ever fetched.
+ * about the time zone's main city (or, with "Weather for where you are" on, about where you are)
+ * every 20 minutes or so. Switch it off in settings and nothing is ever fetched.
  *
  * Codes: 0 clear · 1 cloudy · 2 fog · 3 rain · 4 snow · 5 storm.
  */
@@ -17,7 +17,7 @@ object Weather {
     private const val KEY_CODE = "weather_code"
     private const val KEY_AT = "weather_at"
     private const val KEY_WIND = "weather_wind"
-    private const val HOUR = 55 * 60_000L
+    private const val HOUR = 20 * 60_000L
     private const val STALE = 4 * 60 * 60_000L
     @Volatile private var fetching = false
 
@@ -40,24 +40,29 @@ object Weather {
         return System.currentTimeMillis() - p.getLong(KEY_AT, 0) < STALE && p.getFloat(KEY_WIND, 0f) > 30f
     }
 
-    /** WMO weather code → the scene's few kinds. */
-    fun fromWmo(w: Int) = when (w) {
+    /** WMO weather code → the scene's few kinds. Rain only when rain is falling: a forecast of
+     *  light drizzle with nothing in the gauge (a damp, humid evening) is cloud. */
+    fun fromWmo(w: Int, rain: Double = 1.0) = when (w) {
         0, 1 -> 0
         2, 3 -> 1
         45, 48 -> 2
-        in 51..67, in 80..82 -> 3
+        51, 53, 56 -> if (rain >= 0.2) 3 else 1
+        in 51..67, in 80..82 -> if (rain > 0.0) 3 else 1
         in 71..77, 85, 86 -> 4
         95, 96, 99 -> 5
         else -> 0
     }
+
+    /** Fetch again at the next look (a new place, say). */
+    fun refreshSoon(ctx: Context) { ctx.getSharedPreferences(Themes.PREFS, Context.MODE_PRIVATE).edit().putLong(KEY_AT, 0).apply(); code(ctx) }
 
     private fun refresh(ctx: Context) {
         if (fetching) return
         fetching = true
         Thread {
             try {
-                val (lat, lon) = Sun.where()
-                val url = URL("https://api.open-meteo.com/v1/forecast?latitude=%.2f&longitude=%.2f&current=weather_code,wind_speed_10m".format(java.util.Locale.US, lat, lon))
+                val (lat, lon) = Here.where(ctx) ?: Sun.where()
+                val url = URL("https://api.open-meteo.com/v1/forecast?latitude=%.2f&longitude=%.2f&current=weather_code,precipitation,wind_speed_10m".format(java.util.Locale.US, lat, lon))
                 val c = url.openConnection() as HttpURLConnection
                 c.connectTimeout = 8000; c.readTimeout = 8000
                 val body = c.inputStream.bufferedReader().use { it.readText() }
@@ -66,7 +71,7 @@ object Weather {
                 val wmo = cur.getInt("weather_code")
                 ctx.getSharedPreferences(Themes.PREFS, Context.MODE_PRIVATE).edit()
                     .putFloat(KEY_WIND, cur.optDouble("wind_speed_10m", 0.0).toFloat())
-                    .putInt(KEY_CODE, fromWmo(wmo)).putLong(KEY_AT, System.currentTimeMillis()).apply()
+                    .putInt(KEY_CODE, fromWmo(wmo, cur.optDouble("precipitation", 1.0))).putLong(KEY_AT, System.currentTimeMillis()).apply()
             } catch (_: Exception) {
                 // offline: try again next hour, keep showing the last weather until it's stale
                 ctx.getSharedPreferences(Themes.PREFS, Context.MODE_PRIVATE).edit()

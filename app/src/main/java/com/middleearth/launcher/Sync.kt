@@ -29,7 +29,8 @@ import java.util.concurrent.TimeUnit
  * other files). The newest change wins. The watch gets it from the phone over the watch link.
  *
  * Synced: the look (or follow the sun), "keep it until", weather in the scene, the clock style,
- * the hobbit mealtimes.
+ * the hobbit mealtimes, and (only with "Weather for where you are" on) your area, rounded to about
+ * a kilometre, so the PC's weather is for where you are too.
  */
 object GoogleSync {
     const val PREF_ON = "sync_google"
@@ -93,8 +94,9 @@ object GoogleSync {
             .put("weather", p.getBoolean(Themes.PREF_WEATHER, true))
             .put("clock", p.getString("home_style", "modern") ?: "modern")
             .put("meals", p.getBoolean("meals", true))
+            .apply { Here.where(ctx)?.let { (la, lo) -> put("lat", la); put("lon", lo) } }   // only with "Weather for where you are" on
     }
-    private fun sig(j: JSONObject) = "${j.optString("look")}|${j.optLong("keepUntil")}|${j.optBoolean("weather", true)}|${j.optString("clock")}|${j.optBoolean("meals", true)}"
+    private fun sig(j: JSONObject) = "${j.optString("look")}|${j.optLong("keepUntil")}|${j.optBoolean("weather", true)}|${j.optString("clock")}|${j.optBoolean("meals", true)}|${j.optDouble("lat")}|${j.optDouble("lon")}"
 
     private fun apply(ctx: Context, r: JSONObject) {
         prefs(ctx).edit()

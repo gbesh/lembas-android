@@ -1409,6 +1409,15 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == SearchEngine.REQUEST_CONTACTS && searching) runSearch(search.text.toString())
+        if (requestCode == Here.REQUEST && Here.allowed(this)) hereOn()
+    }
+
+    /** "Weather for where you are" switched on: find the area, then the weather there, then tell the PC. */
+    private fun hereOn() {
+        prefs.edit().putBoolean(Here.PREF_ON, true).apply()
+        Here.refresh(this)
+        Toast.makeText(this, "Weather for your area (rounded to about a kilometre)", Toast.LENGTH_SHORT).show()
+        android.os.Handler(mainLooper).postDelayed({ Weather.refreshSoon(this); GoogleSync.sync(this, force = true) }, 4000)
     }
 
     private fun updateEmpty() {
@@ -1687,6 +1696,10 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
                 SettingsSheet.Row("Weather in the scene", onOff(Weather.on(this))) {
                     val on = !Weather.on(this)
                     prefs.edit().putBoolean(Themes.PREF_WEATHER, on).apply(); backdrop.weather = Weather.code(this); true },
+                SettingsSheet.Row("Weather for where you are", if (Here.on(this)) "On: your area, to about a kilometre" else "Off: your time zone's main city") {
+                    if (Here.on(this)) { Here.forget(this); Weather.refreshSoon(this); GoogleSync.sync(this, force = true); true }
+                    else if (Here.allowed(this)) { hereOn(); true }
+                    else { requestPermissions(arrayOf(android.Manifest.permission.ACCESS_COARSE_LOCATION), Here.REQUEST); false } },
                 SettingsSheet.Row("App icons", when {
                     themed -> "Line art"
                     IconPacks.selected(this).isNotEmpty() -> IconPacks.installed(this).firstOrNull { it.pkg == IconPacks.selected(this) }?.label ?: "Icon pack"
