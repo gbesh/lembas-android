@@ -193,6 +193,11 @@ object GoogleSync {
                 dataMap.putString("look", p.getString(Themes.PREF_THEME, Look.ADAPTIVE) ?: Look.ADAPTIVE)
                 dataMap.putLong("keepUntil", p.getLong(Themes.PREF_KEEP_UNTIL, 0))
                 dataMap.putString("by", "phone")
+                // the sky's moods for the watch face (1 rainbow, 2 beacons, 4 smoke, 8 frost, 16 heat, 32 storm) and the forecast
+                val s = Weather.sky(ctx)
+                dataMap.putInt("sky", (if (s.rainbow) 1 else 0) or (if (s.beacons) 2 else 0) or (if (s.smoke > .15f) 4 else 0) or
+                    (if (s.frost) 8 else 0) or (if (s.heat) 16 else 0) or (if (s.storm) 32 else 0))
+                dataMap.putString("forecast", Weather.forecast(ctx))
             }.asPutDataRequest().setUrgent()
             Wearable.getDataClient(ctx).putDataItem(req)
         } catch (_: Throwable) { }   // no Google Play services, or no watch: nothing to do

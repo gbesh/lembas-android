@@ -1105,6 +1105,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         date.text = glance
         date.visibility = if (glance.isEmpty()) View.GONE else View.VISIBLE
         sunArc.update(now, is24)
+        sunArc.caption = Weather.forecast(this)
         backdrop.refresh()
     }
 
@@ -1145,6 +1146,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         ornament.visibility = View.GONE
         sunArc.visibility = View.VISIBLE
         sunArc.setStyle(look.clockColor, modernHoursColor(), sans)
+        sunArc.setCaptionFont(Fonts.get(assets, look.displayItalicFont, 400, true))
     }
 
     private fun applyLook() {
@@ -1541,6 +1543,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         lines.add(t.shire)
         lines.add("")
         lines.add("Sunrise ${hm(day.sunrise)}  ·  sunset ${hm(day.sunset)}")
+        Weather.forecast(this).takeIf { it.isNotEmpty() }?.let { lines.add(it) }
         if (Themes.choice(this) == Look.ADAPTIVE) {
             val next = Themes.nextChange()
             lines.add("${Themes.adaptive(next.plusMinutes(1)).title} from ${next.format(fmt)}")

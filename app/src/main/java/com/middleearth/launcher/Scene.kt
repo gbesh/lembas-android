@@ -176,7 +176,7 @@ object SvgPath {
  * chimney smoke and river glints; the campfire, embers and compass; stars, the moon, lake glints
  * and the cabin window; mist, lanterns and rising motes), plus the weather.
  */
-class Motion(private val look: String, land: Boolean, private val weather: Int, private val still: Boolean, private val wind: Boolean = false) {
+class Motion(private val look: String, land: Boolean, private val weather: Int, private val still: Boolean, private val wind: Boolean = false, private val sky: Weather.Sky? = null) {
     private val L = land
     private val fill = Paint(Paint.ANTI_ALIAS_FLAG)
     private val line = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeCap = Paint.Cap.ROUND }
@@ -229,7 +229,7 @@ class Motion(private val look: String, land: Boolean, private val weather: Int, 
     }
 
     // --- Red Book
-    private val fire = if (L) floatArrayOf(1210f, 820f, 1f) else floatArrayOf(560f, 1700f, 1.4f)   // the candle's wick (the candle itself is in the art)
+    private val fire = if (L) floatArrayOf(1210f, 820f, 1f) else floatArrayOf(560f, 1630f, 1.4f)   // the candle's wick (the candle itself is in the art)
     private val compass = if (L) floatArrayOf(1760f, 900f) else floatArrayOf(900f, 1900f)
     private val fireShader = radial(150f, 0x99FFC06A.toInt(), 0x00FFB25B, .4f, 0x40FFB25B)
     private class FlameShape(val path: Path, val ox: Float, val oy: Float, val dur: Float, val off: Float, val color: Int)
@@ -292,6 +292,106 @@ class Motion(private val look: String, land: Boolean, private val weather: Int, 
     private val sailShader = LinearGradient(-70f, 0f, 70f, 0f, 0xFFF6F6F2.toInt(), 0xFFC9CED8.toInt(), Shader.TileMode.CLAMP)
     private val seaTwinkles = Random(1956).let { r -> List(36) { floatArrayOf(x0 + r.nextFloat() * (x1 - x0), r.nextFloat() * havenSea * .75f, 1.3f + r.nextFloat() * 1.1f, 2f + r.nextFloat() * 3.5f, r.nextFloat() * 5f) } }
 
+    // --- the sky's moods: a rainbow after rain, beacons for severe weather, lightning, frost, heat, smoke
+    private val outdoors = look != "redbook"
+    private val rainbowOn = sky?.rainbow == true && (look == "shire" || look == "lorien")
+    private val rainbowAt = if (L) floatArrayOf(1200f, 1000f, 800f) else floatArrayOf(540f, 1720f, 720f)
+    private val rainbowColors = intArrayOf(0xFFE8574A.toInt(), 0xFFF29A3A.toInt(), 0xFFF6D35A.toInt(), 0xFF7CC26A.toInt(), 0xFF5AA8D8.toInt(), 0xFF6A6CC8.toInt(), 0xFF9A6AC0.toInt())
+    private val beaconSpots: List<FloatArray> = if (sky?.beacons != true) emptyList() else when (look) {
+        "shire" -> if (L) listOf(floatArrayOf(-220f, 488f), floatArrayOf(380f, 480f), floatArrayOf(1020f, 492f), floatArrayOf(1660f, 484f), floatArrayOf(2240f, 490f)) else listOf(floatArrayOf(110f, 1168f), floatArrayOf(420f, 1160f), floatArrayOf(760f, 1172f), floatArrayOf(1010f, 1164f))
+        "starlit" -> if (L) listOf(floatArrayOf(640f, 540f), floatArrayOf(1180f, 498f), floatArrayOf(1500f, 610f), floatArrayOf(-300f, 570f)) else listOf(floatArrayOf(260f, 1430f), floatArrayOf(620f, 1350f), floatArrayOf(900f, 1520f))
+        "elven" -> if (L) listOf(floatArrayOf(300f, 530f), floatArrayOf(1700f, 520f), floatArrayOf(-200f, 560f)) else listOf(floatArrayOf(300f, 1124f), floatArrayOf(860f, 1150f))
+        "havens" -> if (L) listOf(floatArrayOf(300f, 690f), floatArrayOf(1700f, 700f), floatArrayOf(900f, 730f)) else listOf(floatArrayOf(300f, 1520f), floatArrayOf(820f, 1566f))
+        else -> emptyList()
+    }
+    private val beaconGlow = radial(1f, 0xCCFF9A3A.toInt(), 0x00FF7A2A)
+    private val bolt = Path()
+    private val stormOn = sky?.storm == true && outdoors
+    private val frostOn = sky?.frost == true && outdoors
+    private val heatOn = sky?.heat == true && outdoors
+    private val smoke = sky?.smoke ?: 0f
+    private val horizonY = if (L) 560f else when (look) { "shire" -> 1240f; "starlit" -> 1700f; "havens" -> 1640f; "elven" -> 1300f; else -> 1500f }
+    private val frostSparks = Random(91).let { r -> List(if (L) 70 else 50) { floatArrayOf(x0 + r.nextFloat() * (x1 - x0), horizonY + r.nextFloat() * (hgt - horizonY), r.nextFloat() * 4f, 1f + r.nextFloat() * 1.6f) } }
+    private val windowDrops = Random(92).let { r -> List(12) { floatArrayOf(x0 + r.nextFloat() * (x1 - x0), 6f + r.nextFloat() * 8f, r.nextFloat() * 14f, 4f + r.nextFloat() * 5f) } }
+
+    /** Behind the land: the rainbow, and the bolt of a storm far off. */
+    private fun skyBehind(c: Canvas, t: Float) {
+        if (rainbowOn) {
+            val (cx, cy, r) = Triple(rainbowAt[0], rainbowAt[1], rainbowAt[2])
+            val band = if (L) 12f else 16f
+            line.shader = null; line.strokeWidth = band
+            for ((i, col) in rainbowColors.withIndex()) {
+                line.color = col; line.alpha = 54
+                c.drawCircle(cx, cy, r - i * band, line)
+            }
+        }
+        if (stormOn && !still) {
+            val n = floor(t / 9f).toInt(); val p = (t % 9f) / 9f
+            if (p < .03f) {   // a bolt for a quarter of a second, somewhere new each time
+                val bx = x0 + (x1 - x0) * (.15f + .7f * ((n * 0.618f) % 1f))
+                val top = if (L) 80f else 900f
+                bolt.reset(); bolt.moveTo(bx, top)
+                var x = bx; var y = top; val r = Random(n)
+                while (y < horizonY) { x += (r.nextFloat() - .5f) * 60f; y += 40f + r.nextFloat() * 40f; bolt.lineTo(x, y) }
+                line.color = 0xFFF4F2FF.toInt(); line.alpha = (255 * (1 - p / .03f)).toInt(); line.strokeWidth = if (L) 3f else 4f
+                line.style = Paint.Style.STROKE; c.drawPath(bolt, line)
+            }
+        }
+    }
+
+    /** On the far hills: beacons lit for severe weather; a shimmer over the land on a hot afternoon. */
+    private fun skyBetween(c: Canvas, t: Float) {
+        for ((i, b) in beaconSpots.withIndex()) {
+            val k = if (still) .6f else .55f + .45f * abs(sin(t * (5f + i) + i)).toFloat()
+            glowAt(c, b[0], b[1] - 8, (if (L) 34f else 46f) * (.85f + .25f * k), .6f + .4f * k, beaconGlow, 1f)
+            fill.color = 0xFFFFD27A.toInt(); fill.alpha = 255
+            val fh = (if (L) 14f else 19f) * (.8f + .3f * k); val fw = if (L) 5f else 7f
+            val fl = Path().apply { moveTo(b[0] - fw, b[1]); quadTo(b[0] - fw * .4f, b[1] - fh * .5f, b[0], b[1] - fh); quadTo(b[0] + fw * .4f, b[1] - fh * .5f, b[0] + fw, b[1]); close() }
+            c.drawPath(fl, fill)
+        }
+        if (heatOn && !still) for (k in 0 until 4) {
+            val y = horizonY - 20 + k * 22f
+            val dx = 30f * sin(t * .9f + k * 1.7f)
+            line.color = 0xFFFFF6E0.toInt(); line.alpha = 22; line.strokeWidth = if (L) 6f else 8f
+            c.drawLine(x0 - 60 + dx, y + 4 * sin(t * 2f + k), x1 + 60 + dx, y - 4 * sin(t * 2f + k), line)
+        }
+    }
+
+    /** Over everything: the storm's flash, frost, a haze of smoke, rain on the window by the Red Book. */
+    private fun skyOver(c: Canvas, t: Float) {
+        if (stormOn && !still) {
+            val p = (t % 9f) / 9f
+            val f = when { p < .012f -> .30f; p in .02f..0.03f -> .18f; else -> 0f }
+            if (f > 0) { fill.color = 0xFFF4F2FF.toInt(); fill.alpha = (255 * f).toInt(); c.drawRect(x0 - 50, -50f, x1 + 50, hgt + 50, fill) }
+        }
+        if (frostOn) {
+            glow.shader = LinearGradient(0f, horizonY, 0f, hgt, 0x00E8F2FF, 0x4DE8F2FF, Shader.TileMode.CLAMP); glow.alpha = 255
+            c.drawRect(x0 - 50, horizonY, x1 + 50, hgt + 50, glow)
+            for (sp in frostSparks) {
+                val k = if (still) .6f else breathe(t, 3f + sp[2], sp[2])
+                fill.color = 0xFFFFFFFF.toInt(); fill.alpha = (200 * k).toInt()
+                c.drawCircle(sp[0], sp[1], sp[3] * (if (L) 1f else 1.3f), fill)
+            }
+        }
+        if (smoke > 0f) {
+            val warm = if (look == "shire" || look == "redbook" || look == "lorien") 0xC0905A else 0x6A5040
+            val a = (smoke * 110).toInt().coerceIn(0, 110)
+            glow.shader = LinearGradient(0f, 0f, 0f, hgt, intArrayOf(((a / 3) shl 24) or warm, (a shl 24) or warm, ((a * 2 / 3) shl 24) or warm), floatArrayOf(0f, horizonY / hgt, 1f), Shader.TileMode.CLAMP)
+            glow.alpha = 255
+            c.drawRect(x0 - 50, -50f, x1 + 50, hgt + 50, glow)
+        }
+        if (look == "redbook" && (weather == 3 || weather == 5)) {   // rain on the window: cool light and the shadows of drops sliding down the page
+            fill.color = 0xFF8AA0C0.toInt(); fill.alpha = 20; c.drawRect(x0 - 50, -50f, x1 + 50, hgt + 50, fill)
+            if (!still) for (d in windowDrops) {
+                val p = phase(t, d[1] * 4f, d[2]); val y = -40 + (hgt + 80) * (p * p * (3 - 2 * p))   // slow, then quicker, as drops do
+                fill.color = 0xFF3A2614.toInt(); fill.alpha = 26
+                c.drawOval(d[0] - d[3], y - d[3] * 1.3f, d[0] + d[3], y + d[3] * 1.3f, fill)
+                line.color = 0xFF3A2614.toInt(); line.alpha = 12; line.strokeWidth = d[3] * .7f
+                c.drawLine(d[0], y - d[3] * 9, d[0], y - d[3], line)
+            }
+        }
+    }
+
     // --- weather
     private val drops = Random(77).let { r -> List(if (L) 90 else 70) { floatArrayOf(x0 + r.nextFloat() * (x1 - x0 + 200), .8f + r.nextFloat() * .5f, r.nextFloat() * 2, 30 + r.nextFloat() * 30) } }
     private val flakes = Random(78).let { r -> List(if (L) 80 else 70) { floatArrayOf(x0 + r.nextFloat() * (x1 - x0), 10 + r.nextFloat() * 9, r.nextFloat() * 20, 1.6f + r.nextFloat() * 2.2f) } }
@@ -299,6 +399,7 @@ class Motion(private val look: String, land: Boolean, private val weather: Int, 
 
     /** Behind the middle layer. */
     fun under(c: Canvas, t: Float) {
+        skyBehind(c, t)
         when (look) {
             "shire" -> {
                 glowAt(c, sun[0], sun[1], 1f + .08f * (if (still) 0f else breathe(t, 6f)), .8f + .2f * breathe(t, 6f), sunShader, 300f)
@@ -350,6 +451,7 @@ class Motion(private val look: String, land: Boolean, private val weather: Int, 
 
     /** Between the middle layer and the front. */
     fun moving(c: Canvas, t: Float) {
+        skyBetween(c, t)
         when (look) {
             "shire" -> for ((i, g) in riverGlints.withIndex()) glint(c, g[0], g[1], g[2], t, 4f + i % 3, i * 1.3f, if (L) 3f else 4f, 0xFFFFFFFF.toInt())
             "lorien" -> {
@@ -453,6 +555,7 @@ class Motion(private val look: String, land: Boolean, private val weather: Int, 
             }
         }
         weather(c, t)
+        skyOver(c, t)
     }
 
     private fun weather(c: Canvas, t: Float) {
@@ -461,7 +564,7 @@ class Motion(private val look: String, land: Boolean, private val weather: Int, 
             val col = if (look == "shire") 0xFFF2F4F4.toInt() else 0xFF3A4266.toInt()
             val o = if (look == "shire") .85f else .55f
             val list = if (L) listOf(Cloud(200f, 90f, 1.6f, o, 300f), Cloud(1100f, 160f, 1.3f, o, 360f), Cloud(1900f, 70f, 1.8f, o, 420f))
-                else listOf(Cloud(160f, 1080f, 1.6f, o, 260f), Cloud(800f, 1190f, 1.3f, o, 320f))
+                else listOf(Cloud(160f, 1130f, 1.6f, o, 260f), Cloud(800f, 1240f, 1.3f, o, 320f))
             for (cl in list) cloud(c, cl, t, col)
         }
         if (weather == 2) for ((y, h) in if (L) listOf(560f to 260f, 760f to 320f) else listOf(1300f to 400f, 1700f to 500f)) {
@@ -554,6 +657,7 @@ class Motion(private val look: String, land: Boolean, private val weather: Int, 
     /** How often this scene needs a new frame: gentle scenes less often, saving battery. */
     val fps: Int = when {
         weather == 3 || weather == 5 || weather == 4 -> 30
+        beaconSpots.isNotEmpty() || heatOn -> 24
         look == "shire" -> 30      // slow drifting clouds and smoke need more frames to look smooth
         look == "redbook" -> 24
         look == "elven" -> 20
@@ -564,9 +668,9 @@ class Motion(private val look: String, land: Boolean, private val weather: Int, 
 }
 
 /** Draws one scene (still layers plus the moving parts) at a given size. */
-class SceneDrawer(ctx: Context, val look: Look, val w: Int, val h: Int, dp: Float, val weather: Int, still: Boolean = false, val parallax: Boolean = false) {
+class SceneDrawer(ctx: Context, val look: Look, val w: Int, val h: Int, dp: Float, val weather: Int, still: Boolean = false, val parallax: Boolean = false, seasonOverride: String? = null) {
     val land = w > h
-    val season = SceneArt.season()
+    val season = seasonOverride ?: SceneArt.season()
     private val design = SceneArt.Design(land)
     // Rivendell on a wide upright screen (a tablet): crop evenly, so the trees stay below the clock
     private val fit = SceneArt.Fit(design, w.toFloat(), h.toFloat(), if (parallax) 1.04f else 1f,
@@ -574,7 +678,7 @@ class SceneDrawer(ctx: Context, val look: Look, val w: Int, val h: Int, dp: Floa
     val extras = SceneExtras(look.id, w, h, dp, still)
     private val names = SceneArt.LAYERS[look.id] ?: listOf("back")
     private val bitmaps = names.map { SceneArt.layer(ctx, look.id, season, land, it, (design.h * fit.s).toInt()) }
-    private val motion = Motion(look.id, land, weather, still, wind = !still && Weather.windy(ctx))
+    private val motion = Motion(look.id, land, weather, still, wind = !still && Weather.windy(ctx), sky = Weather.sky(ctx))
     private val paint = Paint(Paint.FILTER_BITMAP_FLAG or Paint.DITHER_FLAG)
     private val maxShift = 12 * dp
     val fps get() = motion.fps
@@ -651,25 +755,37 @@ class SceneView @JvmOverloads constructor(context: Context, attrs: AttributeSet?
     // over the old one for a couple of seconds, like the light changing.
     private var old: SceneDrawer? = null
     private var fadeStart = 0L
-    private val fadeMs = 2000L
+    private var fadeMs = 2000L
     private var building = 0
+    // the season turning: on its first day the old season gives way to the new over a minute,
+    // with the new season blowing in (blossom, leaves, snow, or summer's drifting seeds)
+    private var turning: String? = null
+    private val seasonPrefs = context.getSharedPreferences(Themes.PREFS, Context.MODE_PRIVATE)
 
     private fun rebuild() {
         val w = width; val h = height
         if (w <= 0 || h <= 0) return
-        val key = "${look.id}#$w#$h#${SceneArt.season()}#$weather#$parallax"
+        val sk = Weather.sky(context).let { "${it.rainbow}${it.frost}${it.heat}${(it.smoke * 10).toInt()}${it.beacons}${it.storm}" }
+        val key = "${look.id}#$w#$h#${SceneArt.season()}#$weather#$parallax#$sk"
         if (key == builtFor && drawer != null) { invalidate(); return }
         builtFor = key
         val token = ++building
         val lk = look; val wx = weather; val px = parallax; val dpx = resources.displayMetrics.density
+        val season = SceneArt.season()
+        val seen = seasonPrefs.getString("season_seen", null)
+        val turn = seen != null && seen != season && animationsOn && !Quiet.now(context)
+        seasonPrefs.edit().putString("season_seen", season).apply()
         Thread {
             val d = try { SceneDrawer(context, lk, w, h, dpx, wx, parallax = px) } catch (_: Throwable) { null }
+            val was = if (turn) try { SceneDrawer(context, lk, w, h, dpx, wx, parallax = px, seasonOverride = seen) } catch (_: Throwable) { null } else null
             post {
                 if (token != building || d == null) return@post
                 d.extras.bunting = bunting
                 val prev = drawer
-                val fade = prev != null && prev.look.id != d.look.id && animationsOn
-                old = if (fade) prev else null
+                val fade = (prev != null && prev.look.id != d.look.id && animationsOn) || was != null
+                old = was ?: if (fade) prev else null
+                fadeMs = if (was != null) 60_000L else 2000L
+                turning = if (was != null) season else null
                 fadeStart = SystemClock.uptimeMillis()
                 drawer = d
                 if (fade) ensureTicking()
@@ -700,6 +816,27 @@ class SceneView @JvmOverloads constructor(context: Context, attrs: AttributeSet?
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) = rebuild()
 
+    private val turnPaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG)
+    private val turnBits = Random(2026).let { r -> List(48) { floatArrayOf(r.nextFloat(), r.nextFloat(), .6f + r.nextFloat() * .8f, r.nextFloat() * 6.28f) } }
+    /** The new season blowing in across the old, thick in the middle of the minute, thinning at the ends. */
+    private fun drawTurning(c: Canvas, season: String, f: Float) {
+        val dp = resources.displayMetrics.density
+        val amount = sin(PI * f).toFloat()
+        val t = (SystemClock.uptimeMillis() - fadeStart) / 1000f
+        for ((i, b) in turnBits.withIndex()) {
+            val sp = b[2]
+            val y = ((b[1] + t * .05f * sp) % 1.1f - .05f) * height
+            val x = ((b[0] + t * .02f * sp + .03f * sin(t * .8f + b[3])) % 1f) * width
+            turnPaint.alpha = (230 * amount).toInt()
+            when (season) {
+                "winter" -> { turnPaint.color = 0xFFFFFFFF.toInt(); turnPaint.alpha = (230 * amount).toInt(); c.drawCircle(x, y, (2f + sp * 2f) * dp, turnPaint) }
+                "spring" -> { turnPaint.color = if (i % 3 == 0) 0xFFFFFFFF.toInt() else 0xFFF2B8C6.toInt(); turnPaint.alpha = (230 * amount).toInt(); c.save(); c.rotate(t * 60 * sp + b[3] * 57, x, y); c.drawOval(x - 4 * dp, y - 2.4f * dp, x + 4 * dp, y + 2.4f * dp, turnPaint); c.restore() }
+                "autumn" -> { turnPaint.color = intArrayOf(0xFFD9843A.toInt(), 0xFFE8A646.toInt(), 0xFFC8562E.toInt())[i % 3]; turnPaint.alpha = (230 * amount).toInt(); c.save(); c.rotate(t * 90 * sp + b[3] * 57, x, y); c.drawOval(x - 6 * dp, y - 2.8f * dp, x + 6 * dp, y + 2.8f * dp, turnPaint); c.restore() }
+                else -> { turnPaint.color = 0xFFFFF6D8.toInt(); turnPaint.alpha = (180 * amount).toInt(); c.drawCircle(x, y, 1.6f * dp, turnPaint) }   // summer: thistledown on the air
+            }
+        }
+    }
+
     private val fadePaint = android.graphics.Paint()
     override fun onDraw(canvas: Canvas) {
         val t = (SystemClock.uptimeMillis() - start) / 1000f
@@ -712,9 +849,10 @@ class SceneView @JvmOverloads constructor(context: Context, attrs: AttributeSet?
             canvas.saveLayerAlpha(0f, 0f, width.toFloat(), height.toFloat(), (255 * k).toInt())
             drawer?.draw(canvas, tt, tiltX, tiltY)
             canvas.restore()
+            turning?.let { drawTurning(canvas, it, f) }
             return
         }
-        old = null
+        old = null; turning = null
         drawer?.draw(canvas, tt, tiltX, tiltY) ?: canvas.drawColor(look.windowColor)
     }
 

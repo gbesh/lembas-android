@@ -26,6 +26,11 @@ class SunArcView @JvmOverloads constructor(ctx: Context, attrs: AttributeSet? = 
     private val sun = Paint(Paint.ANTI_ALIAS_FLAG)
     private val glow = Paint(Paint.ANTI_ALIAS_FLAG)
     private val label = Paint(Paint.ANTI_ALIAS_FLAG).apply { textAlign = Paint.Align.CENTER }
+    private val cap = Paint(Paint.ANTI_ALIAS_FLAG).apply { textAlign = Paint.Align.CENTER }
+
+    /** Today's weather as a hobbit would put it, under the arc ("" for none). */
+    var caption: String = ""
+        set(value) { if (field != value) { field = value; requestLayout(); invalidate() } }
     private val oval = RectF()
 
     private var minute = 0
@@ -44,8 +49,13 @@ class SunArcView @JvmOverloads constructor(ctx: Context, attrs: AttributeSet? = 
         label.color = (color and 0x00FFFFFF) or 0xA0000000.toInt()
         label.typeface = font
         label.textSize = 11 * dp
+        cap.color = (color and 0x00FFFFFF) or 0xC8000000.toInt()
+        cap.textSize = 13.5f * dp
         invalidate()
     }
+
+    /** The caption's face (the look's italic display face). */
+    fun setCaptionFont(font: Typeface) { cap.typeface = font; invalidate() }
 
     fun update(now: LocalDateTime, use24: Boolean) {
         val m = now.hour * 60 + now.minute
@@ -53,7 +63,7 @@ class SunArcView @JvmOverloads constructor(ctx: Context, attrs: AttributeSet? = 
         minute = m
         is24 = use24
         day = Sun.today(ZoneId.systemDefault(), now.toLocalDate())
-        contentDescription = "Sunrise ${fmt(day.sunrise)}, sunset ${fmt(day.sunset)}"
+        contentDescription = "Sunrise ${fmt(day.sunrise)}, sunset ${fmt(day.sunset)}" + (if (caption.isNotEmpty()) ". $caption" else "")
         invalidate()
     }
 
@@ -65,7 +75,7 @@ class SunArcView @JvmOverloads constructor(ctx: Context, attrs: AttributeSet? = 
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val w = MeasureSpec.getSize(widthMeasureSpec).coerceAtMost((260 * dp).toInt())
-        setMeasuredDimension(w, (64 * dp).toInt())
+        setMeasuredDimension(w, ((if (caption.isEmpty()) 64 else 86) * dp).toInt())
     }
 
     override fun onDraw(c: Canvas) {
@@ -73,7 +83,7 @@ class SunArcView @JvmOverloads constructor(ctx: Context, attrs: AttributeSet? = 
         val textW = 40 * dp
         val left = textW
         val right = w - textW
-        val baseY = height - 18 * dp
+        val baseY = (64 - 18) * dp
         val rise = 40 * dp
         // a half-ellipse from sunrise (left) over the top to sunset (right)
         oval.set(left, baseY - rise, right, baseY + rise)
@@ -95,6 +105,10 @@ class SunArcView @JvmOverloads constructor(ctx: Context, attrs: AttributeSet? = 
         val ty = baseY + 14 * dp
         c.drawText(fmt(day.sunrise), left - 6 * dp, ty, label)
         c.drawText(fmt(day.sunset), right + 6 * dp, ty, label)
+        if (caption.isNotEmpty()) {
+            val text = android.text.TextUtils.ellipsize(caption, android.text.TextPaint(cap), w - 8 * dp, android.text.TextUtils.TruncateAt.END).toString()
+            c.drawText(text, w / 2, baseY + 36 * dp, cap)
+        }
     }
 }
 
