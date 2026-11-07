@@ -195,8 +195,11 @@ object GoogleSync {
                 dataMap.putString("by", "phone")
                 // the sky's moods for the watch face (1 rainbow, 2 beacons, 4 smoke, 8 frost, 16 heat, 32 storm) and the forecast
                 val s = Weather.sky(ctx)
+                // and the calendar: 64 lanterns (Yule, Lithe), 128 fireworks (Hobbit Day evening), 256 Durin's Day, 512 the toast
                 dataMap.putInt("sky", (if (s.rainbow) 1 else 0) or (if (s.beacons) 2 else 0) or (if (s.smoke > .15f) 4 else 0) or
-                    (if (s.frost) 8 else 0) or (if (s.heat) 16 else 0) or (if (s.storm) 32 else 0))
+                    (if (s.frost) 8 else 0) or (if (s.heat) 16 else 0) or (if (s.storm) 32 else 0) or
+                    (if (Feasts.lanterns()) 64 else 0) or (if (Feasts.fireworks()) 128 else 0) or (if (Feasts.durin()) 256 else 0) or (if (Feasts.toast()) 512 else 0))
+                dataMap.putString("day", java.time.LocalDate.now().toString() + "T" + java.time.LocalTime.now().hour)   // changes hourly, so the calendar flags reach the watch on time
                 dataMap.putString("forecast", Weather.forecast(ctx))
             }.asPutDataRequest().setUrgent()
             Wearable.getDataClient(ctx).putDataItem(req)
