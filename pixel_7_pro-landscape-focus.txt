@@ -1,0 +1,2 @@
+  mCurrentFocus=Window{ab381ca u0 com.middleearth.launcher/com.middleearth.launcher.MainActivity}
+  mFocusedApp=ActivityRecord{55274a8 u0 com.middleearth.launcher/.MainActivity t8}
