@@ -1679,8 +1679,10 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
             Look.ADAPTIVE to "now ${Themes.adaptive().title}",
             Look.SHIRE.id to "${hm(day.sunrise)}–${hm(day.evening)}",
             Look.REDBOOK.id to "${hm(day.evening)}–${hm(day.sunset)}",
+            Look.LORIEN.id to "autumn, ${hm(day.evening)}–${hm(day.sunset)}",
             Look.STARLIT.id to "${hm(day.sunset)}–11pm",
-            Look.ELVEN.id to "11pm–4am",
+            Look.ELVEN.id to "11pm–2am",
+            Look.HAVENS.id to "2am–${hm(day.sunrise)}",
         )
         val sections = listOf(
             SettingsSheet.Section("Home screen", listOf(
@@ -1860,18 +1862,20 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
     }
 
     private fun showThemePicker() {
-        val ids = arrayOf(Look.ADAPTIVE, Look.SHIRE.id, Look.REDBOOK.id, Look.STARLIT.id, Look.ELVEN.id)
+        val ids = arrayOf(Look.ADAPTIVE, Look.SHIRE.id, Look.REDBOOK.id, Look.LORIEN.id, Look.STARLIT.id, Look.ELVEN.id, Look.HAVENS.id)
         val day = Sun.today()
         fun hm(m: Int): String {
             val t = java.time.LocalTime.of(m / 60, m % 60)
             return t.format(DateTimeFormatter.ofPattern(if (DateFormat.is24HourFormat(this)) "H:mm" else "h:mm a"))
         }
         val names = arrayOf(
-            "Adaptive — follows the sun: Shire Morning ${hm(day.sunrise)}–${hm(day.evening)}, Red Book until ${hm(day.sunset)}, Starlit Night until 11pm, Elven Silver until 4am",
+            "Adaptive — follows the sun: Shire Morning ${hm(day.sunrise)}–${hm(day.evening)}, Red Book until ${hm(day.sunset)} (Lothlórien in autumn), Starlit Night until 11pm, Elven Silver until 2am, the Grey Havens until sunrise",
             "Shire Morning · morning light",
             "Red Book · afternoon",
+            "Lothlórien · golden evening",
             "Starlit Night · evening",
             "Elven Silver · deep night",
+            "The Grey Havens · the small hours",
         )
         val current = ids.indexOf(Themes.choice(this)).coerceAtLeast(0)
         AlertDialog.Builder(this, dialogTheme())

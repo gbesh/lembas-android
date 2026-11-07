@@ -43,7 +43,8 @@ import kotlin.random.Random
  */
 object SceneArt {
     val LAYERS = mapOf("shire" to listOf("back", "mid", "front"), "redbook" to listOf("back"),
-        "starlit" to listOf("back", "front"), "elven" to listOf("back", "mid"))
+        "starlit" to listOf("back", "front"), "elven" to listOf("back", "mid"),
+        "lorien" to listOf("back", "mid", "front"), "havens" to listOf("back", "mid", "front"))
     val SEASONS = listOf("spring", "summer", "autumn", "winter")
 
     /** The season by the month and hemisphere (the same rule as the PC and the watch). */
@@ -270,6 +271,27 @@ class Motion(private val look: String, land: Boolean, private val weather: Int, 
     private val mistY = if (L) floatArrayOf(640f, 140f) else floatArrayOf(1500f, 220f)
     private val mistShader = LinearGradient(0f, mistY[0], 0f, mistY[0] + mistY[1], intArrayOf(0x009FC7D0, 0x1C9FC7D0, 0x009FC7D0), null, Shader.TileMode.CLAMP)
 
+    // --- Lothlórien
+    private val lorienLamps = if (L) listOf(floatArrayOf(0f, 515f), floatArrayOf(250f, 515f), floatArrayOf(1440f, 455f), floatArrayOf(1730f, 455f), floatArrayOf(1700f, 695f), floatArrayOf(2150f, 555f), floatArrayOf(860f, 640f), floatArrayOf(1000f, 700f), floatArrayOf(1180f, 620f))
+        else listOf(floatArrayOf(-30f, 1235f), floatArrayOf(230f, 1235f), floatArrayOf(840f, 1315f), floatArrayOf(1130f, 1315f), floatArrayOf(200f, 1655f), floatArrayOf(870f, 1715f), floatArrayOf(420f, 1500f), floatArrayOf(560f, 1440f), floatArrayOf(700f, 1560f))
+    private val goldLampShader = radial(if (L) 24f else 32f, 0x99FFE7A8.toInt(), 0x00FFE7A8)
+    private val leafColors = when (SceneArt.season()) { "spring" -> intArrayOf(0xFFE8C45A.toInt(), 0xFFF2D98A.toInt(), 0xFFC9A23A.toInt()); "summer" -> intArrayOf(0xFFB9C46A.toInt(), 0xFFD9D08A.toInt(), 0xFF8FA64E.toInt()); else -> intArrayOf(0xFFE9B23A.toInt(), 0xFFF6D06A.toInt(), 0xFFC98A2A.toInt()) }
+    private val leaves = Random(86).let { r -> List(16) { floatArrayOf(x0 + r.nextFloat() * (x1 - x0), 9 + r.nextFloat() * 6, r.nextFloat() * 12, r.nextFloat() * 6.28f) } }
+
+    // --- The Grey Havens
+    private val havenMoon = if (L) floatArrayOf(1480f, 210f, 46f) else floatArrayOf(760f, 1060f, 58f)
+    private val havenSea = if (L) 760f else 1640f
+    private val havenMoonShader = radial(havenMoon[2] * 3.2f, 0x80F2F4FA.toInt(), 0x00F2F4FA)
+    private val ship = if (L) floatArrayOf(1180f, 860f, 1f) else floatArrayOf(560f, 1830f, 1.35f)
+    private val beacon = if (L) floatArrayOf(2010f, 650f - 197f * .9f, 60f * .9f) else floatArrayOf(980f, 1440f - 197f * 1.3f, 60f * 1.3f)
+    private val beaconShader = radial(1f, 0xB3FFF2D0.toInt(), 0x00FFF2D0)
+    private val hull = SvgPath.parse("M-120,0 C-90,26 80,26 120,0 C124,-10 132,-30 150,-44 C140,-28 136,-14 134,0 Z M150,-44 C158,-50 166,-46 164,-38 C160,-40 156,-40 150,-44Z")
+    private val keel = SvgPath.parse("M-120,0 C-90,26 80,26 120,0 L118,8 C80,32 -90,32 -118,8Z")
+    private val sailA = SvgPath.parse("M-2,-186 C60,-150 74,-80 64,-18 L-2,-18Z")
+    private val sailB = SvgPath.parse("M-10,-170 C-60,-130 -70,-70 -62,-20 L-10,-20Z")
+    private val sailShader = LinearGradient(-70f, 0f, 70f, 0f, 0xFFF6F6F2.toInt(), 0xFFC9CED8.toInt(), Shader.TileMode.CLAMP)
+    private val seaTwinkles = Random(1956).let { r -> List(36) { floatArrayOf(x0 + r.nextFloat() * (x1 - x0), r.nextFloat() * havenSea * .75f, 1.3f + r.nextFloat() * 1.1f, 2f + r.nextFloat() * 3.5f, r.nextFloat() * 5f) } }
+
     // --- weather
     private val drops = Random(77).let { r -> List(if (L) 90 else 70) { floatArrayOf(x0 + r.nextFloat() * (x1 - x0 + 200), .8f + r.nextFloat() * .5f, r.nextFloat() * 2, 30 + r.nextFloat() * 30) } }
     private val flakes = Random(78).let { r -> List(if (L) 80 else 70) { floatArrayOf(x0 + r.nextFloat() * (x1 - x0), 10 + r.nextFloat() * 9, r.nextFloat() * 20, 1.6f + r.nextFloat() * 2.2f) } }
@@ -301,6 +323,22 @@ class Motion(private val look: String, land: Boolean, private val weather: Int, 
                 for ((i, g) in listOf(floatArrayOf(-80f, 0f, 160f), floatArrayOf(-60f, 28f, 120f), floatArrayOf(-44f, 58f, 88f), floatArrayOf(-30f, 94f, 60f), floatArrayOf(-20f, 136f, 40f), floatArrayOf(-12f, 186f, 24f)).withIndex())
                     glint(c, lakeGlint[0] + g[0], lakeGlint[1] + g[1], g[2], t, 3f + i * .5f, i * .6f, if (L) 4f else 5f, 0xFFFFF3D6.toInt())
             }
+            "havens" -> {
+                for (st in seaTwinkles) {
+                    val k = if (still) .7f else breathe(t, st[3], st[4])
+                    fill.color = 0xFFF2F2EE.toInt(); fill.alpha = (255 * (.15f + .85f * k)).toInt()
+                    c.drawCircle(st[0], st[1], st[2] * (.6f + .65f * k), fill)
+                }
+                val alt = moonAltitude()
+                if (alt > 0f) {
+                    val my = havenMoon[1] + (1f - alt) * (if (L) 330f else 520f)
+                    glowAt(c, havenMoon[0], my, 1f + .06f * breathe(t, 7f), .75f + .25f * breathe(t, 7f), havenMoonShader, havenMoon[2] * 3.2f)
+                    drawMoon(c, havenMoon[0], my, havenMoon[2])
+                }
+                shootingStar(c, t)
+                for ((i, g) in listOf(floatArrayOf(-70f, 14f, 140f), floatArrayOf(-50f, 44f, 100f), floatArrayOf(-36f, 80f, 72f), floatArrayOf(-24f, 124f, 48f), floatArrayOf(-14f, 176f, 30f)).withIndex())
+                    glint(c, havenMoon[0] + g[0], havenSea + g[1] * (if (L) 1f else 1.4f), g[2], t, 3.2f + i * .5f, i * .7f, if (L) 4f else 5f, 0xFFF2F4FA.toInt())
+            }
             "elven" -> {
                 glowAt(c, star[0], star[1], star[2] * (1f + .08f * breathe(t, 6f)), .8f + .2f * breathe(t, 6f), starShader, 90f)
                 val dx = if (still) 0f else (-120 * cos(2 * PI * phase(t, 80f, 0f))).toFloat()
@@ -314,6 +352,36 @@ class Motion(private val look: String, land: Boolean, private val weather: Int, 
     fun moving(c: Canvas, t: Float) {
         when (look) {
             "shire" -> for ((i, g) in riverGlints.withIndex()) glint(c, g[0], g[1], g[2], t, 4f + i % 3, i * 1.3f, if (L) 3f else 4f, 0xFFFFFFFF.toInt())
+            "lorien" -> {
+                for ((i, l) in lorienLamps.withIndex()) {
+                    val k = if (still) .5f else breathe(t, 3f + i % 3, i * .9f)
+                    glowAt(c, l[0], l[1], .85f + .3f * k, .6f + .4f * k, goldLampShader, if (L) 24f else 32f)
+                    fill.color = 0xFFFFF0C4.toInt(); fill.alpha = 255
+                    c.drawCircle(l[0], l[1], if (L) 4.5f else 6f, fill)
+                }
+                if (!still) for ((i, lf) in leaves.withIndex()) {   // a leaf drifting down, turning as it falls
+                    val p = phase(t, lf[1], lf[2])
+                    val x = lf[0] + 60 * sin(p * 2 * PI * 1.5 + lf[3]).toFloat(); val y = -20 + (hgt + 40) * p
+                    c.save(); c.translate(x, y); c.rotate(p * 540f + lf[3] * 57f)
+                    fill.color = leafColors[i % 3]; fill.alpha = (230 * (if (p > .85f) (1 - p) / .15f else 1f)).toInt()
+                    c.drawOval(-7f, -3.4f, 7f, 3.4f, fill)
+                    c.restore()
+                }
+            }
+            "havens" -> {
+                val k = if (still) .5f else breathe(t, 4.5f)
+                glowAt(c, beacon[0], beacon[1], beacon[2] * (.9f + .2f * k), .7f + .3f * k, beaconShader, 1f)
+                // the white ship, rising and falling on the swell
+                val rock = if (still) 0f else (1.2 * sin(2 * PI * phase(t, 8f, 0f))).toFloat()
+                val bob = if (still) 0f else (3 * sin(2 * PI * phase(t, 8f, 2f))).toFloat()
+                c.save(); c.translate(ship[0], ship[1] + bob * ship[2]); c.rotate(rock); c.scale(ship[2], ship[2])
+                fill.shader = null; fill.color = 0xFFB9C0CE.toInt(); fill.alpha = 255; c.drawPath(keel, fill)
+                fill.color = 0xFFF2F2EE.toInt(); c.drawPath(hull, fill)
+                line.color = 0xFFD8DCE4.toInt(); line.alpha = 255; line.strokeWidth = 5f; c.drawLine(-6f, -6f, -6f, -190f, line)
+                fill.shader = sailShader; c.drawPath(sailA, fill); fill.alpha = 230; c.drawPath(sailB, fill); fill.shader = null
+                fill.color = 0xFFFFF2D0.toInt(); fill.alpha = 255; c.drawCircle(-112f, -8f, 5f, fill)
+                c.restore()
+            }
             "starlit" -> {   // mist drifting on the water
                 val dx = if (still) 0f else (-120 * cos(2 * PI * phase(t, 80f, 20f))).toFloat()
                 glow.shader = lakeMistShader; glow.alpha = 255
@@ -489,6 +557,8 @@ class Motion(private val look: String, land: Boolean, private val weather: Int, 
         look == "shire" -> 30      // slow drifting clouds and smoke need more frames to look smooth
         look == "redbook" -> 24
         look == "elven" -> 20
+        look == "lorien" -> 30     // falling leaves
+        look == "havens" -> 24
         else -> 20
     }
 }

@@ -39,6 +39,8 @@ object SystemTheme {
         Look.REDBOOK.id to Palette("9A2A1C", "9A2A1C", "TONAL_SPOT", dark = false),   // red ink on parchment
         Look.STARLIT.id to Palette("C9A452", "C9A452", "TONAL_SPOT", dark = true),    // gold in the night
         Look.ELVEN.id to Palette("8FA6B2", "8FA6B2", "SPRITZ", dark = true),          // quiet silver
+        Look.LORIEN.id to Palette("D9A43A", "D9A43A", "TONAL_SPOT", dark = true),     // mallorn gold at dusk
+        Look.HAVENS.id to Palette("8A9AB8", "8A9AB8", "SPRITZ", dark = true),         // the grey sea before dawn
     )
 
     fun permitted(ctx: Context): Boolean =

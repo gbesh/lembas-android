@@ -161,7 +161,7 @@ class SettingsSheet(
     /** One card per look, painted from the real scene (in the background, so the sheet opens at once). */
     private fun previews(dialog: Dialog): View {
         val row = LinearLayout(activity).apply { orientation = LinearLayout.HORIZONTAL }
-        val ids = listOf(Look.ADAPTIVE, Look.SHIRE.id, Look.REDBOOK.id, Look.STARLIT.id, Look.ELVEN.id)
+        val ids = listOf(Look.ADAPTIVE) + Look.ALL.map { it.id }
         val w = px(88f)
         val h = px(150f)
         val images = HashMap<String, ImageView>()

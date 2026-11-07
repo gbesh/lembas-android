@@ -116,23 +116,26 @@ object Themes {
     const val PREF_PAUSE_UNTIL = "pause_until"
 
     private const val NIGHT_START = 23 * 60
-    private const val NIGHT_END = 4 * 60
+    private const val NIGHT_END = 2 * 60
 
     /**
      * Adaptive, following the sun:
      *  sunrise → late afternoon  Shire Morning (while the sun is high)
-     *  late afternoon → sunset   Red Book by the fire (once the sun is down to 15°, the light golden)
+     *  late afternoon → sunset   Red Book by the fire (once the sun is down to 15°, the light golden);
+     *                            in autumn, Lothlórien's golden woods
      *  sunset → 23:00            Starlit Night
-     *  23:00 → 04:00             Elven Silver
-     *  04:00 → sunrise           Starlit Night
+     *  23:00 → 02:00             Elven Silver
+     *  02:00 → sunrise           The Grey Havens
+     * The phone, the watch face and Lembas for Windows all use exactly this.
      */
     fun adaptive(now: ZonedDateTime = ZonedDateTime.now()): Look {
         val day = Sun.today(now.zone, now.toLocalDate())
         val m = now.hour * 60 + now.minute
         return when {
             m >= day.sunrise && m < day.evening -> Look.SHIRE
-            m >= day.evening && m < day.sunset -> Look.REDBOOK
+            m >= day.evening && m < day.sunset -> if (SceneArt.season(now.toLocalDate()) == "autumn") Look.LORIEN else Look.REDBOOK
             m >= NIGHT_START || m < NIGHT_END -> Look.ELVEN
+            m < day.sunrise -> Look.HAVENS
             else -> Look.STARLIT
         }
     }
@@ -157,7 +160,7 @@ object Themes {
 
     fun keptUntil(context: Context): Long = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getLong(PREF_KEEP_UNTIL, 0)
 
-    /** When Adaptive would next change look on its own (sunrise, the 15° sun, sunset, 11pm, 4am). */
+    /** When Adaptive would next change look on its own (sunrise, the 15° sun, sunset, 11pm, 2am). */
     fun nextChange(now: ZonedDateTime = ZonedDateTime.now()): ZonedDateTime {
         var next = now.plusDays(2)
         for (d in 0..1) {
