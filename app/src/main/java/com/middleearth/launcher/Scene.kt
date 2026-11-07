@@ -392,6 +392,49 @@ class Motion(private val look: String, land: Boolean, private val weather: Int, 
         }
     }
 
+    // --- the real sky over you (night looks): the bright stars and the planets where they really are
+    private val nightSky = look == "starlit" || look == "elven" || look == "havens"
+    private val skyTop = if (L) (if (look == "starlit") 430f else if (look == "havens") 680f else 470f) else (if (look == "starlit") 1300f else if (look == "havens") 1560f else 1180f)
+    private val skyHorizon = if (L) (if (look == "havens") 760f else 640f) else (if (look == "havens") 1640f else 1500f)
+    private var realAt = 0L
+    private class SkyDot(val x: Float, val y: Float, val r: Float, val color: Int, val tw: Float)   // tw < 0: a planet, steady
+    private val realStars = ArrayList<SkyDot>()
+    private var realMoon: Heavens.Moon? = null
+    private fun updateRealSky() {
+        val now = System.currentTimeMillis()
+        if (now - realAt < 60_000L) return
+        realAt = now
+        val (lat, lon) = Sun.where()
+        realMoon = Heavens.moon(lat, lon, now)
+        realStars.clear()
+        if (!nightSky) return
+        val az0 = if (lat < 0) 180.0 else 0.0                 // face the pole you can see: the Cross in the south, the Plough in the north
+        val pxH = if (L) 16f else 13.5f; val pxV = if (L) 9f else 13.5f
+        val cx = (x0 + x1) / 2
+        fun place(alt: Double, az: Double): Pair<Float, Float>? {
+            val da = (((az - az0) % 360 + 540) % 360 - 180).toFloat()
+            val x = cx + da * pxH; val y = skyHorizon - alt.toFloat() * pxV
+            return if (alt > 2 && x in x0..x1 && y < skyTop && y > 0) x to y else null
+        }
+        for ((st, p) in Heavens.stars(lat, lon, now)) place(p.alt, p.az)?.let { (x, y) ->
+            realStars.add(SkyDot(x, y, ((2.7 - .5 * st.mag).toFloat()).coerceIn(.9f, 3.4f) * (if (L) 1f else 1.25f), st.color, (st.ra * 7 % 5).toFloat()))
+        }
+        for (pl in Heavens.planets(lat, lon, now)) place(pl.pos.alt, pl.pos.az)?.let { (x, y) ->
+            realStars.add(SkyDot(x, y, pl.size * (if (L) 1f else 1.25f), pl.color, -1f))
+        }
+    }
+    private fun drawRealSky(c: Canvas, t: Float) {
+        updateRealSky()
+        for (st in realStars) {
+            val planet = st.tw < 0
+            val k = if (still || planet) 1f else .75f + .25f * breathe(t, 3f + st.tw, st.tw)
+            fill.color = st.color
+            if (planet) { fill.alpha = 60; c.drawCircle(st.x, st.y, st.r * 2.4f, fill) }
+            fill.alpha = (255 * k).toInt()
+            c.drawCircle(st.x, st.y, st.r, fill)
+        }
+    }
+
     // --- weather
     private val drops = Random(77).let { r -> List(if (L) 90 else 70) { floatArrayOf(x0 + r.nextFloat() * (x1 - x0 + 200), .8f + r.nextFloat() * .5f, r.nextFloat() * 2, 30 + r.nextFloat() * 30) } }
     private val flakes = Random(78).let { r -> List(if (L) 80 else 70) { floatArrayOf(x0 + r.nextFloat() * (x1 - x0), 10 + r.nextFloat() * 9, r.nextFloat() * 20, 1.6f + r.nextFloat() * 2.2f) } }
@@ -406,6 +449,7 @@ class Motion(private val look: String, land: Boolean, private val weather: Int, 
                 if (weather != 5) for (cl in clouds) cloud(c, cl, t)
             }
             "starlit" -> {
+                drawRealSky(c, t)
                 for (s in twinkles) {
                     val k = if (still) .7f else breathe(t, s[3], s[4])
                     fill.color = 0xFFFFF8E6.toInt(); fill.alpha = (255 * (.15f + .85f * k)).toInt()
@@ -415,9 +459,9 @@ class Motion(private val look: String, land: Boolean, private val weather: Int, 
                 val alt = moonAltitude()
                 if (alt > 0f) {
                     val my = moon[1] + (1f - alt) * (if (L) 330f else 640f)
-                    val full = moonPhase().let { it > 0.46 && it < 0.54 }
-                    val mr = moon[2] * (if (full) 1.25f else 1f)
-                    glowAt(c, moon[0], my, (if (full) 1.35f else 1f) * (1f + .06f * breathe(t, 7f)), .75f + .25f * breathe(t, 7f), moonShader, moon[2] * 3.2f)
+                    val sc = moonScale()
+                    val mr = moon[2] * sc
+                    glowAt(c, moon[0], my, sc * (1f + .06f * breathe(t, 7f)), (.75f + .25f * breathe(t, 7f)) * (1f - .7f * (realMoon?.eclipse ?: 0.0).toFloat()), moonShader, moon[2] * 3.2f)
                     drawMoon(c, moon[0], my, mr)
                 }
                 shootingStar(c, t)
@@ -425,6 +469,7 @@ class Motion(private val look: String, land: Boolean, private val weather: Int, 
                     glint(c, lakeGlint[0] + g[0], lakeGlint[1] + g[1], g[2], t, 3f + i * .5f, i * .6f, if (L) 4f else 5f, 0xFFFFF3D6.toInt())
             }
             "havens" -> {
+                drawRealSky(c, t)
                 for (st in seaTwinkles) {
                     val k = if (still) .7f else breathe(t, st[3], st[4])
                     fill.color = 0xFFF2F2EE.toInt(); fill.alpha = (255 * (.15f + .85f * k)).toInt()
@@ -441,6 +486,7 @@ class Motion(private val look: String, land: Boolean, private val weather: Int, 
                     glint(c, havenMoon[0] + g[0], havenSea + g[1] * (if (L) 1f else 1.4f), g[2], t, 3.2f + i * .5f, i * .7f, if (L) 4f else 5f, 0xFFF2F4FA.toInt())
             }
             "elven" -> {
+                drawRealSky(c, t)
                 glowAt(c, star[0], star[1], star[2] * (1f + .08f * breathe(t, 6f)), .8f + .2f * breathe(t, 6f), starShader, 90f)
                 val dx = if (still) 0f else (-120 * cos(2 * PI * phase(t, 80f, 0f))).toFloat()
                 glow.shader = mistShader; glow.alpha = 255
@@ -590,30 +636,16 @@ class Motion(private val look: String, land: Boolean, private val weather: Int, 
         }
     }
 
-    private fun moonPhase(): Double {
-        var phase = ((System.currentTimeMillis() - 947182440000L) / 86_400_000.0 / 29.530588853) % 1.0
-        if (phase < 0) phase += 1.0
-        return phase
-    }
+    private fun moonPhase(): Double { updateRealSky(); return realMoon?.phase ?: 0.0 }
 
     /**
      * How high the moon is, 0 (on the horizon) to 1, or below 0 when it has set. The moon crosses the
      * sky about 50 minutes later each day: at new moon with the sun (midday), at full moon at midnight.
      */
-    private var altAt = 0L
-    private var altCache = 1f
-    private fun moonAltitude(): Float {
-        val now = System.currentTimeMillis()
-        if (now - altAt < 60_000L) return altCache
-        altAt = now
-        val day = Sun.today()
-        val nowMin = java.time.LocalTime.now().let { it.hour * 60 + it.minute }
-        val transit = day.noon + moonPhase() * 1490.0          // minutes after midnight (can run into tomorrow)
-        val hours = ((nowMin - transit) / 60.0 + 36) % 24.84 - 12.42
-        altCache = cos(hours / 24.84 * 2 * PI).toFloat() * 1.4f - 0.15f
-        altCache = altCache.coerceAtMost(1f)
-        return altCache
-    }
+    /** 0 on the horizon .. 1 high (60° and up), below 0 once it has set: from its real altitude. */
+    private fun moonAltitude(): Float { updateRealSky(); return ((realMoon?.pos?.alt ?: 30.0) / 60.0).toFloat().coerceAtMost(1f) }
+    /** A supermoon a little larger; a full moon a touch larger anyway. */
+    private fun moonScale(): Float { val m = realMoon ?: return 1f; return if (m.supermoon) 1.32f else if (m.full) 1.18f else 1f }
 
     /** Now and then a shooting star; every few seconds on meteor-shower nights (mid-August, mid-December). */
     private val meteorNight = java.time.LocalDate.now().let { (it.monthValue == 8 && it.dayOfMonth in 11..13) || (it.monthValue == 12 && it.dayOfMonth in 13..15) }
@@ -639,6 +671,7 @@ class Motion(private val look: String, land: Boolean, private val weather: Int, 
         val phase = moonPhase()
         fill.color = 0xFF2A3058.toInt(); fill.alpha = 255
         c.drawCircle(cx, cy, r, fill)
+        val ecl = (realMoon?.eclipse ?: 0.0).toFloat()
         val termW = (r * cos(2 * PI * phase)).toFloat()
         val lit = Path()
         lit.moveTo(cx, cy - r)
@@ -652,6 +685,7 @@ class Motion(private val look: String, land: Boolean, private val weather: Int, 
         fill.color = 0xFFFFF3D6.toInt()
         c.drawPath(lit, fill)
         c.restore()
+        if (ecl > 0f) { fill.color = 0xFF9A3A22.toInt(); fill.alpha = (235 * ecl).toInt(); c.drawCircle(cx, cy, r, fill); fill.alpha = 255 }   // in Earth's shadow: the blood-red moon
     }
 
     /** How often this scene needs a new frame: gentle scenes less often, saving battery. */
@@ -681,7 +715,7 @@ class SceneDrawer(ctx: Context, val look: Look, val w: Int, val h: Int, dp: Floa
     private val motion = Motion(look.id, land, weather, still, wind = !still && Weather.windy(ctx), sky = Weather.sky(ctx))
     private val paint = Paint(Paint.FILTER_BITMAP_FLAG or Paint.DITHER_FLAG)
     private val maxShift = 12 * dp
-    val fps get() = motion.fps
+    val fps get() = maxOf(motion.fps, extras.fps)
 
     /** [tx], [ty]: the tilt, -1..1 (for depth); nearer layers move further. */
     fun draw(c: Canvas, t: Float, tx: Float = 0f, ty: Float = 0f) {
@@ -766,7 +800,8 @@ class SceneView @JvmOverloads constructor(context: Context, attrs: AttributeSet?
         val w = width; val h = height
         if (w <= 0 || h <= 0) return
         val sk = Weather.sky(context).let { "${it.rainbow}${it.frost}${it.heat}${(it.smoke * 10).toInt()}${it.beacons}${it.storm}" }
-        val key = "${look.id}#$w#$h#${SceneArt.season()}#$weather#$parallax#$sk"
+        val feast = "${Feasts.fireworks()}${Feasts.lanterns()}${Feasts.durin()}"
+        val key = "${look.id}#$w#$h#${SceneArt.season()}#$weather#$parallax#$sk#$feast"
         if (key == builtFor && drawer != null) { invalidate(); return }
         builtFor = key
         val token = ++building

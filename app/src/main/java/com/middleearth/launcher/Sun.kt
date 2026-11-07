@@ -133,7 +133,7 @@ object Themes {
         val m = now.hour * 60 + now.minute
         return when {
             m >= day.sunrise && m < day.evening -> Look.SHIRE
-            m >= day.evening && m < day.sunset -> if (SceneArt.season(now.toLocalDate()) == "autumn") Look.LORIEN else Look.REDBOOK
+            m >= day.evening && m < day.sunset -> if (SceneArt.season(now.toLocalDate()) == "autumn" && !Feasts.durin(now.toLocalDate())) Look.LORIEN else Look.REDBOOK   // Durin's Day: the Red Book, its moon-letters lit
             m >= NIGHT_START || m < NIGHT_END -> Look.ELVEN
             m < day.sunrise -> Look.HAVENS
             else -> Look.STARLIT

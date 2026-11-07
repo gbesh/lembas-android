@@ -1213,6 +1213,12 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         // Drawer — same layout for every theme
         drawer.background = GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, intArrayOf(look.drawerTop, look.drawerBottom))
         drawerTitle.text = look.drawerTitle
+        findViewById<TextView>(R.id.drawerFeast)?.apply {
+            text = Feasts.countdown()
+            typeface = Fonts.get(assets, look.displayItalicFont, 400, true)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
+            setTextColor(look.muted)
+        }
         drawerTitle.typeface = if (look.titleUsesLabelFont) labelFont else displayMedium
         drawerTitle.setTextSize(TypedValue.COMPLEX_UNIT_SP, look.titleSizeSp)
         drawerTitle.setTextColor(look.titleColor)
@@ -1544,6 +1550,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         lines.add("")
         lines.add("Sunrise ${hm(day.sunrise)}  ·  sunset ${hm(day.sunset)}")
         Weather.forecast(this).takeIf { it.isNotEmpty() }?.let { lines.add(it) }
+        lines.add(Feasts.countdown())
         if (Themes.choice(this) == Look.ADAPTIVE) {
             val next = Themes.nextChange()
             lines.add("${Themes.adaptive(next.plusMinutes(1)).title} from ${next.format(fmt)}")

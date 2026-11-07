@@ -10,6 +10,7 @@ import java.time.LocalDate
 import java.time.LocalTime
 import kotlin.math.PI
 import kotlin.math.abs
+import kotlin.math.floor
 import kotlin.math.sin
 import kotlin.random.Random
 
@@ -140,6 +141,91 @@ class SceneExtras(private val look: String, private val w: Int, private val h: I
         }
     }
 
+    // ------------------------------------------------------------------ Middle-earth's calendar
+    private val fireworks = !still && Feasts.fireworks()
+    private val lanterns = Feasts.lanterns()
+    private val moonLetters = look == "redbook" && Feasts.durin()
+    /** Frames a second the calendar needs (fireworks move fast). */
+    val fps get() = if (fireworks) 30 else 0
+
+    /** Gandalf's fireworks for Hobbit Day: bursts of gold, green and red over the scene, clear of the clock. */
+    private val burstColors = intArrayOf(0xFFFFD27A.toInt(), 0xFF9FE6A0.toInt(), 0xFFFF8A7A.toInt(), 0xFFFFFFFF.toInt(), 0xFFB9C8FF.toInt())
+    private fun drawFireworks(c: Canvas) {
+        val t = SystemClock.uptimeMillis() / 1000f
+        val land = w > h
+        for (slot in 0 until 3) {
+            val dur = 2.6f; val off = slot * .87f
+            val n = floor((t + off) / dur).toInt(); val p = ((t + off) % dur) / dur
+            val r = Random(n * 7 + slot)
+            val cx = if (land) w * (.45f + .5f * r.nextFloat()) else w * (.15f + .7f * r.nextFloat())
+            val cy = if (land) h * (.12f + .3f * r.nextFloat()) else h * (.44f + .14f * r.nextFloat())
+            val col = burstColors[r.nextInt(burstColors.size)]
+            if (p < .18f) {   // the rocket climbing
+                val k = p / .18f
+                fill.color = 0xFFFFF0C4.toInt(); fill.alpha = 220
+                c.drawCircle(cx, cy + (1 - k) * h * .2f, 2.2f * dp, fill)
+                continue
+            }
+            val k = (p - .18f) / .82f
+            val reach = (if (land) h * .16f else w * .2f) * (1 - (1 - k) * (1 - k))
+            for (i in 0 until 26) {
+                val a = i / 26f * 2 * PI.toFloat() + r.nextFloat() * .2f
+                val x = cx + kotlin.math.cos(a) * reach; val y = cy + sin(a) * reach + k * k * 40 * dp   // and they fall a little
+                fill.color = col; fill.alpha = (255 * (1 - k)).toInt()
+                c.drawCircle(x, y, (2.4f - 1.2f * k) * dp, fill)
+            }
+        }
+    }
+
+    /** Yule and Lithe: paper lanterns strung across the sky, glowing. */
+    private fun drawLanterns(c: Canvas) {
+        val y0 = h * (if (w > h) .06f else .05f)
+        val sag = h * .025f
+        line.color = 0x99FFFFFF.toInt(); line.strokeWidth = 1.2f * dp
+        c.drawPath(Path().apply { moveTo(0f, y0); quadTo(w / 2f, y0 + sag * 2, w.toFloat(), y0) }, line)
+        val n = (w / (54 * dp)).toInt()
+        val t = SystemClock.uptimeMillis() / 1000f
+        val cols = intArrayOf(0xFFFFC867.toInt(), 0xFFFF9A6A.toInt(), 0xFFFFE08A.toInt(), 0xFFF2B8C6.toInt())
+        for (i in 1 until n) {
+            val x = i * w / n.toFloat(); val f = x / w
+            val y = y0 + sag * 4 * f * (1 - f) + 10 * dp
+            val k = if (still) .8f else .7f + .3f * sin(t * 1.3f + i).let { it * it }
+            fill.color = cols[i % cols.size]; fill.alpha = (60 * k).toInt()
+            c.drawCircle(x, y, 16 * dp, fill)
+            fill.alpha = (235 * k).toInt()
+            c.drawOval(x - 6 * dp, y - 8 * dp, x + 6 * dp, y + 8 * dp, fill)
+            line.color = 0xFF4A3A28.toInt(); line.strokeWidth = 1.4f * dp
+            c.drawLine(x - 4 * dp, y - 8.5f * dp, x + 4 * dp, y - 8.5f * dp, line); c.drawLine(x - 4 * dp, y + 8.5f * dp, x + 4 * dp, y + 8.5f * dp, line)
+        }
+    }
+
+    /** Durin's Day: moon-letters glowing silver-blue on the Red Book's page, two lines of runes. */
+    private val runes: List<Path> = Random(1937).let { r ->
+        List(26) {
+            Path().apply {
+                moveTo(0f, 0f); lineTo(0f, 22f)   // the stave
+                repeat(1 + r.nextInt(2)) {
+                    val y = 2f + r.nextFloat() * 14f; val side = if (r.nextBoolean()) 1f else -1f
+                    moveTo(0f, y); lineTo(side * (5f + r.nextFloat() * 4f), y + (if (r.nextBoolean()) 6f else -4f))
+                }
+            }
+        }
+    }
+    private fun drawMoonLetters(c: Canvas) {
+        val t = SystemClock.uptimeMillis() / 1000f
+        val k = if (still) .7f else .45f + .3f * (.5f + .5f * sin(t * .7f))
+        val land = w > h
+        val sc = (if (land) h / 1080f else w / 1080f) * 2.2f
+        val left = w * (if (land) .52f else .14f); val top = h * (if (land) .3f else .55f)
+        for ((i, g) in runes.withIndex()) {
+            val row = i / 13; val col = i % 13
+            c.save(); c.translate(left + col * 16 * sc, top + row * 36 * sc); c.scale(sc, sc)
+            line.color = 0xFFCFE6FF.toInt(); line.alpha = (60 * k).toInt(); line.strokeWidth = 4.5f; c.drawPath(g, line)
+            line.alpha = (230 * k).toInt(); line.strokeWidth = 1.5f; c.drawPath(g, line)
+            c.restore()
+        }
+    }
+
     // ------------------------------------------------------------------ taps
     private class Poke(val x: Float, val y: Float, val at: Long, val seed: Int)
     private val pokes = ArrayList<Poke>()
@@ -179,6 +265,9 @@ class SceneExtras(private val look: String, private val w: Int, private val h: I
         glow?.let { c.drawRect(0f, 0f, w.toFloat(), h.toFloat(), it) }
         if (!still) visitor().let { if (it >= 0f) drawVisitor(c, it) }
         if (bunting) drawBunting(c)
+        if (lanterns && !bunting) drawLanterns(c)
+        if (moonLetters) drawMoonLetters(c)
+        if (fireworks) drawFireworks(c)
         if (pokes.isNotEmpty()) drawPokes(c)
     }
 }

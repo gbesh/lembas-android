@@ -101,7 +101,7 @@ object Lore {
         val (quenya, gloss) = period(now.hour)
         val occ = occasion(date)
         val loc = Locale.getDefault()
-        val mealText = if (showMeals) meal(now.hour) else ""
+        val mealText = if (Feasts.toast(now)) "A toast: the Professor" else if (showMeals) meal(now.hour) else ""
         return when (look.id) {
             "shire" -> HomeText(
                 label = "${wd.uppercase(loc)} · ${quenya.uppercase(loc)}",
