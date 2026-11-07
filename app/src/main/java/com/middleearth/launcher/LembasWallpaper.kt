@@ -75,6 +75,7 @@ class LembasWallpaper : WallpaperService() {
             if (Build.VERSION.SDK_INT >= 33) registerReceiver(tick, filter, Context.RECEIVER_NOT_EXPORTED)
             else registerReceiver(tick, filter)
             prefs.registerOnSharedPreferenceChangeListener(this)
+            Hearth.init(this@LembasWallpaper)
         }
 
         override fun onDestroy() {
@@ -98,6 +99,7 @@ class LembasWallpaper : WallpaperService() {
                 if (Build.VERSION.SDK_INT >= 27) notifyColorsChanged()
             } else {
                 repaint() // only does work when the day (moon phase) changed
+                if (Hearth.dawn() > 0f || Hearth.watch() in .01f..0.99f) drawFrame()   // the dawn brightening, the lamps going out
             }
             updateRunning()
         }
@@ -149,7 +151,7 @@ class LembasWallpaper : WallpaperService() {
             val w = width
             val h = height
             if (w <= 0 || h <= 0) return
-            val key = "${look.id}#$w#$h#${LocalDate.now().toEpochDay()}#${SceneArt.season()}#${Weather.code(this@LembasWallpaper)}"
+            val key = "${look.id}#$w#$h#${LocalDate.now().toEpochDay()}#${SceneArt.season()}#${Weather.code(this@LembasWallpaper)}#${Hearth.dawnSoon()}"
             if (key == paintedKey) return
             paintedKey = key
             val lk = look

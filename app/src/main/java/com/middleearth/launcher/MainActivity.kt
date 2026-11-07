@@ -89,6 +89,10 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
     private lateinit var ornament: ImageView
     private lateinit var meal: TextView
     private lateinit var sunArc: SunArcView
+    /** The Sindarin greeting under the clock (English beneath). */
+    private lateinit var greet: TextView
+    /** The glowing trail of a rune being drawn. */
+    private lateinit var trail: RuneTrail
     private lateinit var music: MusicCard
     private lateinit var live: LiveCard
     private lateinit var widgetBox: LinearLayout
@@ -159,6 +163,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         super.onCreate(savedInstanceState)
         prefs = getSharedPreferences(Themes.PREFS, MODE_PRIVATE)
         prefs.registerOnSharedPreferenceChangeListener(syncListener)
+        Hearth.init(this)
         Updater.schedule(this)
         look = Themes.current(this)
         setupWindow()
@@ -220,6 +225,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
     override fun onStart() {
         super.onStart()
         visibleNow = true
+        Hearth.homeShowing = true
         if (prefs.getBoolean(PREF_MUSIC, true)) music.start()
         widgets.start()
     }
@@ -243,6 +249,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         }
         updateTexts()
         updateAmbient()
+        Focus.playPending(this)
         Updater.showPending(this)
         LookWallpaper.syncAsync(this, interactive = true)  // cheap when nothing changed
         if (entranceArmed) {
@@ -267,6 +274,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
     override fun onStop() {
         super.onStop()
         visibleNow = false
+        Hearth.homeShowing = false
         music.stop()
         widgets.stop()
         // Coming back home should always show the home screen, not a half-open drawer.
@@ -800,13 +808,17 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
             sb.setSpan(RelativeSizeSpan(0.28f), start, sb.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             sb.setSpan(ForegroundColorSpan(suffix), start, sb.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
         }
-        clock.text = sb
+        clock.text = if (tengwarMode() == "both") tengwar(time) else sb
+        clock.contentDescription = time
         val t = Lore.homeText(look, now, prefs.getBoolean(PREF_MEALS, true))
         label.text = t.label
         shire.text = t.shire
-        date.text = t.date
-        meal.text = t.meal
-        meal.visibility = if (t.meal.isEmpty()) View.GONE else View.VISIBLE
+        date.text = if (tengwarMode() != "off") tengwar(now.format(DateTimeFormatter.ofPattern("EEEE d MMMM", java.util.Locale.ENGLISH))) else t.date
+        date.contentDescription = t.date
+        val m = focusLine() ?: t.meal
+        meal.text = m
+        meal.visibility = if (m.isEmpty()) View.GONE else View.VISIBLE
+        updateGreeting(now)
         backdrop.weather = Weather.code(this)
         backdrop.animationsOn = animationsOn() && !Quiet.now(this)
         backdrop.bunting = birthdayToday()
@@ -868,6 +880,11 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         ornament = findViewById(R.id.ornament)
         meal = findViewById(R.id.meal)
         sunArc = findViewById(R.id.sunArc)
+        greet = TextView(this).apply { importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_YES }
+        home.addView(greet, home.indexOfChild(date) + 1, LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = (8 * dp).roundToInt() })
+        trail = RuneTrail(this).apply { visibility = View.GONE }
+        root.addView(trail, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT))
         // the music player sits under the sun arc
         music = MusicCard(this)
         home.addView(music, home.indexOfChild(sunArc) + 1, LinearLayout.LayoutParams(
@@ -1092,13 +1109,14 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         val sb = SpannableStringBuilder(hours).append("\u2009").append(minutes)
         sb.setSpan(ForegroundColorSpan(modernHoursColor()), 0, hours.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
         minutesFont?.let { sb.setSpan(TypefaceCompatSpan(it), hours.length + 1, sb.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE) }
-        clock.text = sb
+        clock.text = if (tengwarMode() == "both") tengwar("$hours\u2009$minutes") else sb
         clock.contentDescription = now.format(DateTimeFormatter.ofPattern(if (is24) "H:mm" else "h:mm a"))
         val loc = java.util.Locale.getDefault()
         label.text = now.format(DateTimeFormatter.ofPattern("EEE d MMM", loc))
+        if (tengwarMode() != "off") { label.contentDescription = label.text; label.text = tengwar(now.format(DateTimeFormatter.ofPattern("EEEE d MMMM", java.util.Locale.ENGLISH))) }
         val sd = Lore.shireDate(now.toLocalDate())
         shire.text = Lore.shireWeekday(now.dayOfWeek) + " · " + (if (sd.isSpecial) sd.name else "${sd.day} ${sd.name}")
-        val m = if (prefs.getBoolean(PREF_MEALS, true)) Lore.meal(now.hour) else ""
+        val m = focusLine() ?: if (prefs.getBoolean(PREF_MEALS, true)) (if (Feasts.toast(now)) "A toast: the Professor" else Lore.meal(now.hour)) else ""
         meal.text = m
         meal.visibility = if (m.isEmpty()) View.GONE else View.VISIBLE
         val glance = glanceText(now, is24)
@@ -1106,7 +1124,60 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         date.visibility = if (glance.isEmpty()) View.GONE else View.VISIBLE
         sunArc.update(now, is24)
         sunArc.caption = Weather.forecast(this)
+        updateGreeting(now)
         backdrop.refresh()
+    }
+
+    // ------------------------------------------------------------------ Elvish words, Tengwar, focus
+
+    private fun tengwarMode(): String = if (Tengwar.font(assets) == null) "off" else Tengwar.mode(this)
+
+    /** [s] in Tengwar, in the Tengwar face (a little larger, so the vowel signs read). */
+    private fun tengwar(s: String): CharSequence {
+        val tf = Tengwar.font(assets) ?: return s
+        val out = SpannableStringBuilder(Tengwar.text(s))
+        out.setSpan(TypefaceCompatSpan(tf), 0, out.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        return out
+    }
+
+    /** "Focusing · 18 min to go" while a focus session runs (and finishes it, if it's over). */
+    private fun focusLine(): String? {
+        if (Focus.end(this) > 0L && !Focus.running(this)) Focus.finish(this, homeShowing = visibleNow)
+        if (!Focus.running(this)) return null
+        val n = Focus.minutesLeft(this)
+        return if (n <= 1) "Focusing · a minute to go" else "Focusing · $n min to go"
+    }
+
+    private fun updateGreeting(now: LocalDateTime) {
+        if (!prefs.getBoolean(PREF_GREETING, true)) { greet.visibility = View.GONE; return }
+        val (elvish, english) = Sayings.greeting(now.toLocalTime())
+        val sb = SpannableStringBuilder(elvish).append("\n").append(english)
+        sb.setSpan(RelativeSizeSpan(0.72f), elvish.length + 1, sb.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        sb.setSpan(ForegroundColorSpan((greet.currentTextColor and 0x00FFFFFF) or 0x99000000.toInt()), elvish.length + 1, sb.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        greet.text = sb
+        greet.contentDescription = "$elvish: $english"
+        greet.visibility = View.VISIBLE
+    }
+
+    private fun styleGreeting() {
+        greet.typeface = Fonts.get(assets, look.displayItalicFont, 400, true)
+        greet.setTextSize(TypedValue.COMPLEX_UNIT_SP, if (modern) 17f else look.mealSizeSp.coerceAtLeast(15f))
+        greet.setTextColor(look.shireColor)
+        greet.setLineSpacing(0f, 1.05f)
+        greet.gravity = if (look.alignStart && !modern) Gravity.START else Gravity.CENTER
+        (greet.layoutParams as LinearLayout.LayoutParams).gravity = if (look.alignStart && !modern) Gravity.START else Gravity.CENTER_HORIZONTAL
+        if (look.textShadow) greet.setShadowLayer(14 * dp, 0f, 2 * dp, 0x99000000.toInt()) else greet.setShadowLayer(0f, 0f, 0f, 0)
+    }
+
+    // ------------------------------------------------------------------ rune shortcuts
+
+    override fun onRuneStart(x: Float, y: Float) { trail.color = look.accent; trail.begin(x, y) }
+    override fun onRuneMove(x: Float, y: Float) = trail.extend(x, y)
+    override fun onRuneEnd(points: FloatArray) {
+        val r = if (points.size >= 8) Runes.match(this, points) else null
+        val e = r?.let { rune -> if (rune.key.startsWith("pkg:")) repo.apps.firstOrNull { it.packageName == rune.key.removePrefix("pkg:") && it.isMainUser } else repo.byKey[rune.key] }
+        trail.end(e != null)
+        if (e != null) { Haptics.feel(root, Haptics.Feel.CONFIRM); root.postDelayed({ launch(e, null) }, 160) }
     }
 
     private fun applyModern() {
@@ -1209,6 +1280,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
             if (look.lightBars) 0x1A000000 else 0x24FFFFFF, Fonts.get(assets, look.displayItalicFont, 400, true),
             Fonts.get(assets, "AlegreyaSans-Medium.ttf", 500))
         if (modern) applyModern() else { date.visibility = View.VISIBLE; sunArc.visibility = View.GONE }
+        styleGreeting()
 
         // Drawer — same layout for every theme
         drawer.background = GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, intArrayOf(look.drawerTop, look.drawerBottom))
@@ -1218,6 +1290,14 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
             typeface = Fonts.get(assets, look.displayItalicFont, 400, true)
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
             setTextColor(look.muted)
+            setOnClickListener { Deeds.show(this@MainActivity, look) }
+        }
+        findViewById<TextView>(R.id.drawerSaying)?.apply {
+            text = Sayings.today()
+            typeface = Fonts.get(assets, look.displayItalicFont, 400, true)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
+            setTextColor((look.muted and 0x00FFFFFF) or 0xB3000000.toInt())
+            setOnClickListener { Deeds.show(this@MainActivity, look) }
         }
         drawerTitle.typeface = if (look.titleUsesLabelFont) labelFont else displayMedium
         drawerTitle.setTextSize(TypedValue.COMPLEX_UNIT_SP, look.titleSizeSp)
@@ -1377,7 +1457,12 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         updateEmpty()
     }
 
+    private var wonderShown = ""
     private fun runSearch(text: String) {
+        val said = text.trim().lowercase(java.util.Locale.ROOT)
+        if (said == "mellon" || said == "ash nazg") {
+            if (wonderShown != said) { wonderShown = said; Wonders.show(this, root, if (said == "mellon") Wonders.MELLON else Wonders.RING) }
+        } else wonderShown = ""
         val now = text.trim().isNotEmpty()
         if (!now && search.hasFocus() && recentSearches().isNotEmpty()) { showRecentSearches(); return }
         if (now != searching) {
@@ -1676,6 +1761,17 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
     private fun dialogTheme() = if (look.lightBars) android.R.style.Theme_DeviceDefault_Light_Dialog_Alert
     else android.R.style.Theme_DeviceDefault_Dialog_Alert
 
+    /** The night watch's bedtime (when Rivendell's lamps start going out), or off. */
+    private fun pickBedtime() {
+        val cur = prefs.getInt(Hearth.PREF_WATCH, Hearth.DEFAULT_BEDTIME).let { if (it < 0) Hearth.DEFAULT_BEDTIME else it }
+        android.app.TimePickerDialog(this, dialogTheme(), { _, h, m ->
+            prefs.edit().putInt(Hearth.PREF_WATCH, h * 60 + m).apply(); backdrop.invalidate()
+        }, cur / 60, cur % 60, DateFormat.is24HourFormat(this)).apply {
+            setTitle("Bedtime: the lamps go out")
+            setButton(android.content.DialogInterface.BUTTON_NEUTRAL, "Turn off") { _, _ -> prefs.edit().putInt(Hearth.PREF_WATCH, -1).apply(); backdrop.invalidate() }
+        }.show()
+    }
+
     private fun showSettings() {
         val themed = prefs.getBoolean(PREF_THEMED, true)
         val meals = prefs.getBoolean(PREF_MEALS, true)
@@ -1769,6 +1865,36 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
                     true },
                 SettingsSheet.Row("Keyboard when opening the Red Book", onOff(kbd)) {
                     prefs.edit().putBoolean(PREF_KEYBOARD, !kbd).apply(); true },
+            )),
+            SettingsSheet.Section("Small touches", listOf(
+                SettingsSheet.Row("Elvish greeting under the clock", onOff(prefs.getBoolean(PREF_GREETING, true))) {
+                    prefs.edit().putBoolean(PREF_GREETING, !prefs.getBoolean(PREF_GREETING, true)).apply(); updateTexts(); true },
+                SettingsSheet.Row("Tengwar", when (Tengwar.mode(this)) { "date" -> "On the date"; "both" -> "On the date and clock"; else -> "Off" }) {
+                    val next = when (Tengwar.mode(this)) { "off" -> "date"; "date" -> "both"; else -> "off" }
+                    prefs.edit().putString(Tengwar.PREF, next).apply(); updateTexts(); true },
+                SettingsSheet.Row("Rune shortcuts", Runes.summary(this)) {
+                    Runes.manage(this, dialogTheme(), look, repo.apps.filter { it.isMainUser }.map { it.key to it.label }); false },
+                SettingsSheet.Row("Night watch", prefs.getInt(Hearth.PREF_WATCH, Hearth.DEFAULT_BEDTIME).let { if (it < 0) "Off" else "Lamps out from ${hm(it)}" }) { pickBedtime(); false },
+                SettingsSheet.Row("Dawn alarm", if (prefs.getBoolean(Hearth.PREF_DAWN, true)) "Morning rises 15 min before your alarm" else "Off") {
+                    prefs.edit().putBoolean(Hearth.PREF_DAWN, !prefs.getBoolean(Hearth.PREF_DAWN, true)).apply(); true },
+                SettingsSheet.Row("Fireflies to the music", onOff(prefs.getBoolean(Hearth.PREF_FIREFLIES, true))) {
+                    prefs.edit().putBoolean(Hearth.PREF_FIREFLIES, !prefs.getBoolean(Hearth.PREF_FIREFLIES, true)).apply(); true },
+                SettingsSheet.Row("Messengers and eagles", when {
+                    !Dots.accessGranted(this) -> "Needs notification access"
+                    prefs.getBoolean(Hearth.PREF_OMENS, true) -> "On"
+                    else -> "Off"
+                }) {
+                    if (!Dots.accessGranted(this)) { prefs.edit().putBoolean(Hearth.PREF_OMENS, true).apply(); Dots.turnOn(this) }
+                    else prefs.edit().putBoolean(Hearth.PREF_OMENS, !prefs.getBoolean(Hearth.PREF_OMENS, true)).apply()
+                    true },
+                SettingsSheet.Row("Sam's garden", if (Garden.permitted(this)) "Planted by Bag End" else "Needs usage access") {
+                    if (Garden.permitted(this)) Toast.makeText(this, "The garden grows with gentle days. To dig it up, turn off usage access for Lembas.", Toast.LENGTH_LONG).show()
+                    Garden.openSettings(this); false },
+                SettingsSheet.Row("Smoke-ring focus", if (Focus.running(this)) "${Focus.minutesLeft(this)} min to go · tap to stop" else
+                    "Start 25 minutes" + Focus.ringsToday(this).let { if (it > 0) " · $it today" else "" }) {
+                    if (Focus.running(this)) Focus.stop(this) else Focus.start(this, 25)
+                    updateTexts(); true },
+                SettingsSheet.Row("Deeds of the Red Book", "${Deeds.seen(this)} of ${Deeds.ALL.size}") { Deeds.show(this, look); false },
             )),
             SettingsSheet.Section("Widgets", listOf(
                 SettingsSheet.Row("Add a widget", if (widgets.count == 0) "" else "${widgets.count} on the home screen") { widgets.pick(); false },
@@ -1936,6 +2062,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         const val PREF_HOME_STYLE = "home_style"
         const val PREF_RECENT_SEARCHES = "recent_searches"
         const val PREF_MUSIC = "music"
+        const val PREF_GREETING = "greeting"
         const val ACTION_SEARCH = "com.middleearth.launcher.SEARCH"
         /** Set just before a look change rebuilds the screen, so the new look fades in. */
         @JvmStatic var fadeInNext = false

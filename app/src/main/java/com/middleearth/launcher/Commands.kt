@@ -12,6 +12,8 @@ import java.util.Locale
 
 /**
  * Little commands typed into search, answered without opening an app first:
+ *   "focus", "focus 45"                             → a smoke-ring focus session ("stop focus" ends it)
+ *   "deeds"                                        → the Red Book: deeds, today's saying, the next feast
  *   "timer 10m", "5 min timer", "timer 1h 30"      → starts a timer in your clock app
  *   "alarm 7:30", "alarm 6am", "wake me 6.45"      → sets an alarm
  *   "10 km in miles", "180 cm to ft", "70f in c"    → unit conversions (length, weight, volume, temperature, speed)
@@ -23,11 +25,26 @@ object Commands {
     /** The answers for [q], or nothing. [ratesArrived] is called once when currency rates finish loading. */
     fun evaluate(activity: Activity, q: String, ratesArrived: () -> Unit): List<Hit> {
         val s = q.trim().lowercase(Locale.ROOT)
+        focus(activity, s)?.let { return listOf(it) }
+        if (s == "deeds" || s == "red book" || s == "the red book") return listOf(Hit.Action("The Red Book", "Deeds, today's saying and the next feast", R.drawable.g_clock) { Deeds.show(activity, Themes.current(activity)) })
         timer(activity, s)?.let { return listOf(it) }
         alarm(activity, s)?.let { return listOf(it) }
         units(s)?.let { return listOf(it) }
         currency(activity, s, ratesArrived)?.let { return listOf(it) }
         return emptyList()
+    }
+
+    // ---- smoke-ring focus
+    private val focusRe = Regex("^(?:focus|focus for|focus timer|smoke ring)(?:\\s+(\\d{1,3})\\s*(?:m|min|mins|minutes)?)?$")
+    private fun focus(a: Activity, s: String): Hit? {
+        if (s == "stop focus" || s == "end focus" || (s == "focus" && Focus.running(a)))
+            return if (Focus.running(a)) Hit.Action("Stop focusing", "${Focus.minutesLeft(a)} min to go", R.drawable.g_clock) { Focus.stop(a); Toast.makeText(a, "Focus stopped", Toast.LENGTH_SHORT).show() } else null
+        val m = focusRe.matchEntire(s) ?: return null
+        val min = m.groupValues[1].toIntOrNull() ?: 25
+        return Hit.Action("Focus for $min minutes", "A smoke ring when you're done", R.drawable.g_clock) {
+            Focus.start(a, min)
+            Toast.makeText(a, "Focusing for $min minutes", Toast.LENGTH_SHORT).show()
+        }
     }
 
     // ---- timer

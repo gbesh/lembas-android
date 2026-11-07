@@ -30,6 +30,8 @@
     <uses-permission android:name="android.permission.READ_CALENDAR" />
     <!-- Optional (asked the first time you choose to): contacts in search. -->
     <uses-permission android:name="android.permission.READ_CONTACTS" />
+    <!-- Sam's garden (optional, you turn it on): how long the phone was in use today, compared with your own usual -->
+    <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.UPDATE_PACKAGES_WITHOUT_USER_ACTION" />
 
     <uses-feature android:name="android.software.live_wallpaper" android:required="false" />
@@ -146,6 +148,8 @@
         </service>
 
         <receiver android:name=".ThemeSetup$CodeReceiver" android:exported="false" />
+        <!-- the smoke-ring focus timer finishing, or stopped from its notification -->
+        <receiver android:name=".FocusReceiver" android:exported="false" />
 
         <!-- The Lembas widget, for other home apps -->
         <receiver android:name=".SceneWidget" android:exported="false" android:label="Lembas scene">

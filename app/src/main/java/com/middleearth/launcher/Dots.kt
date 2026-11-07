@@ -132,8 +132,11 @@ object Dots {
 
 class DotsService : NotificationListenerService() {
     private fun refresh() = try { Dots.set(this, activeNotifications) } catch (_: Throwable) { }
-    override fun onListenerConnected() { Dots.service = this; refresh() }
-    override fun onNotificationPosted(sbn: StatusBarNotification?) = refresh()
+    override fun onListenerConnected() { Dots.service = this; Hearth.init(this); refresh() }
+    override fun onNotificationPosted(sbn: StatusBarNotification?) {
+        if (sbn != null) try { Hearth.posted(sbn) } catch (_: Throwable) { }
+        refresh()
+    }
     override fun onNotificationRemoved(sbn: StatusBarNotification?) = refresh()
     override fun onListenerDisconnected() { Dots.service = null; Dots.set(this, null) }
 }

@@ -31,6 +31,7 @@ import kotlin.math.floor
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sin
+import kotlin.math.sqrt
 import kotlin.random.Random
 
 /**
@@ -176,7 +177,7 @@ object SvgPath {
  * chimney smoke and river glints; the campfire, embers and compass; stars, the moon, lake glints
  * and the cabin window; mist, lanterns and rising motes), plus the weather.
  */
-class Motion(private val look: String, land: Boolean, private val weather: Int, private val still: Boolean, private val wind: Boolean = false, private val sky: Weather.Sky? = null) {
+class Motion(private val look: String, land: Boolean, private val weather: Int, private val still: Boolean, private val wind: Boolean = false, private val sky: Weather.Sky? = null, private val garden: Int = -1) {
     private val L = land
     private val fill = Paint(Paint.ANTI_ALIAS_FLAG)
     private val line = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeCap = Paint.Cap.ROUND }
@@ -210,6 +211,21 @@ class Motion(private val look: String, land: Boolean, private val weather: Int, 
     private val riverGlints = if (L) listOf(floatArrayOf(140f, 775f, 70f), floatArrayOf(520f, 792f, 40f), floatArrayOf(1010f, 771f, 90f), floatArrayOf(1560f, 752f, 50f), floatArrayOf(-300f, 768f, 60f), floatArrayOf(2100f, 770f, 70f))
         else listOf(floatArrayOf(120f, 1512f, 60f), floatArrayOf(560f, 1530f, 40f), floatArrayOf(900f, 1478f, 50f))
     private val chimney = if (L) floatArrayOf(1392f, 806f, 1f) else floatArrayOf(897f, 1677f, 1.45f)
+    // the lantern by Bag End's door (it burns on the lamp oil), and Sam's garden beside the path
+    private val lantern = if (L) floatArrayOf(1310f, 875f, 1f) else floatArrayOf(852f, 1802f, 1.6f)
+    private val lanternShader = radial(1f, 0xB3FFD98A.toInt(), 0x00FFD98A, .35f, 0x55FFC867)
+    private class Plant(val x: Float, val y: Float, val h: Float, val kind: Int, val tone: Int, val sway: Float)
+    private val plants: List<Plant> = if (garden < 0 || look != "shire") emptyList() else Random(1937 + garden).let { r ->
+        // a bed left of the path: rows of cabbages and flowers, or a tangle of thistles and dock
+        val bx = if (L) 1090f else 430f; val by = if (L) 968f else 1990f; val bw = if (L) 120f else 150f; val sc = if (L) 1f else 1.45f
+        val n = when (garden) { Garden.BLOOMING -> 22; Garden.FAIR -> 16; else -> 18 }
+        List(n) { i ->
+            val weed = when (garden) { Garden.WEEDY -> i % 3 != 0; Garden.FAIR -> i % 6 == 0; else -> false }
+            val kind = if (weed) 3 + r.nextInt(2) else if (i % 4 == 0) 0 else if (garden == Garden.BLOOMING || i % 2 == 0) 1 else 2
+            Plant(bx + r.nextFloat() * bw, by + (i % 3) * 14f * sc / 1.45f * (if (L) 1f else 1.2f) + r.nextFloat() * 6f, (10f + r.nextFloat() * 10f) * sc * (if (weed) 1.6f else 1f), kind, r.nextInt(4), r.nextFloat() * 6.28f)
+        }.sortedBy { it.y }
+    }
+    private val bloomTones = intArrayOf(0xFFE07A8A.toInt(), 0xFFF2C14E.toInt(), 0xFFB08AD8.toInt(), 0xFFF29A6A.toInt())
 
     private fun cloud(c: Canvas, cl: Cloud, t: Float, color: Int = 0xFFFFFFFF.toInt()) {
         val span = (x1 - x0) + 1400f
@@ -503,8 +519,10 @@ class Motion(private val look: String, land: Boolean, private val weather: Int, 
             "lorien" -> {
                 for ((i, l) in lorienLamps.withIndex()) {
                     val k = if (still) .5f else breathe(t, 3f + i % 3, i * .9f)
-                    glowAt(c, l[0], l[1], .85f + .3f * k, .6f + .4f * k, goldLampShader, if (L) 24f else 32f)
-                    fill.color = 0xFFFFF0C4.toInt(); fill.alpha = 255
+                    val lit = Hearth.lampLit(i, lorienLamps.size); if (lit <= 0f) continue
+                    val fl = Hearth.flame(t, i)
+                    glowAt(c, l[0], l[1], (.85f + .3f * k) * fl, (.6f + .4f * k) * lit * fl.coerceAtMost(1f), goldLampShader, if (L) 24f else 32f)
+                    fill.color = 0xFFFFF0C4.toInt(); fill.alpha = (255 * lit).toInt()
                     c.drawCircle(l[0], l[1], if (L) 4.5f else 6f, fill)
                 }
                 if (!still) for ((i, lf) in leaves.withIndex()) {   // a leaf drifting down, turning as it falls
@@ -518,7 +536,8 @@ class Motion(private val look: String, land: Boolean, private val weather: Int, 
             }
             "havens" -> {
                 val k = if (still) .5f else breathe(t, 4.5f)
-                glowAt(c, beacon[0], beacon[1], beacon[2] * (.9f + .2f * k), .7f + .3f * k, beaconShader, 1f)
+                val fl = Hearth.flame(t, 5)
+                glowAt(c, beacon[0], beacon[1], beacon[2] * (.9f + .2f * k) * fl, (.7f + .3f * k) * fl.coerceAtMost(1f), beaconShader, 1f)
                 // the white ship, rising and falling on the swell
                 val rock = if (still) 0f else (1.2 * sin(2 * PI * phase(t, 8f, 0f))).toFloat()
                 val bob = if (still) 0f else (3 * sin(2 * PI * phase(t, 8f, 2f))).toFloat()
@@ -537,8 +556,10 @@ class Motion(private val look: String, land: Boolean, private val weather: Int, 
             }
             "redbook" -> {
                 val fx = fire[0]; val fy = fire[1]; val fs = fire[2]
-                glowAt(c, fx, fy - 34 * fs, fs * (1f + .04f * breathe(t, 2.2f)), .7f + .3f * breathe(t, 2.2f), fireShader, 150f)
-                c.save(); c.translate(fx, fy - 4 * fs); c.scale(fs * .52f, fs * .52f)
+                val fl = Hearth.flame(t)
+                val fk = sqrt(fl)   // the flame shrinks (gently) as the candle burns down
+                glowAt(c, fx, fy - 34 * fs * fk, fs * fk * (1f + .04f * breathe(t, 2.2f)), (.7f + .3f * breathe(t, 2.2f)) * fl.coerceAtMost(1.1f), fireShader, 150f)
+                c.save(); c.translate(fx, fy - 4 * fs); c.scale(fs * .52f * (.6f + .4f * fk), fs * .52f * fk)
                 for (f in flames) {
                     val p = if (still) 0f else phase(t, f.dur, f.off)
                     val at = floatArrayOf(0f, .25f, .5f, .75f, 1f)
@@ -565,7 +586,13 @@ class Motion(private val look: String, land: Boolean, private val weather: Int, 
     /** In front of everything (smoke above the chimney, the cabin window, lanterns and motes). */
     fun over(c: Canvas, t: Float) {
         when (look) {
-            "shire" -> for (k in 0 until 4) {
+            "shire" -> {
+              drawGarden(c, t)
+              // the door lantern: a soft glow by day, warmer as evening comes, guttering when the oil's low
+              val fl = Hearth.flame(t)
+              val ls = lantern[2]
+              glowAt(c, lantern[0], lantern[1], 34f * ls * (.75f + .25f * fl) * (if (still) 1f else 1f + .04f * breathe(t, 2.6f)), (.55f + .45f * fl.coerceAtMost(1.2f)) * .9f, lanternShader, 1f)
+              for (k in 0 until 4) {
                 val cs = chimney[2]
                 if (still) {
                     fill.color = 0xFFFFFFFF.toInt(); fill.alpha = (255 * (.55f - k * .11f)).toInt()
@@ -574,22 +601,27 @@ class Motion(private val look: String, land: Boolean, private val weather: Int, 
                     val p = phase(t, 5f, k * 1.25f); val e = easeOut(p)
                     fill.color = 0xFFFFFFFF.toInt(); fill.alpha = (153 * (if (p < .15f) p / .15f else 1 - (p - .15f) / .85f)).toInt()
                     val lean = if (wind) 170f else 50f       // and the smoke leans
+                    fill.alpha = (fill.alpha * (.35f + .65f * fl.coerceAtMost(1f))).toInt()   // a low fire, thin smoke
                     c.drawCircle(chimney[0] + lean * cs * e, chimney[1] - (if (wind) 120 else 200) * cs * e, 12 * cs * (.6f + 1.3f * e), fill)
                 }
+              }
             }
             "starlit" -> {
                 val p = phase(t, 3.2f, 0f)
                 val o = if (still) 1f else if (p > .31f && p < .33f) .82f else if (p > .64f && p < .67f) .88f else 1f
                 val ks = cabin[2]
-                fill.color = 0xFFFFC867.toInt(); fill.alpha = (255 * o).toInt()
+                val lit = (Hearth.flame(t, 3).coerceAtMost(1.15f) * Hearth.lampLit(0, 1)).coerceIn(0f, 1f)
+                fill.color = 0xFFFFC867.toInt(); fill.alpha = (255 * o * lit).toInt()
                 c.drawRect(cabin[0] - 14 * ks, cabin[1] - 3 * ks, cabin[0], cabin[1] + 11 * ks, fill)
                 c.drawRect(cabin[0] + 6 * ks, cabin[1] - 3 * ks, cabin[0] + 20 * ks, cabin[1] + 11 * ks, fill)
             }
             "elven" -> {
                 for ((i, l) in lamps.withIndex()) {
                     val k = if (still) .5f else breathe(t, 3f + i % 3, i * .9f)
-                    glowAt(c, l[0], l[1], .85f + .3f * k, .6f + .4f * k, lampShader, if (L) 22f else 28f)
-                    fill.color = 0xFFE5DCC2.toInt(); fill.alpha = 255
+                    val lit = Hearth.lampLit(i, lamps.size); if (lit <= 0f) continue      // the night watch puts them out one by one
+                    val fl = Hearth.flame(t, i)
+                    glowAt(c, l[0], l[1], (.85f + .3f * k) * fl, (.6f + .4f * k) * lit * fl.coerceAtMost(1f), lampShader, if (L) 22f else 28f)
+                    fill.color = 0xFFE5DCC2.toInt(); fill.alpha = (255 * lit).toInt()
                     c.drawCircle(l[0], l[1], if (L) 4.5f else 6f, fill)
                 }
                 if (!still) for (m in motes) {
@@ -602,6 +634,48 @@ class Motion(private val look: String, land: Boolean, private val weather: Int, 
         }
         weather(c, t)
         skyOver(c, t)
+    }
+
+    /** Sam's garden: cabbages and flowers in a tidy bed when it's flourishing; thistles and dock when it isn't. */
+    private fun drawGarden(c: Canvas, t: Float) {
+        if (plants.isEmpty()) return
+        val sc = if (L) 1f else 1.45f
+        val bx = if (L) 1084f else 422f; val by = if (L) 962f else 1984f; val bw = if (L) 132f else 166f; val bh = if (L) 40f else 70f
+        fill.shader = null
+        fill.color = 0xFF7A5A3A.toInt(); fill.alpha = 200
+        c.drawOval(bx, by, bx + bw, by + bh, fill)
+        fill.color = 0xFF5E4430.toInt(); fill.alpha = 150
+        c.drawOval(bx + 6 * sc, by + bh * .45f, bx + bw - 6 * sc, by + bh * .95f, fill)
+        for (p in plants) {
+            val sway = if (still) 0f else 1.6f * sin(t * .9f + p.sway)
+            when (p.kind) {
+                0 -> {   // a cabbage
+                    fill.color = 0xFF6E9A4E.toInt(); fill.alpha = 255; c.drawCircle(p.x, p.y, 6.5f * sc, fill)
+                    fill.color = 0xFF9CC27A.toInt(); c.drawCircle(p.x - 1.5f * sc, p.y - 1.5f * sc, 3.5f * sc, fill)
+                }
+                1, 2 -> {   // a flower on its stem (a bud on a fair day)
+                    val tx = p.x + sway; val ty = p.y - p.h
+                    line.color = 0xFF4E7A3A.toInt(); line.alpha = 255; line.strokeWidth = 1.6f * sc; line.shader = null
+                    c.drawLine(p.x, p.y, tx, ty, line)
+                    fill.color = 0xFF5E8C46.toInt(); fill.alpha = 255; c.drawOval(p.x - 4 * sc, p.y - p.h * .45f - 1.5f * sc, p.x, p.y - p.h * .45f + 1.5f * sc, fill)
+                    fill.color = bloomTones[p.tone]
+                    if (p.kind == 1) { for (k in 0 until 5) { val a = k * 1.2566f; c.drawCircle(tx + cos(a) * 2.6f * sc, ty + sin(a) * 2.6f * sc, 2.2f * sc, fill) }
+                        fill.color = 0xFFFFE9A0.toInt(); c.drawCircle(tx, ty, 1.5f * sc, fill) }
+                    else c.drawOval(tx - 1.8f * sc, ty - 3f * sc, tx + 1.8f * sc, ty + 1f * sc, fill)
+                }
+                3 -> {   // a thistle: spiky, with a purple head
+                    val tx = p.x + sway * 1.4f; val ty = p.y - p.h
+                    line.color = 0xFF6F7E4A.toInt(); line.alpha = 255; line.strokeWidth = 1.8f * sc; line.shader = null
+                    c.drawLine(p.x, p.y, tx, ty, line)
+                    for (k in 1..3) { val yy = p.y - p.h * k / 4f; c.drawLine(p.x + (tx - p.x) * k / 4f, yy, p.x + (tx - p.x) * k / 4f + (if (k % 2 == 0) 5f else -5f) * sc, yy - 3f * sc, line) }
+                    fill.color = 0xFF8E6A9A.toInt(); fill.alpha = 255; c.drawCircle(tx, ty - 1.5f * sc, 3f * sc, fill)
+                }
+                else -> {   // dock and long grass, untidy
+                    line.color = 0xFF7F8C4C.toInt(); line.alpha = 230; line.strokeWidth = 2.2f * sc; line.shader = null
+                    for (k in -1..1) c.drawLine(p.x + k * 3f * sc, p.y, p.x + k * 6f * sc + sway * 1.6f, p.y - p.h * (1f - .15f * k * k), line)
+                }
+            }
+        }
     }
 
     private fun weather(c: Canvas, t: Float) {
@@ -659,6 +733,7 @@ class Motion(private val look: String, land: Boolean, private val weather: Int, 
         val sy = (if (L) 80f else 260f) + 120f * ((n * 0.382f) % 1f)
         val len = if (L) 160f else 220f
         val hx = sx + len * p; val hy = sy + len * .35f * p
+        meteorSeen = true
         line.color = 0xFFFFFFFF.toInt(); line.strokeWidth = if (L) 2.4f else 3.2f
         line.alpha = (255 * sin(PI * p)).toInt()
         line.shader = LinearGradient(hx - 90, hy - 30, hx, hy, 0x00FFFFFF, 0xFFFFFFFF.toInt(), Shader.TileMode.CLAMP)
@@ -688,6 +763,18 @@ class Motion(private val look: String, land: Boolean, private val weather: Int, 
         if (ecl > 0f) { fill.color = 0xFF9A3A22.toInt(); fill.alpha = (235 * ecl).toInt(); c.drawCircle(cx, cy, r, fill); fill.alpha = 255 }   // in Earth's shadow: the blood-red moon
     }
 
+    /** Set when a falling star has been drawn (for the Deeds). */
+    var meteorSeen = false
+    /** The rare things this scene is showing, for the Deeds of the Red Book. */
+    val deeds: List<String> get() = buildList {
+        if (rainbowOn) add("rainbow")
+        if (frostOn) add("frost")
+        if (beaconSpots.isNotEmpty()) add("beacons")
+        if (stormOn) add("storm")
+        updateRealSky()
+        realMoon?.let { m -> if (m.pos.alt > 0 && (look == "starlit" || look == "havens" || look == "elven")) { if (m.eclipse > .3) add("eclipse"); if (m.supermoon) add("supermoon") } }
+    }
+
     /** How often this scene needs a new frame: gentle scenes less often, saving battery. */
     val fps: Int = when {
         weather == 3 || weather == 5 || weather == 4 -> 30
@@ -709,13 +796,24 @@ class SceneDrawer(ctx: Context, val look: Look, val w: Int, val h: Int, dp: Floa
     // Rivendell on a wide upright screen (a tablet): crop evenly, so the trees stay below the clock
     private val fit = SceneArt.Fit(design, w.toFloat(), h.toFloat(), if (parallax) 1.04f else 1f,
         anchor = if (look.id == "elven" && !land && h.toFloat() / w < 2f) .5f else 1f)
-    val extras = SceneExtras(look.id, w, h, dp, still)
+    val extras = SceneExtras(ctx.applicationContext, look.id, w, h, dp, still)
+    private val app = ctx.applicationContext
+    private val live = !still
     private val names = SceneArt.LAYERS[look.id] ?: listOf("back")
     private val bitmaps = names.map { SceneArt.layer(ctx, look.id, season, land, it, (design.h * fit.s).toInt()) }
-    private val motion = Motion(look.id, land, weather, still, wind = !still && Weather.windy(ctx), sky = Weather.sky(ctx))
+    private val motion = Motion(look.id, land, weather, still, wind = !still && Weather.windy(ctx), sky = Weather.sky(ctx),
+        garden = if (look.id == "shire" && !still) Garden.state(ctx) else -1)
+    /** The dawn alarm: in the quarter hour before your alarm, Shire morning rises through the night. */
+    private val dawn: SceneDrawer? = if (live && seasonOverride == null && look.darkScene && look.id != "shire" && Hearth.dawnSoon())
+        try { SceneDrawer(ctx, Look.byId("shire"), w, h, dp, weather, parallax = parallax) } catch (_: Throwable) { null } else null
+    private var deedsChecked = false
     private val paint = Paint(Paint.FILTER_BITMAP_FLAG or Paint.DITHER_FLAG)
     private val maxShift = 12 * dp
-    val fps get() = maxOf(motion.fps, extras.fps)
+    /** Frames a second: the scene's own, more for fireworks or a visitor in flight; calmer under the night watch. */
+    val fps: Int get() {
+        val f = maxOf(motion.fps, extras.fps)
+        return if (Hearth.watch() >= .5f && extras.fps == 0) maxOf(12, f * 3 / 5) else f
+    }
 
     /** [tx], [ty]: the tilt, -1..1 (for depth); nearer layers move further. */
     fun draw(c: Canvas, t: Float, tx: Float = 0f, ty: Float = 0f) {
@@ -740,6 +838,22 @@ class SceneDrawer(ctx: Context, val look: Look, val w: Int, val h: Int, dp: Floa
         if (front >= 0) layer(front, 1f)
         moving(1f) { motion.over(it, t) }
         extras.draw(c)
+        dawn?.let { d ->
+            val k = Hearth.dawn()
+            if (k > 0f) { c.saveLayerAlpha(0f, 0f, w.toFloat(), h.toFloat(), (255 * k * k * (3 - 2 * k)).toInt()); d.draw(c, t, tx, ty); c.restore() }
+        }
+        if (live) noteDeeds()
+    }
+
+    private fun noteDeeds() {
+        if (!deedsChecked) {
+            deedsChecked = true
+            motion.deeds.forEach { Deeds.saw(app, it) }
+            if (Feasts.fireworks()) Deeds.saw(app, "fireworks")
+            if (Feasts.lanterns()) Deeds.saw(app, "lanterns")
+            if (look.id == "redbook" && Feasts.durin()) Deeds.saw(app, "durin")
+        }
+        if (motion.meteorSeen) { motion.meteorSeen = false; Deeds.saw(app, "meteor") }
     }
 }
 
@@ -801,7 +915,8 @@ class SceneView @JvmOverloads constructor(context: Context, attrs: AttributeSet?
         if (w <= 0 || h <= 0) return
         val sk = Weather.sky(context).let { "${it.rainbow}${it.frost}${it.heat}${(it.smoke * 10).toInt()}${it.beacons}${it.storm}" }
         val feast = "${Feasts.fireworks()}${Feasts.lanterns()}${Feasts.durin()}"
-        val key = "${look.id}#$w#$h#${SceneArt.season()}#$weather#$parallax#$sk#$feast"
+        val garden = if (look.id == "shire") Garden.state(context) else -1
+        val key = "${look.id}#$w#$h#${SceneArt.season()}#$weather#$parallax#$sk#$feast#$garden#${Hearth.dawnSoon()}"
         if (key == builtFor && drawer != null) { invalidate(); return }
         builtFor = key
         val token = ++building
@@ -809,6 +924,7 @@ class SceneView @JvmOverloads constructor(context: Context, attrs: AttributeSet?
         val season = SceneArt.season()
         val seen = seasonPrefs.getString("season_seen", null)
         val turn = seen != null && seen != season && animationsOn && !Quiet.now(context)
+        if (turn) Deeds.saw(context, "turning")
         seasonPrefs.edit().putString("season_seen", season).apply()
         Thread {
             val d = try { SceneDrawer(context, lk, w, h, dpx, wx, parallax = px) } catch (_: Throwable) { null }
@@ -927,8 +1043,11 @@ class SceneView @JvmOverloads constructor(context: Context, attrs: AttributeSet?
     }
     override fun onAccuracyChanged(s: Sensor?, a: Int) {}
 
-    override fun onAttachedToWindow() { super.onAttachedToWindow(); update() }
+    /** A messenger, an eagle, a refill or a smoke ring: keep frames coming while it plays. */
+    private val omen: () -> Unit = { ensureTicking() }
+    override fun onAttachedToWindow() { super.onAttachedToWindow(); Hearth.init(context); Hearth.addListener(omen); update() }
     override fun onDetachedFromWindow() {
+        Hearth.removeListener(omen)
         running = false
         Choreographer.getInstance().removeFrameCallback(frame)
         sensors?.unregisterListener(this)
