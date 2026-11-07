@@ -197,18 +197,18 @@ class Motion(private val look: String, land: Boolean, private val weather: Int, 
     }
 
     // --- Shire Morning
-    private val sun = if (L) floatArrayOf(1390f, 250f) else floatArrayOf(830f, 900f)
+    private val sun = if (L) floatArrayOf(1390f, 250f) else floatArrayOf(820f, 1060f)
     private val sunShader = radial(300f, 0xFFFFF6D8.toInt(), 0x00FFE7A6, .28f, 0xFFFFEFC0.toInt())
     private class Cloud(val x: Float, val y: Float, val s: Float, val o: Float, val dur: Float)
     private val clouds = if (L) listOf(Cloud(1640f, 190f, 1f, .9f, 260f), Cloud(980f, 140f, .7f, .75f, 320f), Cloud(1240f, 420f, .55f, .8f, 380f), Cloud(320f, 470f, .6f, .7f, 300f), Cloud(-260f, 260f, .8f, .8f, 340f))
-        else listOf(Cloud(180f, 900f, .9f, .85f, 220f), Cloud(900f, 1150f, .7f, .8f, 280f), Cloud(520f, 780f, .5f, .7f, 340f))
+        else listOf(Cloud(160f, 1100f, .85f, .85f, 220f), Cloud(930f, 1150f, .62f, .8f, 280f), Cloud(470f, 1210f, .45f, .7f, 340f))   // below the clock and the sun's arc
     private val cloudPath = Path().apply {
         addRoundRect(RectF(-90f, -8f, 110f, 26f), 17f, 17f, Path.Direction.CW)
         addCircle(-30f, -6f, 32f, Path.Direction.CW); addCircle(20f, -22f, 42f, Path.Direction.CW); addCircle(66f, -2f, 26f, Path.Direction.CW)
     }
     private val riverGlints = if (L) listOf(floatArrayOf(140f, 775f, 70f), floatArrayOf(520f, 792f, 40f), floatArrayOf(1010f, 771f, 90f), floatArrayOf(1560f, 752f, 50f), floatArrayOf(-300f, 768f, 60f), floatArrayOf(2100f, 770f, 70f))
-        else listOf(floatArrayOf(120f, 1572f, 60f), floatArrayOf(560f, 1590f, 40f), floatArrayOf(900f, 1548f, 50f))
-    private val chimney = if (L) floatArrayOf(1392f, 806f, 1f) else floatArrayOf(897f, 1707f, 1.45f)
+        else listOf(floatArrayOf(120f, 1512f, 60f), floatArrayOf(560f, 1530f, 40f), floatArrayOf(900f, 1478f, 50f))
+    private val chimney = if (L) floatArrayOf(1392f, 806f, 1f) else floatArrayOf(897f, 1677f, 1.45f)
 
     private fun cloud(c: Canvas, cl: Cloud, t: Float, color: Int = 0xFFFFFFFF.toInt()) {
         val span = (x1 - x0) + 1400f
@@ -228,21 +228,20 @@ class Motion(private val look: String, land: Boolean, private val weather: Int, 
     }
 
     // --- Red Book
-    private val fire = if (L) floatArrayOf(1210f, 930f, 1f) else floatArrayOf(560f, 1860f, 1.5f)
+    private val fire = if (L) floatArrayOf(1210f, 820f, 1f) else floatArrayOf(560f, 1700f, 1.4f)   // the candle's wick (the candle itself is in the art)
     private val compass = if (L) floatArrayOf(1760f, 900f) else floatArrayOf(900f, 1900f)
-    private val fireShader = radial(230f, 0x8CFFB25B.toInt(), 0x00FFB25B)
+    private val fireShader = radial(150f, 0x99FFC06A.toInt(), 0x00FFB25B, .4f, 0x40FFB25B)
     private class FlameShape(val path: Path, val ox: Float, val oy: Float, val dur: Float, val off: Float, val color: Int)
     private val flames = listOf(
-        Triple("M0,-118 C34,-72 46,-46 30,-6 C22,14 -22,14 -30,-6 C-44,-40 -18,-62 0,-118Z", floatArrayOf(1.3f, 0f), 0xFFC8401F.toInt()),
-        Triple("M2,-74 C22,-46 26,-30 16,-8 C10,4 -12,4 -16,-8 C-24,-30 -8,-44 2,-74Z", floatArrayOf(1.05f, .4f), 0xFFF29A3A.toInt()),
-        Triple("M2,-40 C12,-26 12,-16 7,-6 C4,0 -6,0 -8,-6 C-11,-16 -4,-24 2,-40Z", floatArrayOf(.8f, .2f), 0xFFFFE07A.toInt()),
+        Triple("M0,-118 C34,-72 46,-46 30,-6 C22,14 -22,14 -30,-6 C-44,-40 -18,-62 0,-118Z", floatArrayOf(1.3f, 0f), 0xFFE8762A.toInt()),
+        Triple("M2,-74 C22,-46 26,-30 16,-8 C10,4 -12,4 -16,-8 C-24,-30 -8,-44 2,-74Z", floatArrayOf(1.05f, .4f), 0xFFF7B24A.toInt()),
+        Triple("M2,-40 C12,-26 12,-16 7,-6 C4,0 -6,0 -8,-6 C-11,-16 -4,-24 2,-40Z", floatArrayOf(.8f, .2f), 0xFFFFF0B0.toInt()),
     ).map { (d, tm, col) ->
         val p = SvgPath.parse(d); val b = RectF(); p.computeBounds(b, true)
         FlameShape(p, (b.left + b.right) / 2, b.bottom, tm[0], tm[1], col)
     }
     private val needleNS = SvgPath.parse("M0,-96 L14,0 L0,96 L-14,0Z")
     private val needleEW = SvgPath.parse("M-96,0 L0,-14 L96,0 L0,14Z")
-    private val logs = SvgPath.parse("M-46,24 L46,-6 M-46,-6 L46,24")
     private val mtx = Matrix()
     private fun track(p: Float, at: FloatArray, v: FloatArray): Float {
         for (i in 1 until at.size) if (p <= at[i]) {
@@ -257,6 +256,8 @@ class Motion(private val look: String, land: Boolean, private val weather: Int, 
     private val moonShader = radial(moon[2] * 3.2f, 0x8CFFF7E0.toInt(), 0x00FFF7E0)
     private val lakeGlint = if (L) floatArrayOf(1480f, 812f) else floatArrayOf(820f, 1786f)
     private val cabin = if (L) floatArrayOf(600f, 905f, 1f) else floatArrayOf(430f, 1960f, 1.25f)
+    private val lakeMist = if (L) floatArrayOf(820f, 90f) else floatArrayOf(1820f, 140f)
+    private val lakeMistShader = LinearGradient(0f, lakeMist[0], 0f, lakeMist[0] + lakeMist[1], intArrayOf(0x00B9C2EE, 0x38B9C2EE, 0x00B9C2EE), null, Shader.TileMode.CLAMP)
     private val twinkles = Random(1954).let { r -> List(40) { floatArrayOf(x0 + r.nextFloat() * (x1 - x0), r.nextFloat() * (if (L) 430f else 900f), 1.4f + r.nextFloat() * 1.2f, 2f + r.nextFloat() * 3.5f, r.nextFloat() * 5f) } }
 
     // --- Elven Silver
@@ -313,12 +314,15 @@ class Motion(private val look: String, land: Boolean, private val weather: Int, 
     fun moving(c: Canvas, t: Float) {
         when (look) {
             "shire" -> for ((i, g) in riverGlints.withIndex()) glint(c, g[0], g[1], g[2], t, 4f + i % 3, i * 1.3f, if (L) 3f else 4f, 0xFFFFFFFF.toInt())
+            "starlit" -> {   // mist drifting on the water
+                val dx = if (still) 0f else (-120 * cos(2 * PI * phase(t, 80f, 20f))).toFloat()
+                glow.shader = lakeMistShader; glow.alpha = 255
+                c.drawRect(x0 - 200 + dx, lakeMist[0], x1 + 200 + dx, lakeMist[0] + lakeMist[1], glow)
+            }
             "redbook" -> {
                 val fx = fire[0]; val fy = fire[1]; val fs = fire[2]
-                glowAt(c, fx, fy - 30 * fs, fs * (1f + .04f * breathe(t, 2.2f)), .7f + .3f * breathe(t, 2.2f), fireShader, 230f)
-                c.save(); c.translate(fx, fy); c.scale(fs, fs)
-                line.color = 0xFF5A3F22.toInt(); line.alpha = 255; line.strokeWidth = 9f
-                c.drawPath(logs, line)
+                glowAt(c, fx, fy - 34 * fs, fs * (1f + .04f * breathe(t, 2.2f)), .7f + .3f * breathe(t, 2.2f), fireShader, 150f)
+                c.save(); c.translate(fx, fy - 4 * fs); c.scale(fs * .52f, fs * .52f)
                 for (f in flames) {
                     val p = if (still) 0f else phase(t, f.dur, f.off)
                     val at = floatArrayOf(0f, .25f, .5f, .75f, 1f)
@@ -331,11 +335,6 @@ class Motion(private val look: String, land: Boolean, private val weather: Int, 
                     fill.color = f.color; fill.alpha = 255
                     c.drawPath(f.path, fill)
                     c.restore()
-                }
-                if (!still) for (i in 0 until 6) {
-                    val p = phase(t, 2.4f + i * .4f, i * .7f)
-                    fill.color = 0xFFFFC56A.toInt(); fill.alpha = (255 * (if (p < .15f) p / .15f else 1 - (p - .15f) / .85f)).toInt()
-                    c.drawCircle(-20f + i * 8 + 30 * p, -100 - 260 * p, 2.4f, fill)
                 }
                 c.restore()
                 c.save(); c.translate(compass[0], compass[1])
@@ -394,7 +393,7 @@ class Motion(private val look: String, land: Boolean, private val weather: Int, 
             val col = if (look == "shire") 0xFFF2F4F4.toInt() else 0xFF3A4266.toInt()
             val o = if (look == "shire") .85f else .55f
             val list = if (L) listOf(Cloud(200f, 90f, 1.6f, o, 300f), Cloud(1100f, 160f, 1.3f, o, 360f), Cloud(1900f, 70f, 1.8f, o, 420f))
-                else listOf(Cloud(160f, 700f, 1.6f, o, 260f), Cloud(800f, 820f, 1.3f, o, 320f))
+                else listOf(Cloud(160f, 1080f, 1.6f, o, 260f), Cloud(800f, 1190f, 1.3f, o, 320f))
             for (cl in list) cloud(c, cl, t, col)
         }
         if (weather == 2) for ((y, h) in if (L) listOf(560f to 260f, 760f to 320f) else listOf(1300f to 400f, 1700f to 500f)) {

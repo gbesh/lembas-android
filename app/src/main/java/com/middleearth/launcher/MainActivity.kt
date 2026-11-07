@@ -1199,7 +1199,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         } else ornament.visibility = View.GONE
 
         hint.setImageResource(look.hintRes)
-        hint.imageTintList = ColorStateList.valueOf(look.hintColor)
+        hint.imageTintList = if (look.hintRes == R.drawable.hint_ring) null else ColorStateList.valueOf(look.hintColor)   // the Ring keeps its own gold
         music.style(look.clockColor, (look.clockColor and 0x00FFFFFF) or 0xA0000000.toInt(), look.accent,
             if (look.lightBars) 0x1A000000 else 0x24FFFFFF, Fonts.get(assets, look.displayItalicFont, 400, true),
             Fonts.get(assets, "AlegreyaSans-Medium.ttf", 500))

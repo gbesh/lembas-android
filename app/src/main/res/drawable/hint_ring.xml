@@ -1,4 +1,30 @@
-<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="44dp" android:height="24dp" android:viewportWidth="44" android:viewportHeight="24">
-    <path android:pathData="M6,12a16,7 0 1,0 32,0a16,7 0 1,0 -32,0z" android:fillColor="#00000000" android:strokeColor="#FFFFFFFF" android:strokeWidth="2.4" />
-    <path android:pathData="M8.5,11a13.5,5.2 0 0,1 27,0" android:fillColor="#00000000" android:strokeColor="#FFFFFFFF" android:strokeAlpha="0.55" android:strokeWidth="0.8" />
+<!-- The One Ring lying on the ground above the dock: gold, with a highlight, a soft shadow and a gleam (not tinted) -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android" xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="44dp" android:height="26dp" android:viewportWidth="44" android:viewportHeight="26">
+    <!-- its shadow on the ground -->
+    <path android:pathData="M8,16.5a14,4.2 0 1,0 28,0a14,4.2 0 1,0 -28,0z" android:fillColor="#38000000" />
+    <!-- the band: the far side, darker -->
+    <path android:pathData="M7,12.5a15,6.4 0 1,1 30,0" android:fillColor="#00000000" android:strokeWidth="2.6" android:strokeLineCap="round">
+        <aapt:attr name="android:strokeColor">
+            <gradient android:type="linear" android:startX="7" android:startY="0" android:endX="37" android:endY="0">
+                <item android:offset="0" android:color="#FF7A5A22" />
+                <item android:offset="0.5" android:color="#FFB8913E" />
+                <item android:offset="1" android:color="#FF7A5A22" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <!-- the near side, catching the light -->
+    <path android:pathData="M7,12.5a15,6.4 0 1,0 30,0" android:fillColor="#00000000" android:strokeWidth="3.2" android:strokeLineCap="round">
+        <aapt:attr name="android:strokeColor">
+            <gradient android:type="linear" android:startX="7" android:startY="0" android:endX="37" android:endY="0">
+                <item android:offset="0" android:color="#FF9A7430" />
+                <item android:offset="0.42" android:color="#FFF7E2A0" />
+                <item android:offset="0.6" android:color="#FFE2C064" />
+                <item android:offset="1" android:color="#FF8E6A28" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path android:pathData="M12,17a12,3.6 0 0,0 14,1.2" android:fillColor="#00000000" android:strokeColor="#CCFFFBEA" android:strokeWidth="0.9" android:strokeLineCap="round" />
+    <!-- the gleam -->
+    <path android:pathData="M31,3.2 L31.7,5.8 L34.3,6.5 L31.7,7.2 L31,9.8 L30.3,7.2 L27.7,6.5 L30.3,5.8 Z" android:fillColor="#FFFFF8E0" />
 </vector>

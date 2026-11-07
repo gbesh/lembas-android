@@ -128,8 +128,9 @@ class Look(
             labelFont = "AlegreyaSans-Medium.ttf",
             glyphColor = 0xFF2F4A2A.toInt(),
             dockFrame = IconFrame.ROUND_TILE,
-            dockFillTop = 0xFFF6F2E8.toInt(),
-            dockStroke = 0x402F4A2A,
+            dockFillTop = 0xA6FBF8EE.toInt(),       // frosted, so the meadow shows through like the other looks
+            dockFillBottom = 0x80F3EEE2.toInt(),
+            dockStroke = 0x59FFFFFF,
             drawerFrame = IconFrame.ROUND_TILE,
             drawerFillTop = 0xFFE3EBCB.toInt(),
             drawerTone = 0xFFE3EBCB.toInt(),
