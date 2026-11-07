@@ -1,0 +1,13 @@
+--------- beginning of main
+11-07 01:30:58.288  7662  7662 D LembasTouch: down 160.0,1650.0 mode=0
+11-07 01:30:58.289  7662  7662 D LembasTouch: down 160.0,1650.0 mode=0
+11-07 01:30:58.316  7662  7662 D LembasTouch: move 1449.5068 mode=1
+11-07 01:30:58.366  7662  7662 D LembasTouch: move 1250.0 mode=1
+11-07 01:30:58.416  7662  7662 D LembasTouch: move 1000.0 mode=1
+11-07 01:30:58.595  7662  7662 D LembasTouch: move 750.0 mode=1
+11-07 01:30:58.798  7662  7662 D LembasTouch: move 500.0 mode=1
+11-07 01:30:58.898  7662  7662 D LembasTouch: move 300.0 mode=1
+11-07 01:30:58.999  7662  7662 D LembasTouch: move 150.0 mode=1
+11-07 01:30:59.072  7662  7662 D LembasTouch: end v=0.0 p=0.54146117
+11-07 01:30:59.072  7662  7662 D LembasTouch: animateTo 1.0 from 0.54146117 anim=false
+11-07 01:30:59.072  7662  7662 D LembasTouch: settle 1.0
