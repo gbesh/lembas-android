@@ -208,6 +208,10 @@ object GoogleSync {
                 dataMap.putString("walk_at", Journey.last(ctx).name)
                 // and the night watch's bedtime (minutes after midnight, -1 off), so the watch face settles too
                 dataMap.putInt("bedtime", p.getInt(Hearth.PREF_WATCH, Hearth.DEFAULT_BEDTIME))
+                // a smoke-ring focus running (when it ends, 0 for none), for the watch's focus tile
+                // Tengwar on the face too: the phone's setting ("off", "date", "both")
+                dataMap.putString("tengwar", Tengwar.mode(ctx))
+                dataMap.putLong("focus_end", if (Focus.running(ctx)) Focus.end(ctx) else 0L)
             }.asPutDataRequest().setUrgent()
             Wearable.getDataClient(ctx).putDataItem(req)
         } catch (_: Throwable) { }   // no Google Play services, or no watch: nothing to do
@@ -216,6 +220,18 @@ object GoogleSync {
 
 /** A look chosen on the watch: the phone takes it, and passes it on to the PC through Google. */
 class WatchLookListener : WearableListenerService() {
+    /** From the watch: the Horn of Gondor (find the phone), or a smoke-ring focus started or stopped there. */
+    override fun onMessageReceived(m: com.google.android.gms.wearable.MessageEvent) {
+        when (m.path) {
+            "/lembas/horn" -> Horn.blow(this)
+            "/lembas/focus" -> {
+                val cmd = String(m.data)
+                if (cmd == "stop") Focus.stop(this) else Focus.start(this, cmd.removePrefix("start:").toIntOrNull() ?: 25)
+                GoogleSync.tellWatch(this)
+            }
+        }
+    }
+
     override fun onDataChanged(events: DataEventBuffer) {
         for (e in events) {
             if (e.type != DataEvent.TYPE_CHANGED || e.dataItem.uri.path != GoogleSync.WATCH_PATH) continue

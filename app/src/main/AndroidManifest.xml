@@ -198,6 +198,11 @@
                 <action android:name="com.google.android.gms.wearable.DATA_CHANGED" />
                 <data android:scheme="wear" android:host="*" android:pathPrefix="/lembas/look" />
             </intent-filter>
+            <!-- the Horn of Gondor and focus, from the watch -->
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
+                <data android:scheme="wear" android:host="*" android:pathPrefix="/lembas/" />
+            </intent-filter>
         </service>
 
     </application>

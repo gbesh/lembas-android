@@ -56,12 +56,14 @@ object Focus {
         prefs(ctx).edit().putLong(PREF_END, end).putInt(PREF_MIN, m).apply()
         try { ctx.getSystemService(AlarmManager::class.java)?.setWindow(AlarmManager.RTC_WAKEUP, end, 30_000L, alarmIntent(ctx)) } catch (_: Throwable) { }
         notifyRunning(ctx, end, m)
+        GoogleSync.tellWatch(ctx)
     }
 
     fun stop(ctx: Context) {
         prefs(ctx).edit().putLong(PREF_END, 0L).apply()
         try { ctx.getSystemService(AlarmManager::class.java)?.cancel(alarmIntent(ctx)) } catch (_: Throwable) { }
         ctx.getSystemService(NotificationManager::class.java)?.cancel(NOTE)
+        GoogleSync.tellWatch(ctx)
     }
 
     /** The session ended (the alarm, or the home screen noticing first). Safe to call twice. */
@@ -71,6 +73,7 @@ object Focus {
         prefs(ctx).edit().putLong(PREF_END, 0L).putString(PREF_RINGS, "${LocalDate.now().toEpochDay()}:$n")
             .putBoolean(PREF_PENDING, !homeShowing).apply()
         Deeds.saw(ctx, "smokering")
+        GoogleSync.tellWatch(ctx)
         if (homeShowing) { ringAt = SystemClock.uptimeMillis(); Hearth.nudge() }
         notifyDone(ctx, n)
     }
