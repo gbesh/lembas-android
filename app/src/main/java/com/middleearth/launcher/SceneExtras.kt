@@ -31,6 +31,8 @@ class SceneExtras(private val ctx: android.content.Context, private val look: St
     private val fill = Paint(Paint.ANTI_ALIAS_FLAG)
     private val line = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeCap = Paint.Cap.ROUND }
     var bunting = false
+    /** A place on the walk reached today: its name on a pennant strung across the sky. */
+    var milestone: String? = null
 
     // ------------------------------------------------------------------ the light of the hour (worked out once a minute)
     private var tintAt = -1
@@ -143,6 +145,36 @@ class SceneExtras(private val ctx: android.content.Context, private val look: St
             val fl = Path().apply { moveTo(x - 7 * dp, y); lineTo(x + 7 * dp, y); lineTo(x, y + 14 * dp); close() }
             c.drawPath(fl, fill)
         }
+    }
+
+    // ------------------------------------------------------------------ a place reached on the walk
+    private val pennantText = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        textAlign = Paint.Align.CENTER
+        typeface = Fonts.get(ctx.assets, "IMFellEnglish-Italic.ttf", 400, true)
+    }
+    private fun drawPennant(c: Canvas, name: String) {
+        val land = w > h
+        val y0 = h * (if (land) .07f else .055f)
+        val sag = h * .02f
+        line.color = 0xCCFFFFFF.toInt(); line.strokeWidth = 1.4f * dp; line.style = Paint.Style.STROKE
+        c.drawPath(Path().apply { moveTo(0f, y0); quadTo(w / 2f, y0 + sag * 2, w.toFloat(), y0) }, line)
+        pennantText.textSize = 17 * dp
+        val tw = pennantText.measureText(name) + 34 * dp
+        val cx = w / 2f; val cy = y0 + sag + 16 * dp
+        val t = SystemClock.uptimeMillis() / 1000f
+        val sway = if (still) 0f else 1.5f * sin(t * .8f)
+        c.save(); c.rotate(sway, cx, y0 + sag)
+        fill.color = 0xFF9A2A1C.toInt(); fill.alpha = 235
+        c.drawPath(Path().apply {   // a swallow-tailed banner hung from the line
+            moveTo(cx - tw / 2, cy - 14 * dp); lineTo(cx + tw / 2, cy - 14 * dp); lineTo(cx + tw / 2 - 8 * dp, cy); lineTo(cx + tw / 2, cy + 14 * dp)
+            lineTo(cx - tw / 2, cy + 14 * dp); lineTo(cx - tw / 2 + 8 * dp, cy); close()
+        }, fill)
+        line.color = 0xFFE2C46F.toInt(); line.strokeWidth = 1.2f * dp
+        c.drawLine(cx - tw / 2 + 10 * dp, cy - 10 * dp, cx + tw / 2 - 10 * dp, cy - 10 * dp, line)
+        c.drawLine(cx - tw / 2 + 10 * dp, cy + 10 * dp, cx + tw / 2 - 10 * dp, cy + 10 * dp, line)
+        pennantText.color = 0xFFF6EBD0.toInt()
+        c.drawText(name, cx, cy + 6 * dp, pennantText)
+        c.restore()
     }
 
     // ------------------------------------------------------------------ Middle-earth's calendar
@@ -397,6 +429,7 @@ class SceneExtras(private val ctx: android.content.Context, private val look: St
         if (!still) visitor().let { if (it >= 0f) drawVisitor(c, it) }
         if (bunting) drawBunting(c)
         if (lanterns && !bunting) drawLanterns(c)
+        milestone?.let { if (!bunting) drawPennant(c, it) }
         if (moonLetters) drawMoonLetters(c)
         if (fireworks) drawFireworks(c)
         if (!still) {

@@ -891,6 +891,10 @@ class SceneView @JvmOverloads constructor(context: Context, attrs: AttributeSet?
     var bunting = false
         set(value) { field = value; drawer?.extras?.bunting = value; invalidate() }
 
+    /** A place on the walk reached today: a pennant with its name. */
+    var milestone: String? = null
+        set(value) { if (field != value) { field = value; drawer?.extras?.milestone = value; invalidate() } }
+
     /** Tapped the scene: sparkles, embers or a puff of cloud where you touched. */
     fun poke(x: Float, y: Float) {
         val d = drawer ?: return
@@ -932,6 +936,7 @@ class SceneView @JvmOverloads constructor(context: Context, attrs: AttributeSet?
             post {
                 if (token != building || d == null) return@post
                 d.extras.bunting = bunting
+                d.extras.milestone = milestone
                 val prev = drawer
                 val fade = (prev != null && prev.look.id != d.look.id && animationsOn) || was != null
                 old = was ?: if (fade) prev else null

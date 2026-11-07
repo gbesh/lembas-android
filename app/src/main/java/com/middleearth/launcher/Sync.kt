@@ -95,8 +95,9 @@ object GoogleSync {
             .put("clock", p.getString("home_style", "modern") ?: "modern")
             .put("meals", p.getBoolean("meals", true))
             .apply { Here.where(ctx)?.let { (la, lo) -> put("lat", la); put("lon", lo) } }   // only with "Weather for where you are" on
+            .apply { if (Journey.started(ctx)) put("walk", JSONObject().put("km", Journey.km(ctx).toInt()).put("line", Journey.line(ctx))) }   // the walk, for the PC's panel
     }
-    private fun sig(j: JSONObject) = "${j.optString("look")}|${j.optLong("keepUntil")}|${j.optBoolean("weather", true)}|${j.optString("clock")}|${j.optBoolean("meals", true)}|${j.optDouble("lat")}|${j.optDouble("lon")}"
+    private fun sig(j: JSONObject) = "${j.optString("look")}|${j.optLong("keepUntil")}|${j.optBoolean("weather", true)}|${j.optString("clock")}|${j.optBoolean("meals", true)}|${j.optDouble("lat")}|${j.optDouble("lon")}|${j.optJSONObject("walk")?.optInt("km")}"
 
     private fun apply(ctx: Context, r: JSONObject) {
         prefs(ctx).edit()
@@ -201,6 +202,12 @@ object GoogleSync {
                     (if (Feasts.lanterns()) 64 else 0) or (if (Feasts.fireworks()) 128 else 0) or (if (Feasts.durin()) 256 else 0) or (if (Feasts.toast()) 512 else 0))
                 dataMap.putString("day", java.time.LocalDate.now().toString() + "T" + java.time.LocalTime.now().hour)   // changes hourly, so the calendar flags reach the watch on time
                 dataMap.putString("forecast", Weather.forecast(ctx))
+                // the walk to Mount Doom: how far along the road, and the next place (km -1 when not walking)
+                dataMap.putFloat("walk_km", if (Journey.started(ctx)) Journey.km(ctx) else -1f)
+                Journey.next(ctx).let { n -> dataMap.putString("walk_next", n?.first?.name ?: ""); dataMap.putInt("walk_next_km", n?.second ?: 0) }
+                dataMap.putString("walk_at", Journey.last(ctx).name)
+                // and the night watch's bedtime (minutes after midnight, -1 off), so the watch face settles too
+                dataMap.putInt("bedtime", p.getInt(Hearth.PREF_WATCH, Hearth.DEFAULT_BEDTIME))
             }.asPutDataRequest().setUrgent()
             Wearable.getDataClient(ctx).putDataItem(req)
         } catch (_: Throwable) { }   // no Google Play services, or no watch: nothing to do

@@ -53,7 +53,16 @@ object Deeds {
         Deed("smokering", "A smoke ring", "Focused, finished, and a smoke ring to show for it.", "A while of focus"),
         Deed("garden", "Sam's garden in bloom", "A quiet day on the phone, and the garden loved it.", "A gentle day"),
         Deed("refill", "Oil for the lamps", "Down to the last drop, and the lamps filled again.", "When the lamps burn low"),
-    )
+    ) + listOf(
+        Triple("bree", "Over the hedge and into Bree, with a pint at the end of it.", "217 km down the road"),
+        Triple("weathertop", "Up on the old hill, with the wind for company.", "The hill east of Bree"),
+        Triple("rivendell", "The Last Homely House, and a long rest earned.", "Over the Last Bridge and on"),
+        Triple("moria", "At the doors in the mountain wall. You know the word.", "South along the mountains"),
+        Triple("lorien", "Under the golden trees, where time runs slow.", "Beyond the mountains"),
+        Triple("amonhen", "The Seat of Seeing, high above the river.", "Down the Great River"),
+        Triple("blackgate", "The Black Gate, looming. Best go round.", "Across the marshes"),
+        Triple("doom", "The whole road, walked on your own two feet.", "The end of the road"),
+    ).map { (id, line, hint) -> Journey.PLACES.first { it.id == id }.let { Deed("walk_$id", it.name.replaceFirstChar { c -> c.uppercase() }, line, hint) } }
 
     private const val PREF = "deeds"
     @Volatile private var cache: JSONObject? = null
@@ -106,6 +115,10 @@ object Deeds {
         content.addView(text("The Red Book", title, 26f, ink))
         content.addView(text(Sayings.today(), display, 18f, ink, 10f).apply { setLineSpacing(0f, 1.15f) })
         content.addView(text(Feasts.countdown(), sans, 14f, look.accent, 10f))
+        if (Journey.started(activity)) {
+            content.addView(text("THE ROAD · ${Journey.line(activity).uppercase(Locale.getDefault())}", sans, 12f, look.accent).apply { letterSpacing = .1f; setPadding(px(4f), px(24f), 0, px(8f)) })
+            content.addView(JourneyMap(activity, look, Journey.km(activity)), LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, px(220f)))
+        }
 
         val seenCount = ALL.count { j.has(it.id) }
         content.addView(text("DEEDS · $seenCount OF ${ALL.size}", sans, 12f, look.accent, 26f).apply { letterSpacing = .12f; setPadding(px(4f), px(26f), 0, px(8f)) })

@@ -797,6 +797,8 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
             return
         }
         val is24 = DateFormat.is24HourFormat(this)
+        Journey.update(this) { backdrop.milestone = Journey.bannerToday(this) }
+        backdrop.milestone = Journey.bannerToday(this)
         if (modern) { updateModernTexts(now, is24); return }
         val time = now.format(DateTimeFormatter.ofPattern(if (is24) "H:mm" else "h:mm"))
         val sb = SpannableStringBuilder(time)
@@ -1503,6 +1505,11 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == SearchEngine.REQUEST_CONTACTS && searching) runSearch(search.text.toString())
         if (requestCode == Here.REQUEST && Here.allowed(this)) hereOn()
+        if (requestCode == Journey.REQUEST) {
+            Journey.onPermission(this)
+            if (!Journey.permitted(this)) Toast.makeText(this, "The walk needs your steps. You can allow them in Health Connect.", Toast.LENGTH_LONG).show()
+            else Toast.makeText(this, "You set out from Bag End. Every step counts from today.", Toast.LENGTH_LONG).show()
+        }
     }
 
     /** "Weather for where you are" switched on: find the area, then the weather there, then tell the PC. */
@@ -1636,6 +1643,7 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
         lines.add("Sunrise ${hm(day.sunrise)}  ·  sunset ${hm(day.sunset)}")
         Weather.forecast(this).takeIf { it.isNotEmpty() }?.let { lines.add(it) }
         lines.add(Feasts.countdown())
+        Journey.line(this).takeIf { it.isNotEmpty() }?.let { lines.add(it) }
         if (Themes.choice(this) == Look.ADAPTIVE) {
             val next = Themes.nextChange()
             lines.add("${Themes.adaptive(next.plusMinutes(1)).title} from ${next.format(fmt)}")
@@ -1895,6 +1903,19 @@ class MainActivity : Activity(), HomeRoot.Callbacks, AppRepository.Listener {
                     if (Focus.running(this)) Focus.stop(this) else Focus.start(this, 25)
                     updateTexts(); true },
                 SettingsSheet.Row("Deeds of the Red Book", "${Deeds.seen(this)} of ${Deeds.ALL.size}") { Deeds.show(this, look); false },
+            )),
+            SettingsSheet.Section("The walk to Mount Doom", listOf(
+                SettingsSheet.Row(if (Journey.started(this)) "On the road" else "Set out from Bag End",
+                    if (Journey.started(this)) Journey.line(this) else "Your steps, from your watch and phone, carry you along the road") {
+                    if (!Journey.started(this)) Journey.start(this)
+                    else AlertDialog.Builder(this, dialogTheme())
+                        .setTitle("The walk to Mount Doom")
+                        .setMessage(Journey.line(this) + "\n\nSteps come from Health Connect (your watch's count included) and stay on this phone; only the distance goes to your watch and PC.")
+                        .setPositiveButton("The map") { _, _ -> Deeds.show(this, look) }
+                        .setNeutralButton("Start again") { _, _ -> Journey.stop(this); Journey.start(this) }
+                        .setNegativeButton("Stop walking") { _, _ -> Journey.stop(this); backdrop.milestone = null }
+                        .show()
+                    false },
             )),
             SettingsSheet.Section("Widgets", listOf(
                 SettingsSheet.Row("Add a widget", if (widgets.count == 0) "" else "${widgets.count} on the home screen") { widgets.pick(); false },

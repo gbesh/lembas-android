@@ -32,6 +32,10 @@
     <uses-permission android:name="android.permission.READ_CONTACTS" />
     <!-- Sam's garden (optional, you turn it on): how long the phone was in use today, compared with your own usual -->
     <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" tools:ignore="ProtectedPermissions" />
+    <!-- The walk to Mount Doom (optional, you start it): your steps, from Health Connect on Android 14+
+         or the phone's own step counter before that -->
+    <uses-permission android:name="android.permission.health.READ_STEPS" />
+    <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
     <uses-permission android:name="android.permission.UPDATE_PACKAGES_WITHOUT_USER_ACTION" />
 
     <uses-feature android:name="android.software.live_wallpaper" android:required="false" />
@@ -150,6 +154,23 @@
         <receiver android:name=".ThemeSetup$CodeReceiver" android:exported="false" />
         <!-- the smoke-ring focus timer finishing, or stopped from its notification -->
         <receiver android:name=".FocusReceiver" android:exported="false" />
+
+        <!-- what Lembas does with your steps, shown from Health Connect's permission screen -->
+        <activity android:name=".PrivacyActivity" android:exported="true" android:label="Lembas and your steps">
+            <intent-filter>
+                <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" />
+            </intent-filter>
+        </activity>
+        <activity-alias
+            android:name="ViewPermissionUsageActivity"
+            android:exported="true"
+            android:targetActivity=".PrivacyActivity"
+            android:permission="android.permission.START_VIEW_PERMISSION_USAGE">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW_PERMISSION_USAGE" />
+                <category android:name="android.intent.category.HEALTH_PERMISSIONS" />
+            </intent-filter>
+        </activity-alias>
 
         <!-- The Lembas widget, for other home apps -->
         <receiver android:name=".SceneWidget" android:exported="false" android:label="Lembas scene">
